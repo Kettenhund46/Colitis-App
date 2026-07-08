@@ -12,6 +12,7 @@ export default function TagebuchLayout() {
     >
       <Stack.Screen name="index" options={{ title: 'Tagebuch' }} />
       <Stack.Screen name="neu" options={{ title: 'Neuer Eintrag' }} />
+      <Stack.Screen name="auswertung" options={{ title: 'Auswertung' }} />
     </Stack>
   );
 }

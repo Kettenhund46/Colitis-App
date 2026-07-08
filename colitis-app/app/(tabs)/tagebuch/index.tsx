@@ -44,6 +44,14 @@ export default function TagebuchScreen() {
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Muster-Auswertung ansehen"
+        style={styles.analysisLink}
+        onPress={() => router.push('/tagebuch/auswertung')}
+      >
+        <Text style={styles.analysisLinkText}>Muster-Auswertung ansehen →</Text>
+      </Pressable>
       <DiaryHistoryList entries={entries} />
       <Pressable
         accessibilityRole="button"
@@ -71,6 +79,18 @@ const styles = StyleSheet.create({
   errorText: {
     color: tokens.colors.danger,
     fontSize: tokens.typography.fontSize.sm,
+    textAlign: 'center',
+  },
+  analysisLink: {
+    backgroundColor: tokens.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: tokens.colors.border,
+    padding: tokens.spacing.md,
+  },
+  analysisLinkText: {
+    color: tokens.colors.primary,
+    fontSize: tokens.typography.fontSize.sm,
+    fontWeight: tokens.typography.fontWeight.medium,
     textAlign: 'center',
   },
   addButton: {
