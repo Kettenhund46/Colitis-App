@@ -1,0 +1,382 @@
+COLITIS-ULCEROSA-APP – PROJEKT-ZUSAMMENFASSUNG
+Stand: 2026-07-08
+
+===========================================================
+1. ZIEL DES PROJEKTS
+===========================================================
+
+Adrian entwickelt eine mobile App für Menschen mit Colitis Ulcerosa
+(chronisch-entzündliche Darmerkrankung), die:
+
+- über den aktuellen Stand von Krankheit, Forschung und Behandlung
+  informiert (News-/Forschungs-Feed zu Studien, Medikamentenzulassungen,
+  Leitlinien-Updates)
+- ein Symptom-/Schub-Tagebuch mit Trigger-Erfassung bietet (Ernährung,
+  Stress, Schlaf, Medikamente)
+- eine Wissens- und Medikamentendatenbank enthält
+- einen Toiletten-Finder als Kernfunktion bereitstellt (nicht optional!) –
+  persönlich Adrians größtes Alltagsproblem ist plötzlicher, dringender
+  Stuhldrang ohne erreichbare Toilette, verbunden mit Schmerzen und einem
+  psychischen Teufelskreis (Stress → Schub → Erschöpfung → Essprobleme →
+  mehr Stress)
+
+Grundlage aller medizinischen Inhalte ist die Recherche-Datei
+"Colitis_Ulcerosa_Deepsearch.md" (im Projektordner), die Adrian zu Beginn
+bereitgestellt hat.
+
+Bereits zu Beginn festgelegte Eckpunkte:
+- Zielgruppe v1: nur für Adrian persönlich (Single-User, kein
+  Account-System, keine Server-Infrastruktur)
+- Plattform: Mobile-first, Android (React Native/Expo, iOS-Option bleibt
+  offen)
+- Datensicherung: nur lokal, manuelles verschlüsseltes Export/Import
+  (kein automatisches Cloud-Backup)
+- UI-Sprache: Deutsch
+- Design-Ton: ruhig, warm, beruhigend – wenig Alarmfarben/Rot, damit die
+  App im akuten Schub nicht zusätzlichen Stress auslöst
+- Toiletten-Finder: offene Kartendaten (OpenStreetMap/Overpass) + eigene
+  gespeicherte "sichere Orte"
+- Datenschutz: sensible Gesundheitsdaten, DSGVO-relevant, sollen lokal und
+  verschlüsselt gespeichert werden, keine unnötige Cloud-Weitergabe
+
+===========================================================
+2. WIE WIR GEPLANT HABEN (Vorgehen)
+===========================================================
+
+Das Projekt folgt einem strukturierten Prozess mit klaren Phasen:
+
+  Idee → Design/Spec → Implementierungsplan → Umsetzung (pro Aufgabe:
+  Implementierung → Review → ggf. Korrektur) → Zusammenführung
+
+Schritt 1 – Brainstorming/Design (abgeschlossen):
+  - Ausführliche Rückfragen zu Zielgruppe, Plattform, Backup-Strategie,
+    UI-Sprache, Design-Ton, Datenquelle für den Toiletten-Finder und
+    technischen Stack
+  - Daraus entstand ein vollständiges Design-Dokument (Spec) für Phase 1
+    (MVP): docs/superpowers/specs/2026-07-07-colitis-ulcerosa-app-design.md
+  - Diese Spec deckt ab: Architektur, technischer Stack, Datenmodell &
+    Datenschutz, Feature-Module (Tagebuch, Wissens-/Medi-DB,
+    Toiletten-Finder), Projektstruktur, Fehlerbehandlung, Testing-Ansatz
+    und einen groben 8-stufigen Umsetzungsplan
+  - Von Adrian Punkt für Punkt geprüft und freigegeben
+
+Schritt 2 – Technischer Stack (Entscheidung):
+  - React Native mit Expo (TypeScript) – Begründung: ein einziger
+    TypeScript-Codebase deckt DB, Karte, Standort, Benachrichtigungen,
+    Verschlüsselung und Biometrie über reife Bibliotheken ab, lässt die
+    Tür zu iOS offen, und ist gut mit Claude Code iterierbar
+  - Verworfene Alternativen: natives Android (Kotlin/Jetpack Compose –
+    kein einfacher iOS-Weg), Web-App/PWA (eingeschränktes
+    Hintergrund-Standort-/Push-/Offline-Verhalten, schlecht für den
+    Toiletten-Finder als Kernfunktion)
+
+Schritt 3 – Umsetzungsplan schreiben:
+  - Die Spec wurde in 8 grobe Umsetzungsschritte unterteilt (siehe unten,
+    Abschnitt 4)
+  - Auf Adrians Wunsch wird NICHT ein einziger Mega-Plan für alle 8
+    Schritte geschrieben, sondern jeweils EIN detaillierter,
+    aufgabenweise ausführbarer Plan PRO Umsetzungsschritt – so bleibt
+    jeder Plan überschaubar und einzeln testbar
+  - Plan 1 (Projekt-Setup) wurde als erstes vollständig ausgearbeitet:
+    docs/superpowers/plans/2026-07-08-colitis-app-projekt-setup.md
+
+Schritt 4 – Umsetzung von Plan 1 (Subagent-Driven Development):
+  - Für jede der 5 Teilaufgaben in Plan 1 wurde ein frischer,
+    eigenständiger Arbeits-Agent eingesetzt, der die Aufgabe umsetzt,
+    testet und committet
+  - Nach jeder Teilaufgabe erfolgte eine unabhängige Code-Review
+    (Spezifikations-Abgleich + Qualitätsprüfung) durch einen weiteren
+    Agenten
+  - Am Ende gab es zusätzlich eine große, plan-übergreifende
+    Abschluss-Review über alle 5 Aufgaben hinweg, die gefundene Probleme
+    in einer gemeinsamen Korrekturrunde beheben ließ
+  - Die gesamte Arbeit erfolgte in einem isolierten Git-Arbeitsbereich
+    (Worktree), damit der Hauptzweig (main) währenddessen unangetastet
+    blieb
+  - Nach erfolgreicher Prüfung wurde der Arbeitsbereich in main gemergt,
+    aufgeräumt und zu GitHub gepusht
+
+Schritt 5 – Plan 2 "Tagebuch-Kern" schreiben und umsetzen:
+  - Nach Freigabe der Zusammenfassung von Schritt 1 wurde direkt der
+    nächste Umsetzungsschritt aus der Spec geplant:
+    docs/superpowers/plans/2026-07-08-colitis-app-tagebuch-kern.md
+  - Vor der Umsetzung wurden zwei Entscheidungen bewusst mit Adrian
+    abgestimmt (statt sie stillschweigend zu treffen):
+      1. Die Spec verlangt Komponenten-Tests mit "React Native Testing
+         Library". Ein direkter Test in dieser Sitzung zeigte jedoch, dass
+         sich React Native unter dem aktuell genutzten Test-Runner
+         (Vitest) technisch gar nicht einbinden lässt (eine bestimmte
+         Code-Syntax wird nicht unterstützt). Entscheidung: die komplette
+         Formular-/Anzeige-LOGIK wird weiterhin vollständig automatisiert
+         getestet, die reine Bildschirm-Darstellung wird stattdessen beim
+         späteren manuellen Alltagstest mitgeprüft (Adrian stimmte dieser
+         Empfehlung zu)
+      2. Die grobe Reihenfolge trennt "Tagebuch-Kern" (Schritt 2) und
+         "Trigger-Erfassung" (Schritt 3). Da die Auswahl möglicher
+         Auslöser (Ernährung, Stress, Schlaf, Medikament, Sonstiges) aber
+         technisch direkt an jeden Tagebuch-Eintrag gekoppelt ist, wurde
+         entschieden, diese Auswahl bereits jetzt ins Eingabe-Formular
+         aufzunehmen, um es in Schritt 3 nicht nochmal anfassen zu
+         müssen – die eigentliche Muster-AUSWERTUNG bleibt trotzdem
+         vollständig Schritt 3 (Adrian stimmte auch hier zu)
+  - Die Umsetzung erfolgte nach demselben Subagent-Driven-Development-
+    Verfahren wie bei Plan 1 (5 Teilaufgaben, je einzeln reviewt, danach
+    eine plan-übergreifende Abschluss-Review), erneut in einem isolierten
+    Arbeitsbereich
+  - Zwei Zwischenfälle während der Umsetzung, die transparent behandelt
+    wurden statt einfach ignoriert zu werden:
+      - Ein Arbeits-Agent wurde versehentlich in einem falsch isolierten,
+        separaten Arbeitsbereich gestartet statt im vorgesehenen. Die
+        bereits fertiggestellte, korrekte Arbeit wurde gefunden, gegen
+        den Plan geprüft, die Tests selbst nachvollzogen und erst dann
+        regulär übernommen
+      - Ein anderer Arbeits-Agent wurde durch ein technisches
+        Nutzungslimit mitten in der Arbeit gestoppt. Auch hier wurde die
+        bis dahin fertige (und korrekte) Arbeit gefunden, geprüft und
+        übernommen, statt sie zu verwerfen und neu zu beginnen
+  - Die Abschluss-Review (mit dem leistungsfähigsten verfügbaren Modell
+    durchgeführt, da sie das gesamte Zusammenspiel aller 5 Teilaufgaben
+    prüft) fand einen echten inhaltlichen Lücke: die im Formular erfassten
+    Symptome wurden in der Verlaufsansicht nirgends angezeigt, obwohl sie
+    gespeichert werden. Das wurde noch vor dem Zusammenführen behoben und
+    erneut geprüft
+  - Nach erfolgreicher Prüfung wurde der Arbeitsbereich in main gemergt,
+    aufgeräumt und zu GitHub gepusht
+
+Schritt 6 – Plan 3 "Trigger-Auswertung" schreiben und umsetzen:
+  - Nächster Umsetzungsschritt aus der Spec:
+    docs/superpowers/plans/2026-07-08-colitis-app-trigger-auswertung.md
+  - Vor der Umsetzung wurden erneut zwei offene Design-Fragen mit Adrian
+    abgestimmt (die Spec nennt nur ein Beispiel – "Schmerzlevel-Durchschnitt
+    an Tagen mit Trigger X" –, legt aber weder Anzeige-Ort noch genauen
+    Umfang fest):
+      1. Anzeige-Ort: eigener Unterbildschirm "Auswertung" unter dem
+         Tagebuch-Tab, erreichbar über einen Link in der Verlaufsansicht
+         (statt einer Zusammenfassungs-Karte direkt in der bestehenden
+         Liste)
+      2. Umfang: bewusst nur das Spec-Beispiel – pro Auslöser-Kategorie
+         Eintragsanzahl + Schmerzlevel-Durchschnitt – keine zusätzlichen
+         Kennzahlen (kein Stuhlgang-Durchschnitt, kein Blut-Anteil), passend
+         zur Spec-Vorgabe "keine komplexe Statistik in Phase 1"
+  - Da der Umfang deutlich kleiner war als bei Plan 1/2, wurde der Plan
+    bewusst in nur 3 statt 5 Teilaufgaben gegliedert (reine Logik →
+    Anzeige-Komponente → Screen/Navigation) – keine künstliche Aufblähung
+    nur um dem bisherigen Muster zu folgen
+  - Umsetzung erneut per Subagent-Driven Development in einem isolierten
+    Arbeitsbereich, jede Teilaufgabe einzeln reviewt
+  - Wieder ein Zwischenfall: derselbe Fehler wie zuvor (ein Arbeits-Agent
+    landete versehentlich in einem separaten, falsch isolierten
+    Arbeitsbereich statt im vorgesehenen). Wie beim ersten Mal wurde die
+    bereits fertige, korrekte Arbeit gefunden, gegen den Plan geprüft, die
+    Tests selbst nachvollzogen und erst dann regulär übernommen, statt sie
+    zu verwerfen
+  - Die Abschluss-Review (mit dem leistungsfähigsten verfügbaren Modell)
+    fand keine kritischen oder wichtigen Probleme, nur vier kleine,
+    kosmetische Anmerkungen (u. a. ein kurzes Aufblitzen des Leer-Zustands
+    beim ersten Laden) – bewusst zurückgestellt, kein Blocker für das
+    Zusammenführen
+  - Nach erfolgreicher Prüfung wurde der Arbeitsbereich in main gemergt,
+    aufgeräumt und zu GitHub gepusht
+
+===========================================================
+3. AKTUELLER STAND / WAS WURDE UMGESETZT
+===========================================================
+
+GitHub-Repository: https://github.com/Kettenhund46/Colitis-App.git
+(privates Repo, Branch main ist aktuell)
+
+Abgeschlossen: Design-Spec (Phase 1) + Plan 1 "Projekt-Setup" (alle 5
+Teilaufgaben implementiert, reviewt, gehärtet und gemergt)
+
+Konkret existiert jetzt im Ordner "colitis-app/":
+
+a) Expo/TypeScript-Projektgrundgerüst
+   - Expo Router mit Tab-Navigation, vier deutsche Tabs: Tagebuch, Wissen,
+     Toiletten, Einstellungen (noch als Platzhalter-Screens)
+   - Ordnerstruktur gemäß Spec: app/, src/features/, src/db/, src/lib/,
+     src/components/ui/, src/styles/
+   - Vitest als Test-Runner eingerichtet (statt Jest)
+
+b) Design-Tokens (ruhig-warme Farbpalette)
+   - Farben, Abstände (Spacing) und Typografie als zentrale Konstanten
+   - Bewusst ohne knalliges Alarm-Rot als Haupt-/Akzentfarbe
+   - Mit Tests abgesichert (u. a. dass keine reine Alarmfarbe verwendet
+     wird)
+
+c) Datenbank-Schema (Drizzle ORM)
+   - Alle 7 Kern-Tabellen aus der Spec definiert und mit generierten
+     SQL-Migrationen hinterlegt:
+     diary_entries, triggers, medications, medication_log, saved_places,
+     knowledge_content, screening_reminders
+   - Fremdschlüssel-Beziehungen korrekt gesetzt (z. B. triggers →
+     diary_entries, medication_log → medications)
+
+d) Verschlüsselung (SQLCipher) & Schlüssel-Verwaltung
+   - SQLCipher-Verschlüsselung (AES-256) für die komplette lokale
+     SQLite-Datenbank aktiviert
+   - Der Verschlüsselungs-Schlüssel wird beim ersten Start zufällig
+     erzeugt und sicher im Android Keystore gespeichert (über
+     expo-secure-store) – verlässt das Gerät nie
+   - Mit Unit-Tests abgesichert (Schlüssel wird nur einmal erzeugt, danach
+     wiederverwendet)
+
+e) Verschlüsselter Datenbank-Client & App-Start
+   - Eine zentrale Funktion öffnet die verschlüsselte Datenbank, prüft den
+     Schlüssel sofort (statt erst später bei einer Abfrage zu scheitern),
+     aktiviert die Fremdschlüssel-Prüfung und führt beim App-Start
+     automatisch die Datenbank-Migrationen aus
+   - Während des Öffnens/Migrierens zeigt die App deutsche Lade- bzw.
+     Fehlertexte (z. B. bei falschem/beschädigtem Schlüssel), passend zum
+     ruhigen Design
+   - Fehler werden zusätzlich lokal geloggt (keine stillen Fehler)
+   - Eine spätere Wiederverwendung der Datenbankverbindung durch
+     kommende Feature-Module (Tagebuch, Wissens-DB usw.) ist bereits
+     berücksichtigt (einmaliges Öffnen, sichere Wiederverwendung)
+
+Qualitätssicherung:
+   - 12 automatisierte Tests (Vitest), alle grün
+   - Typprüfung (TypeScript) fehlerfrei
+   - Jede Teilaufgabe einzeln reviewt, zusätzlich eine große
+     Abschluss-Review über den gesamten Plan mit einer Korrekturrunde
+     (3 wichtige Integrationsprobleme + 3 kleinere Punkte gefunden und
+     behoben, u. a. bessere Fehlermeldung bei falschem Schlüssel,
+     Wiederverwendung der DB-Verbindung, Aktivierung der
+     Fremdschlüssel-Prüfung, Entfernen von unbenutzten
+     Expo-Vorlage-Dateien)
+
+Abgeschlossen (neu): Plan 2 "Tagebuch-Kern" (alle 5 Teilaufgaben
+implementiert, reviewt, korrigiert und gemergt)
+
+Konkret ist jetzt zusätzlich vorhanden:
+
+f) Tagebuch-Eingabe-Screen ("Neuer Eintrag")
+   - Stuhlgang-Häufigkeit (Zähler), Blut im Stuhl (Ja/Nein), Konsistenz
+     (hart/normal/weich/wässrig), Schmerzlevel (0–10), Symptome
+     (Mehrfachauswahl: Bauchschmerzen, Krämpfe, Müdigkeit, Fieber,
+     Gelenkschmerzen, Stuhldrang, Appetitlosigkeit, Gewichtsverlust),
+     mögliche Auslöser (Ernährung/Stress/Schlaf/Medikament/Sonstiges) und
+     eine Freitext-Notiz
+   - Speichern-Button ist während des Speicherns deaktiviert, damit ein
+     versehentliches Doppel-Tippen keinen doppelten Eintrag anlegt
+   - Alle Auswahl-Elemente sind mit Sprachausgabe-Unterstützung
+     (Accessibility) versehen
+
+g) Lokale Speicherung (Tagebuch-Repository)
+   - Neue Einträge werden zusammen mit ihren gewählten Auslöser-
+     Kategorien in der bereits verschlüsselten Datenbank gespeichert
+   - Getestet mit einer echten, temporären SQLite-Datenbank im
+     Test-Lauf (nicht nur mit Attrappen), inklusive Runden-Test, dass
+     Symptome korrekt gespeichert und wieder ausgelesen werden
+
+h) Verlaufsansicht ("Tagebuch"-Tab)
+   - Zeigt alle bisherigen Einträge neueste zuerst: Datum/Uhrzeit,
+     Stuhlgang-Häufigkeit und -Konsistenz, Schmerzlevel, Blut-Warnung
+     (falls zutreffend), Symptome, Auslöser und Notiz
+   - Lädt automatisch neu, sobald man von der Eingabe zurückkehrt (kein
+     manuelles Aktualisieren nötig)
+   - Großer "+"-Button für schnellen Zugriff auf einen neuen Eintrag
+   - Verständliche deutsche Fehlermeldung, falls Laden oder Speichern
+     fehlschlägt (inkl. Logging im Hintergrund, kein stiller Datenverlust)
+
+Qualitätssicherung (Plan 2):
+   - 28 automatisierte Tests (Vitest) insgesamt, alle grün
+   - Typprüfung (TypeScript) durchgehend fehlerfrei
+   - Jede der 5 Teilaufgaben einzeln reviewt, zusätzlich eine
+     Abschluss-Review über den gesamten Plan; der dabei gefundene
+     wichtige Punkt (fehlende Symptom-Anzeige im Verlauf) wurde behoben
+     und erneut bestätigt
+   - Bewusst zurückgestellte Kleinigkeiten (kein Sicherheits- oder
+     Datenrisiko, nur Feinschliff): z. B. kein Ladesymbol beim ersten
+     Laden, ein paar zusätzliche Testfälle für Randwerte – für später
+     vorgemerkt, nicht vergessen
+
+Abgeschlossen (neu): Plan 3 "Trigger-Auswertung" (alle 3 Teilaufgaben
+implementiert, reviewt und gemergt)
+
+Konkret ist jetzt zusätzlich vorhanden:
+
+i) Auswertung-Screen (eigener Unterbildschirm im Tagebuch-Tab)
+   - Zeigt pro Auslöser-Kategorie (Ernährung, Stress, Schlaf, Medikament,
+     Sonstiges), die schon einmal ausgewählt wurde: Anzahl der Einträge
+     mit diesem Auslöser und den durchschnittlichen Schmerzlevel an diesen
+     Tagen
+   - Erreichbar über einen Link direkt in der bestehenden Verlaufsansicht
+   - Bewusst einfach gehalten (kein Zeitraum-Filter, keine weiteren
+     Kennzahlen), passend zur Spec-Vorgabe für diesen Schritt
+
+Qualitätssicherung (Plan 3):
+   - 35 automatisierte Tests (Vitest) insgesamt, alle grün (7 neue Tests
+     für die Muster-Berechnung)
+   - Typprüfung (TypeScript) durchgehend fehlerfrei
+   - Jede der 3 Teilaufgaben einzeln reviewt, zusätzlich eine
+     Abschluss-Review über den gesamten Plan – keine kritischen oder
+     wichtigen Punkte gefunden, nur vier kleine kosmetische Anmerkungen
+     (bewusst zurückgestellt)
+
+===========================================================
+4. WAS NOCH FEHLT / NÄCHSTE SCHRITTE
+===========================================================
+
+Die Spec sieht insgesamt 8 grobe Umsetzungsschritte vor. Bisher sind
+Schritt 1, Schritt 2 und Schritt 3 vollständig umgesetzt:
+
+  [x] 1. Projekt-Setup (Expo-Projekt, Ordnerstruktur, Design-Tokens,
+         verschlüsselte Datenbank mit Schema)                — FERTIG
+  [x] 2. Tagebuch-Kern (Eingabe-Screen, lokale Speicherung,
+         Verlaufsansicht)                                    — FERTIG
+  [x] 3. Trigger-Auswertung (eigener Auswertung-Screen mit
+         Eintragsanzahl + Schmerzlevel-Durchschnitt pro Auslöser-Kategorie)
+                                                               — FERTIG
+  [ ] 4. Wissens-/Medikamentendatenbank (Inhalte aus der Recherche-Datei
+         strukturiert einpflegen, durchsuchbare Artikel-Ansicht)
+  [ ] 5. Eigene Medikamentenliste & Erinnerungen (Einnahme-Tracking,
+         lokale Push-Erinnerungen, Vorsorge-Koloskopie-Reminder)
+  [ ] 6. Toiletten-Finder (Karte, Overpass-Anbindung, eigene "sichere
+         Orte", Schnellzugriff-Button, Offline-Fallback) – Adrians
+         persönlich wichtigste Funktion
+  [ ] 7. App-Sperre & Backup (PIN/Biometrie-Sperre, verschlüsselter
+         Export/Import)
+  [ ] 8. Polish & Testlauf (Design-Feinschliff, echter Alltagstest,
+         Fehlerbehandlung schärfen)
+
+Danach, separat und noch nicht geplant:
+  - Phase 2: News-/Leitlinien-Feed-Automatisierung (PubMed, AWMF-
+    Leitlinien, FDA/EMA-Meldungen) – erfordert einen kleinen Server/
+    Cronjob, wird als eigene Spec geplant, sobald Phase 1 fertig läuft
+
+Außerdem noch offen (kann nicht automatisiert erledigt werden):
+  - Manueller Test auf einem echten Android-Gerät bzw. Emulator
+    (Standortberechtigung, Benachrichtigungen, Offline-Verhalten,
+    PIN-/Biometrie-Sperre) – dafür wird ein Gerät mit Android-Toolchain
+    benötigt, was in dieser Entwicklungsumgebung nicht zur Verfügung
+    steht
+
+===========================================================
+5. WICHTIGE DATEIEN IM PROJEKT
+===========================================================
+
+- Colitis_Ulcerosa_Deepsearch.md
+    Medizinische Recherche-Grundlage (Ursachen, Behandlung, aktuelle
+    Forschung, Adrians persönlicher Hintergrund) – Quelle aller
+    medizinischen Inhalte der App
+
+- docs/superpowers/specs/2026-07-07-colitis-ulcerosa-app-design.md
+    Das genehmigte Design-Dokument für Phase 1 (MVP)
+
+- docs/superpowers/plans/2026-07-08-colitis-app-projekt-setup.md
+    Der detaillierte Umsetzungsplan für Schritt 1 (bereits umgesetzt)
+
+- docs/superpowers/plans/2026-07-08-colitis-app-tagebuch-kern.md
+    Der detaillierte Umsetzungsplan für Schritt 2 "Tagebuch-Kern"
+    (bereits umgesetzt)
+
+- docs/superpowers/plans/2026-07-08-colitis-app-trigger-auswertung.md
+    Der detaillierte Umsetzungsplan für Schritt 3 "Trigger-Auswertung"
+    (bereits umgesetzt)
+
+- colitis-app/
+    Der eigentliche Programmcode der App (Expo/TypeScript-Projekt)
+
+- GitHub: https://github.com/Kettenhund46/Colitis-App.git
+    Privates Remote-Repository, aktueller Stand von main ist dort
+    gesichert
