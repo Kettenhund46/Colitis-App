@@ -17,7 +17,10 @@ let cachedDbPromise: Promise<ExpoSQLiteDatabase<typeof schema>> | null = null;
  */
 export function createEncryptedDb(): Promise<ExpoSQLiteDatabase<typeof schema>> {
   if (!cachedDbPromise) {
-    cachedDbPromise = openEncryptedDb();
+    cachedDbPromise = openEncryptedDb().catch((error: unknown) => {
+      cachedDbPromise = null;
+      throw error;
+    });
   }
   return cachedDbPromise;
 }
