@@ -1,6 +1,6 @@
 import { FlatList, Text, View, StyleSheet } from 'react-native';
 import { tokens } from '../../../styles/tokens';
-import { STOOL_CONSISTENCY_OPTIONS, TRIGGER_CATEGORY_OPTIONS } from '../constants';
+import { STOOL_CONSISTENCY_OPTIONS, SYMPTOM_OPTIONS, TRIGGER_CATEGORY_OPTIONS } from '../constants';
 import type { SelectOption } from '../constants';
 import type { DiaryEntryWithTriggers } from '../types';
 
@@ -50,6 +50,11 @@ export function DiaryHistoryList({ entries }: DiaryHistoryListProps) {
           {item.triggerCategories.length > 0 && (
             <Text style={styles.cardDetail}>
               Auslöser: {item.triggerCategories.map((category) => labelFor(TRIGGER_CATEGORY_OPTIONS, category)).join(', ')}
+            </Text>
+          )}
+          {item.symptoms.length > 0 && (
+            <Text style={styles.cardDetail}>
+              Symptome: {item.symptoms.map((symptomKey) => labelFor(SYMPTOM_OPTIONS, symptomKey)).join(', ')}
             </Text>
           )}
           {item.note && <Text style={styles.cardNote}>{item.note}</Text>}

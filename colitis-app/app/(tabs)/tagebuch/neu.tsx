@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
@@ -10,16 +10,29 @@ import type { NewDiaryEntryInput } from '../../../src/features/diary/types';
 export default function NeuerEintragScreen() {
   const router = useRouter();
   const [saveError, setSaveError] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(
+    () => () => {
+      isMountedRef.current = false;
+    },
+    []
+  );
 
   async function handleSubmit(input: NewDiaryEntryInput) {
     try {
       const db = await createEncryptedDb();
       await createDiaryEntry(db, input);
+      if (!isMountedRef.current) {
+        return;
+      }
       setSaveError(null);
       router.back();
     } catch (error: unknown) {
       console.error('[Tagebuch] Speichern des Eintrags fehlgeschlagen:', error);
-      setSaveError('Eintrag konnte nicht gespeichert werden.');
+      if (isMountedRef.current) {
+        setSaveError('Eintrag konnte nicht gespeichert werden.');
+      }
     }
   }
 

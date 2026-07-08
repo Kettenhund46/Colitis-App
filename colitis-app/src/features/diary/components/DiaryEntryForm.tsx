@@ -14,21 +14,27 @@ import {
 import type { NewDiaryEntryInput } from '../types';
 
 interface DiaryEntryFormProps {
-  onSubmit: (input: NewDiaryEntryInput) => void;
+  onSubmit: (input: NewDiaryEntryInput) => void | Promise<void>;
 }
 
 export function DiaryEntryForm({ onSubmit }: DiaryEntryFormProps) {
   const [formState, setFormState] = useState<DiaryEntryFormState>(INITIAL_DIARY_ENTRY_FORM_STATE);
   const [errors, setErrors] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const validationErrors = validateDiaryEntryForm(formState);
     if (validationErrors.length > 0) {
       setErrors(validationErrors);
       return;
     }
     setErrors([]);
-    onSubmit(buildDiaryEntryInput(formState, new Date().toISOString()));
+    setIsSubmitting(true);
+    try {
+      await Promise.resolve(onSubmit(buildDiaryEntryInput(formState, new Date().toISOString())));
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -51,6 +57,8 @@ export function DiaryEntryForm({ onSubmit }: DiaryEntryFormProps) {
           return (
             <Pressable
               key={String(option.key)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
               onPress={() => setFormState({ ...formState, hasBlood: option.key })}
               style={[
                 styles.choiceButton,
@@ -65,15 +73,20 @@ export function DiaryEntryForm({ onSubmit }: DiaryEntryFormProps) {
 
       <Text style={styles.sectionLabel}>Stuhlgang-Konsistenz</Text>
       <View style={styles.row}>
-        {STOOL_CONSISTENCY_OPTIONS.map((option) => (
-          <Pressable
-            key={option.key}
-            onPress={() => setFormState({ ...formState, stoolConsistency: option.key as StoolConsistency })}
-            style={[styles.choiceButton, formState.stoolConsistency === option.key && styles.choiceButtonActive]}
-          >
-            <Text style={styles.choiceButtonText}>{option.label}</Text>
-          </Pressable>
-        ))}
+        {STOOL_CONSISTENCY_OPTIONS.map((option) => {
+          const isSelected = formState.stoolConsistency === option.key;
+          return (
+            <Pressable
+              key={option.key}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
+              onPress={() => setFormState({ ...formState, stoolConsistency: option.key as StoolConsistency })}
+              style={[styles.choiceButton, isSelected && styles.choiceButtonActive]}
+            >
+              <Text style={styles.choiceButtonText}>{option.label}</Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       <NumberStepper
@@ -86,44 +99,48 @@ export function DiaryEntryForm({ onSubmit }: DiaryEntryFormProps) {
 
       <Text style={styles.sectionLabel}>Symptome</Text>
       <View style={styles.row}>
-        {SYMPTOM_OPTIONS.map((option) => (
-          <Pressable
-            key={option.key}
-            onPress={() =>
-              setFormState({
-                ...formState,
-                symptoms: toggleListValue(formState.symptoms, option.key as SymptomKey),
-              })
-            }
-            style={[
-              styles.choiceButton,
-              formState.symptoms.includes(option.key as SymptomKey) && styles.choiceButtonActive,
-            ]}
-          >
-            <Text style={styles.choiceButtonText}>{option.label}</Text>
-          </Pressable>
-        ))}
+        {SYMPTOM_OPTIONS.map((option) => {
+          const isSelected = formState.symptoms.includes(option.key as SymptomKey);
+          return (
+            <Pressable
+              key={option.key}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
+              onPress={() =>
+                setFormState({
+                  ...formState,
+                  symptoms: toggleListValue(formState.symptoms, option.key as SymptomKey),
+                })
+              }
+              style={[styles.choiceButton, isSelected && styles.choiceButtonActive]}
+            >
+              <Text style={styles.choiceButtonText}>{option.label}</Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       <Text style={styles.sectionLabel}>Mögliche Auslöser</Text>
       <View style={styles.row}>
-        {TRIGGER_CATEGORY_OPTIONS.map((option) => (
-          <Pressable
-            key={option.key}
-            onPress={() =>
-              setFormState({
-                ...formState,
-                triggerCategories: toggleListValue(formState.triggerCategories, option.key as TriggerCategory),
-              })
-            }
-            style={[
-              styles.choiceButton,
-              formState.triggerCategories.includes(option.key as TriggerCategory) && styles.choiceButtonActive,
-            ]}
-          >
-            <Text style={styles.choiceButtonText}>{option.label}</Text>
-          </Pressable>
-        ))}
+        {TRIGGER_CATEGORY_OPTIONS.map((option) => {
+          const isSelected = formState.triggerCategories.includes(option.key as TriggerCategory);
+          return (
+            <Pressable
+              key={option.key}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
+              onPress={() =>
+                setFormState({
+                  ...formState,
+                  triggerCategories: toggleListValue(formState.triggerCategories, option.key as TriggerCategory),
+                })
+              }
+              style={[styles.choiceButton, isSelected && styles.choiceButtonActive]}
+            >
+              <Text style={styles.choiceButtonText}>{option.label}</Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       <Text style={styles.sectionLabel}>Notiz</Text>
@@ -146,7 +163,13 @@ export function DiaryEntryForm({ onSubmit }: DiaryEntryFormProps) {
         </View>
       )}
 
-      <Pressable style={styles.submitButton} onPress={handleSubmit}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: isSubmitting }}
+        disabled={isSubmitting}
+        style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+        onPress={handleSubmit}
+      >
         <Text style={styles.submitButtonText}>Eintrag speichern</Text>
       </Pressable>
     </ScrollView>
@@ -222,6 +245,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: tokens.spacing.md,
     alignItems: 'center',
+  },
+  submitButtonDisabled: {
+    backgroundColor: tokens.colors.border,
   },
   submitButtonText: {
     color: tokens.colors.surface,
