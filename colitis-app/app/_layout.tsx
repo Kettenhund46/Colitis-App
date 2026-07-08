@@ -1,56 +1,82 @@
-import { useFonts } from 'expo-font';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/components/useColorScheme';
-
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
-
-export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
-};
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+import { useEffect, useState } from 'react';
+import { Stack } from 'expo-router';
+import { Text, View } from 'react-native';
+import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
+import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
+import migrations from '../drizzle/migrations';
+import { createEncryptedDb } from '../src/db/client';
+import * as schema from '../src/db/schema';
+import { tokens } from '../src/styles/tokens';
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
+  const [db, setDb] = useState<ExpoSQLiteDatabase<typeof schema> | null>(null);
+  const [initError, setInitError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+    let isMounted = true;
+    createEncryptedDb()
+      .then((createdDb) => {
+        if (isMounted) {
+          setDb(createdDb);
+        }
+      })
+      .catch((error: unknown) => {
+        if (isMounted) {
+          setInitError(error instanceof Error ? error.message : 'Unbekannter Datenbankfehler');
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-  if (!loaded) {
-    return null;
+  if (initError) {
+    return (
+      <View style={styles.centered}>
+        <Text>Fehler beim Öffnen der Datenbank: {initError}</Text>
+      </View>
+    );
   }
 
-  return <RootLayoutNav />;
+  if (!db) {
+    return (
+      <View style={styles.centered}>
+        <Text>Datenbank wird geladen …</Text>
+      </View>
+    );
+  }
+
+  return <MigratedLayout db={db} />;
 }
 
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+function MigratedLayout({ db }: { db: ExpoSQLiteDatabase<typeof schema> }) {
+  const { success, error } = useMigrations(db, migrations);
 
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
-  );
+  if (error) {
+    return (
+      <View style={styles.centered}>
+        <Text>Datenbank-Migration fehlgeschlagen: {error.message}</Text>
+      </View>
+    );
+  }
+
+  if (!success) {
+    return (
+      <View style={styles.centered}>
+        <Text>Datenbank wird vorbereitet …</Text>
+      </View>
+    );
+  }
+
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
+
+const styles = {
+  centered: {
+    flex: 1,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    padding: tokens.spacing.lg,
+    backgroundColor: tokens.colors.background,
+  },
+};
