@@ -3,6 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "drizzle-orm": "^0.45.2",
     "expo": "~57.0.4",
     "expo-constants": "~57.0.3",
     "expo-font": "~57.0.0",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "drizzle-kit": "^0.31.10",
     "typescript": "~6.0.3",
     "vitest": "^4.1.10"
   },
