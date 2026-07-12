@@ -1,5 +1,5 @@
 COLITIS-ULCEROSA-APP – PROJEKT-ZUSAMMENFASSUNG
-Stand: 2026-07-12
+Stand: 2026-07-13
 
 ===========================================================
 1. ZIEL DES PROJEKTS
@@ -199,6 +199,60 @@ Schritt 7 – Plan 4 "Wissens-/Medikamentendatenbank" schreiben und umsetzen:
   - Nach erfolgreicher Prüfung wurde der Arbeitsbereich in main gemergt,
     aufgeräumt und zu GitHub gepusht
 
+Schritt 8 – Plan 5 "Eigene Medikamentenliste & Erinnerungen" schreiben und
+umsetzen:
+  - Nächster Umsetzungsschritt aus der Spec:
+    docs/superpowers/specs/2026-07-12-colitis-app-medikamente-design.md und
+    docs/superpowers/plans/2026-07-12-colitis-app-medikamente.md
+  - Vor der Umsetzung wurden vier offene Design-Fragen mit Adrian
+    abgestimmt:
+      1. Erinnerungs-Tiefe: volle Anbindung an `expo-notifications` (echte
+         geplante lokale Benachrichtigungen) statt nur Datenmodell+UI mit
+         Platzhalter – das tatsächliche Auslösen auf einem echten Gerät
+         bleibt trotzdem ungeprüft (wie bei Standort/Verschlüsselung), da
+         diese Entwicklungsumgebung kein Android-Gerät hat
+      2. Navigation: eigener 5. Tab "Medikamente" (statt Unterbildschirm im
+         Wissen-Tab), da tägliches Einnahme-Tracking und die
+         Vorsorge-Erinnerung leicht auffindbar sein sollen
+      3. Vorsorge-Logik: Adrian trägt Intervall und nächstes Datum manuell
+         ein – keine automatische Ableitung aus Krankheitsdauer/-ausdehnung,
+         da das medizinisch individuell und ärztlich abzustimmen wäre
+      4. Erinnerungszeiten-Modellierung: das bestehende `schedule`-Freitextfeld
+         bleibt unverändert für die Anzeige; eine neue Tabelle
+         `medication_reminder_times` trägt die tatsächlichen Uhrzeiten (0..n
+         pro Medikament)
+  - Umsetzung erneut per Subagent-Driven Development in einem isolierten
+    Arbeitsbereich (5 Teilaufgaben: reine Logik → Schema+Repository →
+    Notification-Service → Formular+UI-Komponenten → Screens/Navigation),
+    jede Teilaufgabe einzeln reviewt
+  - Task 1 brauchte zwei Korrekturrunden: die Review fand einen echten
+    Zeitzonen-Bug (Vergleich über UTC statt lokalem Datum, hätte ein
+    beendetes Medikament in den ersten ein bis zwei Stunden jedes Tages
+    fälschlich noch als aktiv angezeigt) – behoben. Danach stellte sich
+    heraus, dass der neue Regressionstest selbst zeitzonenabhängig war
+    (hätte unter einer UTC-Umgebung stillschweigend bestanden, selbst wenn
+    der Bug wieder eingeführt worden wäre) – ebenfalls behoben, mit
+    gepinnter Zeitzone im Test
+  - Tasks 2–5 wurden jeweils im ersten Anlauf freigegeben
+  - Die Abschluss-Review (mit dem leistungsfähigsten verfügbaren Modell)
+    fand einen weiteren echten Fehler: Falls das Speichern eines Medikaments
+    in der Datenbank erfolgreich war, das anschließende Planen der
+    Erinnerungs-Benachrichtigung aber fehlschlug, zeigte die App einen
+    vollständigen Fehler an – ein erneuter Tipp auf "Speichern" hätte dann
+    ein Duplikat angelegt. Behoben, indem das Speichern des Medikaments und
+    das (optionale) Planen der Erinnerungen als getrennte Schritte behandelt
+    werden; Speichern gilt als erfolgreich, sobald die Datenbank es
+    bestätigt, unabhängig vom Erinnerungs-Status
+  - Mehrere kleinere, unkritische Punkte wurden bewusst zurückgestellt statt
+    sofort behoben (u. a. fehlende Existenzprüfung in zwei
+    Repository-Funktionen, die in der laufenden App durch die aktivierte
+    Fremdschlüssel-Prüfung ohnehin abgesichert ist; ein Anführungszeichen-Stil
+    im Leer-Zustand; keine Kalender-Gültigkeitsprüfung für Datumsangaben über
+    das reine Format hinaus)
+  - Nach erfolgreicher Prüfung wurde der Arbeitsbereich lokal in main
+    gemergt (Fast-Forward), aufgeräumt und auf Adrians Wunsch zu GitHub
+    gepusht
+
 ===========================================================
 3. AKTUELLER STAND / WAS WURDE UMGESETZT
 ===========================================================
@@ -353,12 +407,49 @@ Qualitätssicherung (Plan 4):
      für Content-Struktur, Repository-Seeding und Suchlogik)
    - Typprüfung (TypeScript) durchgehend fehlerfrei
 
+Abgeschlossen (neu): Plan 5 "Eigene Medikamentenliste & Erinnerungen" (alle
+5 Teilaufgaben implementiert, reviewt, zweimal korrigiert und gemergt)
+
+Konkret ist jetzt zusätzlich vorhanden:
+
+k) Medikamente-Tab (5. Tab in der Navigation)
+   - Eigene Medikamentenliste: Name, Dosis, Einnahmeschema (Freitext),
+     Start-/Enddatum, beliebig viele Erinnerungszeiten pro Medikament
+   - "Heute genommen"-Button pro Medikament schreibt sofort einen
+     Einnahme-Log-Eintrag mit Zeitstempel
+   - Medikament "beenden" (setzt nur das Enddatum, kein hartes Löschen –
+     Einnahme-Historie bleibt erhalten); aktive und beendete Medikamente
+     werden getrennt dargestellt
+   - Eigener Bereich für den Vorsorge-Koloskopie-Reminder (Intervall,
+     nächstes fälliges Datum, Notiz)
+   - Echte lokale Erinnerungen über `expo-notifications`: tägliche
+     wiederkehrende Benachrichtigung je Erinnerungszeit, einmalige
+     Benachrichtigung zum Vorsorge-Termin; Berechtigung wird erst beim
+     Setzen der ersten Erinnerung angefragt, bei Ablehnung werden die
+     Zeiten trotzdem gespeichert und angezeigt, nur ohne echten Push
+
+Qualitätssicherung (Plan 5):
+   - 91 automatisierte Tests (Vitest) insgesamt, alle grün (42 neue Tests
+     für Erinnerungslogik, Repository, Notification-Service und
+     Formular-Validierung)
+   - Typprüfung (TypeScript) durchgehend fehlerfrei
+   - Jede der 5 Teilaufgaben einzeln reviewt, zusätzlich eine
+     Abschluss-Review über den gesamten Plan; zwei echte Fehler gefunden und
+     behoben (Zeitzonen-Bug bei der Aktiv/Beendet-Prüfung inkl. eines
+     zunächst selbst zeitzonenabhängigen Tests; mögliches Duplikat-Anlegen
+     bei fehlgeschlagener Erinnerungs-Planung nach erfolgreichem Speichern)
+   - Bewusst zurückgestellte Kleinigkeiten (kein Sicherheits- oder
+     Datenrisiko): fehlende Existenzprüfung in zwei Repository-Funktionen
+     (durch aktivierte Fremdschlüssel-Prüfung in der laufenden App
+     ohnehin abgesichert), ein Anführungszeichen-Stil im Leer-Zustand,
+     keine Kalender-Gültigkeitsprüfung über das reine Datumsformat hinaus
+
 ===========================================================
 4. WAS NOCH FEHLT / NÄCHSTE SCHRITTE
 ===========================================================
 
 Die Spec sieht insgesamt 8 grobe Umsetzungsschritte vor. Bisher sind
-Schritt 1 bis Schritt 4 vollständig umgesetzt:
+Schritt 1 bis Schritt 5 vollständig umgesetzt:
 
   [x] 1. Projekt-Setup (Expo-Projekt, Ordnerstruktur, Design-Tokens,
          verschlüsselte Datenbank mit Schema)                — FERTIG
@@ -369,12 +460,13 @@ Schritt 1 bis Schritt 4 vollständig umgesetzt:
                                                                — FERTIG
   [x] 4. Wissens-/Medikamentendatenbank (6 statische Artikel,
          durchsuchbare Artikel-Ansicht mit Detailseite)       — FERTIG
-  [ ] 5. Eigene Medikamentenliste & Erinnerungen (Einnahme-Tracking,
+  [x] 5. Eigene Medikamentenliste & Erinnerungen (Einnahme-Tracking,
          lokale Push-Erinnerungen, Vorsorge-Koloskopie-Reminder)
-         ← NÄCHSTER SCHRITT
+                                                               — FERTIG
   [ ] 6. Toiletten-Finder (Karte, Overpass-Anbindung, eigene "sichere
          Orte", Schnellzugriff-Button, Offline-Fallback) – Adrians
          persönlich wichtigste Funktion
+         ← NÄCHSTER SCHRITT
   [ ] 7. App-Sperre & Backup (PIN/Biometrie-Sperre, verschlüsselter
          Export/Import)
   [ ] 8. Polish & Testlauf (Design-Feinschliff, echter Alltagstest,
@@ -422,6 +514,14 @@ Außerdem noch offen (kann nicht automatisiert erledigt werden):
 - docs/superpowers/plans/2026-07-09-colitis-app-wissens-db.md
     Der detaillierte Umsetzungsplan für Schritt 4 "Wissens-/
     Medikamentendatenbank" (bereits umgesetzt)
+
+- docs/superpowers/specs/2026-07-12-colitis-app-medikamente-design.md
+    Design-Spec für Schritt 5 "Eigene Medikamentenliste & Erinnerungen"
+    (bereits umgesetzt)
+
+- docs/superpowers/plans/2026-07-12-colitis-app-medikamente.md
+    Der detaillierte Umsetzungsplan für Schritt 5 "Eigene
+    Medikamentenliste & Erinnerungen" (bereits umgesetzt)
 
 - colitis-app/
     Der eigentliche Programmcode der App (Expo/TypeScript-Projekt)
