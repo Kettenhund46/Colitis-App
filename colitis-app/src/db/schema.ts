@@ -39,6 +39,15 @@ export const medicationLog = sqliteTable('medication_log', {
   takenAt: text('taken_at').notNull(),
 });
 
+export const medicationReminderTimes = sqliteTable('medication_reminder_times', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  medicationId: integer('medication_id')
+    .notNull()
+    .references(() => medications.id),
+  time: text('time').notNull(),
+  notificationId: text('notification_id'),
+});
+
 export const savedPlaces = sqliteTable('saved_places', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
@@ -61,4 +70,5 @@ export const screeningReminders = sqliteTable('screening_reminders', {
   intervalMonths: integer('interval_months').notNull(),
   nextDueDate: text('next_due_date').notNull(),
   note: text('note'),
+  notificationId: text('notification_id'),
 });
