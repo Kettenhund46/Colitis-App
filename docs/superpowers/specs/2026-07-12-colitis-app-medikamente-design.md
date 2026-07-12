@@ -64,7 +64,7 @@ Kein Interaktions-Button direkt in der Push-Benachrichtigung (Verhalten von Noti
 
 - Unit-Tests (Vitest) für die reine Auslösezeitpunkt-Berechnung: Uhrzeit heute noch nicht erreicht → heute; Uhrzeit heute schon vorbei → morgen; Vorsorge-Datum in der Zukunft/Vergangenheit
 - Unit-Tests (echte temporäre SQLite-DB wie in Plan 2/4) für Repository-Funktionen: Medikament anlegen/bearbeiten/beenden, Erinnerungszeiten hinzufügen/entfernen, Einnahme-Log schreiben, Vorsorge-Reminder lesen/aktualisieren
-- Der Notification-Service selbst (echte `expo-notifications`-Aufrufe) wird nicht automatisiert getestet — das ist wie bei Standort/Verschlüsselung eine reine Geräte-Integration ohne sinnvollen Unit-Test-Nutzen. Stattdessen wird er so geschrieben, dass die reine Logik (welche Zeit, welche ID) testbar bleibt, und der dünne `expo-notifications`-Aufruf selbst beim späteren Alltagstest auf einem echten Gerät mitgeprüft wird
+- Der Notification-Service wird nach demselben Muster wie `src/lib/encryption.ts` getestet: `expo-notifications` wird per `vi.mock` ersetzt, und die Aufruf-Logik (welche Werte an welche Funktion übergeben werden, welcher Trigger berechnet wird) wird vollständig automatisiert geprüft. Nur das tatsächliche Anzeigen einer Benachrichtigung auf einem echten Gerät bleibt ungeprüft und wird beim späteren Alltagstest mitgeprüft
 - Component-/Screen-Tests entfallen wie bei allen bisherigen Schritten (React Native lässt sich unter Vitest nicht einbinden) — manuelles Testen der Darstellung beim Alltagstest (Schritt 8)
 
 ## Explizit nicht Teil dieses Schritts
