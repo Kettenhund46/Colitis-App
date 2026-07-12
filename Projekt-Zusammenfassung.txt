@@ -1,5 +1,5 @@
 COLITIS-ULCEROSA-APP – PROJEKT-ZUSAMMENFASSUNG
-Stand: 2026-07-08
+Stand: 2026-07-12
 
 ===========================================================
 1. ZIEL DES PROJEKTS
@@ -178,6 +178,27 @@ Schritt 6 – Plan 3 "Trigger-Auswertung" schreiben und umsetzen:
   - Nach erfolgreicher Prüfung wurde der Arbeitsbereich in main gemergt,
     aufgeräumt und zu GitHub gepusht
 
+Schritt 7 – Plan 4 "Wissens-/Medikamentendatenbank" schreiben und umsetzen:
+  - Nächster Umsetzungsschritt aus der Spec, durchgeführt in einer separaten
+    Sitzung am Firmenrechner (anderer, physisch getrennter Rechner, gleicher
+    Anthropic-Account) nach demselben Design→Plan→Subagent-Umsetzung-Ablauf:
+    docs/superpowers/specs/2026-07-09-colitis-app-wissens-db-design.md und
+    docs/superpowers/plans/2026-07-09-colitis-app-wissens-db.md
+  - Umfang bewusst abgegrenzt: genau 6 statische Wissensartikel
+    (ueberblick, ursachen, behandlung, folgen, forschung, medikamente),
+    destilliert aus Kapiteln 1–5 der Deepsearch-Datei; der Artikel
+    "medikamente" bleibt allgemeines Nachschlagewissen zu Wirkstoffklassen
+    ohne Bezug zu Adrians persönlicher Medikamentenhistorie – die
+    Verknüpfung zur eigenen Medikamentenliste ist bewusst Schritt 5
+    vorbehalten
+  - Suche ist ein einfacher, client-seitiger Substring-Filter über
+    Titel + Text (case-insensitive), kein Server, keine Volltextsuch-Engine
+  - Seeding der Artikel erfolgt idempotent (Upsert per Slug) direkt im
+    Wissen-Tab-Container-Screen, nicht global im App-Start, damit ein
+    Seeding-Fehler nicht die ganze App blockiert
+  - Nach erfolgreicher Prüfung wurde der Arbeitsbereich in main gemergt,
+    aufgeräumt und zu GitHub gepusht
+
 ===========================================================
 3. AKTUELLER STAND / WAS WURDE UMGESETZT
 ===========================================================
@@ -313,12 +334,31 @@ Qualitätssicherung (Plan 3):
      wichtigen Punkte gefunden, nur vier kleine kosmetische Anmerkungen
      (bewusst zurückgestellt)
 
+Abgeschlossen (neu): Plan 4 "Wissens-/Medikamentendatenbank" (alle
+Teilaufgaben implementiert, reviewt und gemergt)
+
+Konkret ist jetzt zusätzlich vorhanden:
+
+j) Wissen-Tab (durchsuchbare Artikel-Liste + Detailansicht)
+   - 6 statische Wissensartikel (Überblick, Ursachen, Behandlung, Folgen,
+     Forschung, Medikamente-Wirkstoffklassen) aus der Deepsearch-Datei
+     destilliert, jeweils mit anklickbaren Quellenangaben
+   - Idempotentes Seeding (Upsert per Slug) in die verschlüsselte DB beim
+     Öffnen des Wissen-Tabs
+   - Einfacher, client-seitiger Such-/Filter über Titel + Text
+   - Artikel-Detailansicht mit anklickbaren Quellen-Links
+
+Qualitätssicherung (Plan 4):
+   - 49 automatisierte Tests (Vitest) insgesamt, alle grün (14 neue Tests
+     für Content-Struktur, Repository-Seeding und Suchlogik)
+   - Typprüfung (TypeScript) durchgehend fehlerfrei
+
 ===========================================================
 4. WAS NOCH FEHLT / NÄCHSTE SCHRITTE
 ===========================================================
 
 Die Spec sieht insgesamt 8 grobe Umsetzungsschritte vor. Bisher sind
-Schritt 1, Schritt 2 und Schritt 3 vollständig umgesetzt:
+Schritt 1 bis Schritt 4 vollständig umgesetzt:
 
   [x] 1. Projekt-Setup (Expo-Projekt, Ordnerstruktur, Design-Tokens,
          verschlüsselte Datenbank mit Schema)                — FERTIG
@@ -327,10 +367,11 @@ Schritt 1, Schritt 2 und Schritt 3 vollständig umgesetzt:
   [x] 3. Trigger-Auswertung (eigener Auswertung-Screen mit
          Eintragsanzahl + Schmerzlevel-Durchschnitt pro Auslöser-Kategorie)
                                                                — FERTIG
-  [ ] 4. Wissens-/Medikamentendatenbank (Inhalte aus der Recherche-Datei
-         strukturiert einpflegen, durchsuchbare Artikel-Ansicht)
+  [x] 4. Wissens-/Medikamentendatenbank (6 statische Artikel,
+         durchsuchbare Artikel-Ansicht mit Detailseite)       — FERTIG
   [ ] 5. Eigene Medikamentenliste & Erinnerungen (Einnahme-Tracking,
          lokale Push-Erinnerungen, Vorsorge-Koloskopie-Reminder)
+         ← NÄCHSTER SCHRITT
   [ ] 6. Toiletten-Finder (Karte, Overpass-Anbindung, eigene "sichere
          Orte", Schnellzugriff-Button, Offline-Fallback) – Adrians
          persönlich wichtigste Funktion
@@ -373,6 +414,14 @@ Außerdem noch offen (kann nicht automatisiert erledigt werden):
 - docs/superpowers/plans/2026-07-08-colitis-app-trigger-auswertung.md
     Der detaillierte Umsetzungsplan für Schritt 3 "Trigger-Auswertung"
     (bereits umgesetzt)
+
+- docs/superpowers/specs/2026-07-09-colitis-app-wissens-db-design.md
+    Design-Spec für Schritt 4 "Wissens-/Medikamentendatenbank"
+    (bereits umgesetzt)
+
+- docs/superpowers/plans/2026-07-09-colitis-app-wissens-db.md
+    Der detaillierte Umsetzungsplan für Schritt 4 "Wissens-/
+    Medikamentendatenbank" (bereits umgesetzt)
 
 - colitis-app/
     Der eigentliche Programmcode der App (Expo/TypeScript-Projekt)
