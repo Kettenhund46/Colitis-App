@@ -1,7 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { isMedicationActive } from './medicationStatus';
 
 describe('isMedicationActive', () => {
+  let originalTz: string | undefined;
+
+  beforeAll(() => {
+    originalTz = process.env.TZ;
+    process.env.TZ = 'Europe/Berlin';
+  });
+
+  afterAll(() => {
+    process.env.TZ = originalTz;
+  });
+
   const today = new Date(2026, 6, 12);
 
   it('is active when there is no end date', () => {
