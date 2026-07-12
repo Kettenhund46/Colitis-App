@@ -19,11 +19,19 @@ export default function NeuesMedikamentScreen() {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   async function handleSubmit(input: MedicationInput) {
+    let created;
     try {
       const db = await createEncryptedDb();
-      const created = await createMedication(db, input);
+      created = await createMedication(db, input);
+    } catch (error: unknown) {
+      console.error('[Medikamente] Anlegen fehlgeschlagen:', error);
+      setSaveError('Medikament konnte nicht gespeichert werden.');
+      return;
+    }
 
-      if (created.reminderTimes.length > 0) {
+    if (created.reminderTimes.length > 0) {
+      try {
+        const db = await createEncryptedDb();
         const granted = await requestNotificationPermission();
         if (granted) {
           for (const reminderTime of created.reminderTimes) {
@@ -34,14 +42,13 @@ export default function NeuesMedikamentScreen() {
             await setReminderTimeNotificationId(db, reminderTime.id, notificationId);
           }
         }
+      } catch (notificationError: unknown) {
+        console.error('[Medikamente] Erinnerungen konnten nicht geplant werden:', notificationError);
       }
-
-      setSaveError(null);
-      router.back();
-    } catch (error: unknown) {
-      console.error('[Medikamente] Anlegen fehlgeschlagen:', error);
-      setSaveError('Medikament konnte nicht gespeichert werden.');
     }
+
+    setSaveError(null);
+    router.back();
   }
 
   return (
