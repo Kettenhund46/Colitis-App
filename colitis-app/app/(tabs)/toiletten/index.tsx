@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { Linking, Text, View, StyleSheet } from 'react-native';
 import * as Location from 'expo-location';
@@ -23,6 +23,8 @@ export default function ToilettenScreen() {
   const [selectedToiletId, setSelectedToiletId] = useState<string | null>(null);
   const [locationDenied, setLocationDenied] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLocationResolved, setIsLocationResolved] = useState(false);
+  const searchRequestIdRef = useRef(0);
 
   useFocusEffect(
     useCallback(() => {
@@ -35,6 +37,7 @@ export default function ToilettenScreen() {
           }
           if (permission.status !== 'granted') {
             setLocationDenied(true);
+            setIsLocationResolved(true);
             return;
           }
           setLocationDenied(false);
@@ -48,12 +51,14 @@ export default function ToilettenScreen() {
           };
           setUserLocation(coords);
           setMapCenter(coords);
+          setIsLocationResolved(true);
           await searchAround(coords);
         })
         .catch((error: unknown) => {
           console.error('[Toiletten] Standort konnte nicht ermittelt werden:', error);
           if (isActive) {
             setLocationDenied(true);
+            setIsLocationResolved(true);
           }
         });
 
@@ -64,12 +69,19 @@ export default function ToilettenScreen() {
   );
 
   async function searchAround(center: Coordinates) {
+    const requestId = ++searchRequestIdRef.current;
     try {
       const results = await fetchNearbyToilets(center, SEARCH_RADIUS_METERS);
+      if (requestId !== searchRequestIdRef.current) {
+        return;
+      }
       setToilets(results);
       setLastSearchedCenter(center);
       setLoadError(null);
     } catch (error: unknown) {
+      if (requestId !== searchRequestIdRef.current) {
+        return;
+      }
       console.error('[Toiletten] Toiletten konnten nicht geladen werden:', error);
       setLoadError('Toiletten konnten nicht geladen werden.');
     }
@@ -77,6 +89,9 @@ export default function ToilettenScreen() {
 
   function handleRegionChange(center: Coordinates) {
     setMapCenter(center);
+    if (!isLocationResolved) {
+      return;
+    }
     if (!lastSearchedCenter || hasMovedSignificantly(lastSearchedCenter, center, REGION_CHANGE_THRESHOLD_METERS)) {
       searchAround(center);
     }

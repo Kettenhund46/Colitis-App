@@ -14,9 +14,14 @@ interface ToiletMapViewProps {
 export function ToiletMapView({ center, toilets, onRegionChange, onMarkerTap }: ToiletMapViewProps) {
   const webViewRef = useRef<WebView>(null);
   const [isReady, setIsReady] = useState(false);
+  const isRegionChangeEchoRef = useRef(false);
 
   useEffect(() => {
     if (!isReady) {
+      return;
+    }
+    if (isRegionChangeEchoRef.current) {
+      isRegionChangeEchoRef.current = false;
       return;
     }
     webViewRef.current?.injectJavaScript(`window.setCenter(${center.latitude}, ${center.longitude}); true;`);
@@ -40,6 +45,7 @@ export function ToiletMapView({ center, toilets, onRegionChange, onMarkerTap }: 
     if (message.type === 'ready') {
       setIsReady(true);
     } else if (message.type === 'regionChange') {
+      isRegionChangeEchoRef.current = true;
       onRegionChange({ latitude: message.latitude, longitude: message.longitude });
     } else if (message.type === 'markerTap') {
       onMarkerTap(message.id);
