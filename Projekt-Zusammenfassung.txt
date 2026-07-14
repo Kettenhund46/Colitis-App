@@ -1,5 +1,5 @@
 COLITIS-ULCEROSA-APP – PROJEKT-ZUSAMMENFASSUNG
-Stand: 2026-07-13
+Stand: 2026-07-14
 
 ===========================================================
 1. ZIEL DES PROJEKTS
@@ -253,6 +253,96 @@ umsetzen:
     gemergt (Fast-Forward), aufgeräumt und auf Adrians Wunsch zu GitHub
     gepusht
 
+Schritt 9 – Plan 6a "Toiletten-Karte" (Teil A) schreiben und umsetzen:
+  - Schritt 6 aus der Spec (Toiletten-Finder) wurde bewusst wegen seines
+    Umfangs (neue Karten-/Standort-Abhängigkeiten, externe Netzwerk-API,
+    Offline-Caching) in zwei Pläne aufgeteilt: Teil A (Kartenansicht,
+    Standort, Overpass-Anbindung) und Teil B (sichere Orte, Offline-
+    Fallback, Schnellzugriff) – jeweils eigene Spec und eigener Plan:
+    docs/superpowers/specs/2026-07-13-colitis-app-toiletten-karte-design.md
+    und docs/superpowers/plans/2026-07-13-colitis-app-toiletten-karte.md
+  - Wichtige technische Korrektur während des Brainstormings: ursprünglich
+    war `react-native-maps` mit OpenStreetMap-Kacheln angedacht ("kein
+    Google-Account nötig"). Eine Prüfung der offiziellen Dokumentation
+    ergab, dass `react-native-maps` auf Android zwingend einen
+    Google-Maps-API-Key (Google-Cloud-Konto) benötigt, unabhängig von der
+    Kachelquelle – das widerspricht dem Projekt-Grundsatz "keine
+    unnötigen externen Abhängigkeiten". Adrian wurde das transparent
+    mitgeteilt, daraufhin fiel die Entscheidung auf eine WebView mit
+    lokal gebündeltem Leaflet.js (kein Google-Konto, kein natives
+    Karten-SDK)
+  - Umsetzung per Subagent-Driven Development in einem isolierten
+    Arbeitsbereich (5 Teilaufgaben: reine Overpass-/Geo-Logik →
+    Overpass-Client → Leaflet-Karten-HTML + Karten-Komponente → Infokarte
+    + Standort-Hinweisbanner + Navigations-Link → Screen-Wiring), jede
+    Teilaufgabe einzeln reviewt
+  - Alle 5 Teilaufgaben wurden im ersten Anlauf freigegeben
+  - Die Abschluss-Review (mit dem leistungsfähigsten verfügbaren Modell)
+    fand zwei echte, erst im Zusammenspiel aller Teilaufgaben sichtbare
+    Fehler: (1) die Karte ließ sich auf keiner anderen Zoomstufe als der
+    Ausgangsstufe halten, weil jede Kartenbewegung ein Zurücksetzen auf
+    die Ausgangsstufe auslöste; (2) beim Kaltstart konnte eine unnötige
+    Suche um den Deutschland-Mittelpunkt starten, bevor der echte
+    Standort feststand, und ein dabei verzögert eintreffendes Ergebnis
+    hätte ein frischeres Suchergebnis überschreiben können. Beide behoben
+    und erneut geprüft
+  - Nach erfolgreicher Prüfung wurde der Arbeitsbereich lokal in main
+    gemergt, aufgeräumt und zu GitHub gepusht
+
+Schritt 10 – Plan 6b "Sichere Orte, Offline-Fallback & Schnellzugriff"
+(Teil B) schreiben und umsetzen:
+  - Zweiter und letzter Plan für Schritt 6 der Spec, baut auf der in
+    Schritt 9 fertiggestellten Karten-Komponente auf:
+    docs/superpowers/specs/2026-07-13-colitis-app-toiletten-sichere-orte-design.md
+    und
+    docs/superpowers/plans/2026-07-13-colitis-app-toiletten-sichere-orte.md
+  - Vor der Umsetzung wurden mehrere offene Design-Fragen mit Adrian
+    abgestimmt: Anlegen eines sicheren Orts per langem Drücken auf die
+    Karte (statt eigenem Button), Verwaltung (Bearbeiten/Löschen) über
+    Antippen des Markers, Offline-Speicherung in einer neuen Tabelle der
+    verschlüsselten Datenbank (statt unverschlüsseltem Gerätespeicher),
+    und beim Schnellzugriff zählt der jeweils nähere Punkt (Toilette oder
+    sicherer Ort), unabhängig vom Typ
+  - Wichtige technische Korrektur während des Brainstormings: für den
+    Schnellzugriff-Button war ursprünglich das Drittanbieter-Paket
+    `expo-quick-actions` angedacht. Eine Prüfung ergab, dass es sich um
+    kein offizielles Expo-SDK-Paket handelt, die Kompatibilitätstabelle
+    nur bis Expo SDK 56 reicht (dieses Projekt nutzt SDK 57, unbestätigt)
+    und ein nativer Build nötig wäre. Adrian wurde das – unter Verweis
+    auf die gleichartige Korrektur bei Plan 6a – transparent mitgeteilt;
+    die Entscheidung fiel auf einen selbst geschriebenen, lokalen
+    Expo-Config-Plugin ohne Drittanbieter-Paket und ohne
+    Versions-Risiko
+  - Umsetzung per Subagent-Driven Development in einem isolierten
+    Arbeitsbereich (6 Teilaufgaben: reine Logik für sichere Orte und
+    Kandidaten-Auswahl → Schema-Migration + Repositories →
+    Karten-Bridge-Erweiterung für Long-Press und zweiten Marker-Typ →
+    Formular- und Infokarten-Komponenten → Screen-Wiring → Schnellzugriff
+    mit Config-Plugin und Ziel-Screen), jede Teilaufgabe einzeln reviewt
+  - Zwei Teilaufgaben brauchten je eine Korrekturrunde: bei der
+    Formular-Komponente war eine Übergangs-/Overlay-Farbe hartkodiert
+    statt als Design-Token hinterlegt – behoben, indem ein neuer
+    `overlay`-Token ergänzt wurde. Beim Screen-Wiring fand die Review
+    zwei echte, aus dem mitgelieferten Plan-Code selbst stammende Fehler:
+    eine Lücke im bestehenden Schutz gegen veraltete, verzögert
+    eintreffende Suchergebnisse (griff im neuen Offline-Fallback-Pfad
+    noch nicht vollständig) sowie fehlende Fehlerbehandlung beim
+    Anlegen/Bearbeiten/Löschen sicherer Orte (inkonsistent zum Rest der
+    Datei). Beide als eigenständige, plan-bedingte Fehler erkannt (nicht
+    dem Arbeits-Agenten angelastet) und im selben Zug behoben
+  - Die abschließende, plan-übergreifende Prüfung über alle 6
+    Teilaufgaben hinweg (mit dem leistungsfähigsten verfügbaren Modell)
+    bestätigte, dass das Bridge-Protokoll, die Drei-Zustands-Offline-
+    Logik, die Schnellzugriff-Hilfsfunktionen und die additive
+    Datenbank-Migration sauber zusammenspielen; nur kleinere,
+    unkritische Anmerkungen (z. B. eine allgemeine statt spezifische
+    Fehlermeldung im Schnellzugriff-Screen bei einem echten
+    Datenbankfehler) wurden bewusst zurückgestellt
+  - Nach erfolgreicher Prüfung wurde der Arbeitsbereich lokal in main
+    gemergt, aufgeräumt und auf Adrians Wunsch zu GitHub gepusht – damit
+    ist der komplette Toiletten-Finder (Schritt 6, Adrians persönlich
+    wichtigste Funktion) fertig
+
 ===========================================================
 3. AKTUELLER STAND / WAS WURDE UMGESETZT
 ===========================================================
@@ -444,12 +534,87 @@ Qualitätssicherung (Plan 5):
      ohnehin abgesichert), ein Anführungszeichen-Stil im Leer-Zustand,
      keine Kalender-Gültigkeitsprüfung über das reine Datumsformat hinaus
 
+Abgeschlossen (neu): Plan 6a "Toiletten-Karte" (Teil A, alle 5
+Teilaufgaben implementiert, reviewt, zweimal korrigiert und gemergt)
+
+Konkret ist jetzt zusätzlich vorhanden:
+
+l) Toiletten-Tab (Karte, Standort, Overpass-Suche)
+   - Kartenansicht über eine WebView mit lokal gebündeltem Leaflet.js
+     (OSM-Kacheln, kein Google-Konto, kein natives Karten-SDK) –
+     Kommunikation zwischen React Native und der Karte über eine
+     Nachrichten-Bridge (Kartenmittelpunkt/Marker rein, Kartenverschiebung/
+     Marker-Antippen raus)
+   - Standort nur bei Bedarf im Vordergrund abgefragt (keine
+     Hintergrund-Standortabfrage); bei Verweigerung bleibt die Karte mit
+     einem neutralen Standardausschnitt und einem deutschen
+     Hinweisbanner nutzbar
+   - Automatische Umkreissuche nach öffentlichen Toiletten über die
+     Overpass-API (OpenStreetMap) bei jeder größeren Kartenverschiebung
+     (fester Radius, Schwellwert gegen zu häufige Anfragen bei kleinen
+     Bewegungen)
+   - Antippen eines Toiletten-Markers zeigt eine Infokarte (Name,
+     Entfernung, Öffnungszeiten falls bekannt) mit einem Button "Route
+     dorthin", der die bereits installierte externe Navigations-App
+     öffnet
+
+Qualitätssicherung (Plan 6a):
+   - 108 automatisierte Tests (Vitest) insgesamt, alle grün (17 neue
+     Tests für Overpass-Anfrage-Bau, Antwort-Parsing, Distanzberechnung
+     und Schwellwert-Logik)
+   - Typprüfung (TypeScript) durchgehend fehlerfrei
+   - Jede der 5 Teilaufgaben einzeln reviewt, zusätzlich eine
+     Abschluss-Review über den gesamten Plan; zwei echte, erst im
+     Zusammenspiel sichtbare Fehler gefunden und behoben (Zoomstufe der
+     Karte ließ sich nicht halten; unnötiger/verzögerter Kaltstart-
+     Suchlauf konnte frischere Ergebnisse überschreiben)
+
+Abgeschlossen (neu): Plan 6b "Sichere Orte, Offline-Fallback &
+Schnellzugriff" (Teil B, alle 6 Teilaufgaben implementiert, reviewt,
+dreimal korrigiert und gemergt) – damit ist der komplette
+Toiletten-Finder (Schritt 6) fertig
+
+Konkret ist jetzt zusätzlich vorhanden:
+
+m) Sichere Orte, Offline-Cache und Android-Schnellzugriff
+   - Eigene "sichere Orte" per langem Drücken auf die Karte anlegen
+     (Name, Kategorie mit Vorschlag-Chips Arbeit/Freunde/Café/Sonstiges,
+     optionale Notiz) – eigener, farblich abgesetzter Marker-Typ,
+     bearbeitbar/löschbar über Infokarte (Löschen mit kurzer nativer
+     Bestätigung)
+   - Offline-Fallback: jede erfolgreiche Toiletten-Suche wird in der
+     verschlüsselten Datenbank zwischengespeichert (vollständiger
+     Ersatz bei jeder neuen Suche); schlägt eine Suche mangels Netz fehl,
+     zeigt die App stattdessen die zuletzt gespeicherten Toiletten mit
+     einem Offline-Hinweistext statt einer harten Fehlermeldung (die
+     harte Fehlermeldung bleibt nur, wenn noch gar kein Cache existiert)
+   - Android-Homescreen-Shortcut "Nächste Toilette" über einen selbst
+     geschriebenen, lokalen Expo-Config-Plugin (kein Drittanbieter-Paket)
+     – öffnet einen eigenständigen Schnellzugriff-Screen, der ohne
+     Live-Netzabfrage (nur gecachte Toiletten + sichere Orte) sofort den
+     nächstgelegenen Punkt ermittelt und direkt die externe
+     Navigations-App öffnet
+
+Qualitätssicherung (Plan 6b):
+   - 126 automatisierte Tests (Vitest) insgesamt, alle grün (18 neue
+     Tests für Kandidaten-Auswahl, Formular-Validierung und
+     Repository-CRUD gegen eine echte temporäre Datenbank)
+   - Typprüfung (TypeScript) durchgehend fehlerfrei
+   - Jede der 6 Teilaufgaben einzeln reviewt (zwei davon mit je einer
+     Korrekturrunde: hartkodierte statt Token-basierte Farbe; Lücke im
+     Schutz gegen veraltete Suchergebnisse plus fehlende
+     Fehlerbehandlung beim Verwalten sicherer Orte), zusätzlich eine
+     Abschluss-Review über den gesamten Plan – bestätigte sauberes
+     Zusammenspiel von Karten-Bridge, Offline-Logik und
+     Schnellzugriff-Hilfsfunktionen, nur kleinere unkritische
+     Anmerkungen bewusst zurückgestellt
+
 ===========================================================
 4. WAS NOCH FEHLT / NÄCHSTE SCHRITTE
 ===========================================================
 
 Die Spec sieht insgesamt 8 grobe Umsetzungsschritte vor. Bisher sind
-Schritt 1 bis Schritt 5 vollständig umgesetzt:
+Schritt 1 bis Schritt 6 vollständig umgesetzt:
 
   [x] 1. Projekt-Setup (Expo-Projekt, Ordnerstruktur, Design-Tokens,
          verschlüsselte Datenbank mit Schema)                — FERTIG
@@ -463,12 +628,14 @@ Schritt 1 bis Schritt 5 vollständig umgesetzt:
   [x] 5. Eigene Medikamentenliste & Erinnerungen (Einnahme-Tracking,
          lokale Push-Erinnerungen, Vorsorge-Koloskopie-Reminder)
                                                                — FERTIG
-  [ ] 6. Toiletten-Finder (Karte, Overpass-Anbindung, eigene "sichere
+  [x] 6. Toiletten-Finder (Karte, Overpass-Anbindung, eigene "sichere
          Orte", Schnellzugriff-Button, Offline-Fallback) – Adrians
-         persönlich wichtigste Funktion
-         ← NÄCHSTER SCHRITT
+         persönlich wichtigste Funktion, in zwei Plänen umgesetzt
+         (6a Karte/Standort/Overpass, 6b sichere Orte/Offline/
+         Schnellzugriff)                                     — FERTIG
   [ ] 7. App-Sperre & Backup (PIN/Biometrie-Sperre, verschlüsselter
          Export/Import)
+         ← NÄCHSTER SCHRITT
   [ ] 8. Polish & Testlauf (Design-Feinschliff, echter Alltagstest,
          Fehlerbehandlung schärfen)
 
@@ -522,6 +689,22 @@ Außerdem noch offen (kann nicht automatisiert erledigt werden):
 - docs/superpowers/plans/2026-07-12-colitis-app-medikamente.md
     Der detaillierte Umsetzungsplan für Schritt 5 "Eigene
     Medikamentenliste & Erinnerungen" (bereits umgesetzt)
+
+- docs/superpowers/specs/2026-07-13-colitis-app-toiletten-karte-design.md
+    Design-Spec für Schritt 6a "Toiletten-Karte" – Kartenansicht,
+    Standort & Overpass-Anbindung (bereits umgesetzt)
+
+- docs/superpowers/plans/2026-07-13-colitis-app-toiletten-karte.md
+    Der detaillierte Umsetzungsplan für Schritt 6a "Toiletten-Karte"
+    (bereits umgesetzt)
+
+- docs/superpowers/specs/2026-07-13-colitis-app-toiletten-sichere-orte-design.md
+    Design-Spec für Schritt 6b "Sichere Orte, Offline-Fallback &
+    Schnellzugriff" (bereits umgesetzt)
+
+- docs/superpowers/plans/2026-07-13-colitis-app-toiletten-sichere-orte.md
+    Der detaillierte Umsetzungsplan für Schritt 6b "Sichere Orte,
+    Offline-Fallback & Schnellzugriff" (bereits umgesetzt)
 
 - colitis-app/
     Der eigentliche Programmcode der App (Expo/TypeScript-Projekt)
