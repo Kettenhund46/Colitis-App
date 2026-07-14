@@ -1,34 +1,62 @@
 import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { Linking, Text, View, StyleSheet } from 'react-native';
+import { Alert, Linking, Text, View, StyleSheet } from 'react-native';
 import * as Location from 'expo-location';
 import { ToiletMapView } from '../../../src/features/toilets/components/ToiletMapView';
 import { ToiletInfoCard } from '../../../src/features/toilets/components/ToiletInfoCard';
+import { SavedPlaceInfoCard } from '../../../src/features/toilets/components/SavedPlaceInfoCard';
+import { SavedPlaceForm } from '../../../src/features/toilets/components/SavedPlaceForm';
 import { LocationPermissionBanner } from '../../../src/features/toilets/components/LocationPermissionBanner';
 import { fetchNearbyToilets } from '../../../src/features/toilets/overpassClient';
 import { haversineDistanceMeters } from '../../../src/features/toilets/distance';
 import { hasMovedSignificantly } from '../../../src/features/toilets/regionChange';
 import { buildNavigationUrl } from '../../../src/features/toilets/navigationLink';
 import { SEARCH_RADIUS_METERS, REGION_CHANGE_THRESHOLD_METERS } from '../../../src/features/toilets/constants';
+import { createEncryptedDb } from '../../../src/db/client';
+import {
+  createSavedPlace,
+  listSavedPlaces,
+  updateSavedPlace,
+  deleteSavedPlace,
+} from '../../../src/features/toilets/db/savedPlacesRepository';
+import { replaceCachedToilets, listCachedToilets } from '../../../src/features/toilets/db/cachedToiletsRepository';
 import { tokens } from '../../../src/styles/tokens';
-import type { Coordinates, Toilet } from '../../../src/features/toilets/types';
+import type { Coordinates, SavedPlace, SavedPlaceInput, Toilet } from '../../../src/features/toilets/types';
+import type { SavedPlaceFormState } from '../../../src/features/toilets/savedPlaceFormLogic';
 
 const DEFAULT_CENTER: Coordinates = { latitude: 51.1657, longitude: 10.4515 };
+
+type SelectedMarker = { id: string; kind: 'toilet' | 'place' };
+type FormMode = { mode: 'create'; coordinates: Coordinates } | { mode: 'edit'; place: SavedPlace } | null;
 
 export default function ToilettenScreen() {
   const [mapCenter, setMapCenter] = useState<Coordinates>(DEFAULT_CENTER);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [lastSearchedCenter, setLastSearchedCenter] = useState<Coordinates | null>(null);
   const [toilets, setToilets] = useState<Toilet[]>([]);
-  const [selectedToiletId, setSelectedToiletId] = useState<string | null>(null);
+  const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
+  const [selectedMarker, setSelectedMarker] = useState<SelectedMarker | null>(null);
+  const [formState, setFormState] = useState<FormMode>(null);
   const [locationDenied, setLocationDenied] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [offlineHint, setOfflineHint] = useState<string | null>(null);
   const [isLocationResolved, setIsLocationResolved] = useState(false);
   const searchRequestIdRef = useRef(0);
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
+
+      createEncryptedDb()
+        .then(async (db) => {
+          const places = await listSavedPlaces(db);
+          if (isActive) {
+            setSavedPlaces(places);
+          }
+        })
+        .catch((error: unknown) => {
+          console.error('[Toiletten] Sichere Orte konnten nicht geladen werden:', error);
+        });
 
       Location.requestForegroundPermissionsAsync()
         .then(async (permission) => {
@@ -68,6 +96,11 @@ export default function ToilettenScreen() {
     }, [])
   );
 
+  async function reloadSavedPlaces() {
+    const db = await createEncryptedDb();
+    setSavedPlaces(await listSavedPlaces(db));
+  }
+
   async function searchAround(center: Coordinates) {
     const requestId = ++searchRequestIdRef.current;
     try {
@@ -78,13 +111,37 @@ export default function ToilettenScreen() {
       setToilets(results);
       setLastSearchedCenter(center);
       setLoadError(null);
+      setOfflineHint(null);
+      try {
+        const db = await createEncryptedDb();
+        await replaceCachedToilets(db, results);
+      } catch (cacheError: unknown) {
+        console.error('[Toiletten] Cache konnte nicht aktualisiert werden:', cacheError);
+      }
     } catch (error: unknown) {
       if (requestId !== searchRequestIdRef.current) {
         return;
       }
       console.error('[Toiletten] Toiletten konnten nicht geladen werden:', error);
-      setLoadError('Toiletten konnten nicht geladen werden.');
+      await handleSearchFailure();
     }
+  }
+
+  async function handleSearchFailure() {
+    try {
+      const db = await createEncryptedDb();
+      const cached = await listCachedToilets(db);
+      if (cached.length > 0) {
+        setToilets(cached);
+        setOfflineHint('Offline — zeigt zuletzt geladene Toiletten');
+        setLoadError(null);
+        return;
+      }
+    } catch (cacheError: unknown) {
+      console.error('[Toiletten] Cache konnte nicht gelesen werden:', cacheError);
+    }
+    setLoadError('Toiletten konnten nicht geladen werden.');
+    setOfflineHint(null);
   }
 
   function handleRegionChange(center: Coordinates) {
@@ -97,15 +154,64 @@ export default function ToilettenScreen() {
     }
   }
 
-  function handleMarkerTap(toiletId: string) {
-    setSelectedToiletId(toiletId);
+  function handleMarkerTap(id: string, kind: 'toilet' | 'place') {
+    setSelectedMarker({ id, kind });
   }
 
-  function handleNavigate(toilet: Toilet) {
-    Linking.openURL(buildNavigationUrl({ latitude: toilet.latitude, longitude: toilet.longitude }));
+  function handleLongPress(coordinates: Coordinates) {
+    setSelectedMarker(null);
+    setFormState({ mode: 'create', coordinates });
   }
 
-  const selectedToilet = toilets.find((toilet) => toilet.id === selectedToiletId) ?? null;
+  function handleEditPlace(place: SavedPlace) {
+    setSelectedMarker(null);
+    setFormState({ mode: 'edit', place });
+  }
+
+  async function handleSubmitForm(input: SavedPlaceInput) {
+    const db = await createEncryptedDb();
+    if (formState?.mode === 'edit') {
+      await updateSavedPlace(db, formState.place.id, input);
+    } else {
+      await createSavedPlace(db, input);
+    }
+    setFormState(null);
+    await reloadSavedPlaces();
+  }
+
+  function handleDeletePlace(place: SavedPlace) {
+    Alert.alert('Sicheren Ort löschen?', `"${place.name}" wird endgültig gelöscht.`, [
+      { text: 'Abbrechen', style: 'cancel' },
+      {
+        text: 'Löschen',
+        style: 'destructive',
+        onPress: async () => {
+          const db = await createEncryptedDb();
+          await deleteSavedPlace(db, place.id);
+          setSelectedMarker(null);
+          await reloadSavedPlaces();
+        },
+      },
+    ]);
+  }
+
+  function handleNavigate(destination: Coordinates) {
+    Linking.openURL(buildNavigationUrl(destination));
+  }
+
+  const selectedToilet =
+    selectedMarker?.kind === 'toilet' ? toilets.find((toilet) => toilet.id === selectedMarker.id) ?? null : null;
+  const selectedPlace =
+    selectedMarker?.kind === 'place'
+      ? savedPlaces.find((place) => String(place.id) === selectedMarker.id) ?? null
+      : null;
+
+  const formInitialState: SavedPlaceFormState | undefined =
+    formState?.mode === 'edit'
+      ? { name: formState.place.name, category: formState.place.category, note: formState.place.note ?? '' }
+      : undefined;
+  const formCoordinates: Coordinates | null =
+    formState?.mode === 'create' ? formState.coordinates : formState?.mode === 'edit' ? formState.place : null;
 
   return (
     <View style={styles.container}>
@@ -115,18 +221,43 @@ export default function ToilettenScreen() {
           <Text style={styles.errorText}>{loadError}</Text>
         </View>
       )}
+      {offlineHint && (
+        <View style={styles.offlineBanner}>
+          <Text style={styles.offlineText}>{offlineHint}</Text>
+        </View>
+      )}
       <ToiletMapView
         center={mapCenter}
         toilets={toilets}
+        savedPlaces={savedPlaces}
         onRegionChange={handleRegionChange}
         onMarkerTap={handleMarkerTap}
+        onLongPress={handleLongPress}
       />
       {selectedToilet && (
         <ToiletInfoCard
           toilet={selectedToilet}
           distanceMeters={haversineDistanceMeters(userLocation ?? mapCenter, selectedToilet)}
           onNavigate={() => handleNavigate(selectedToilet)}
-          onClose={() => setSelectedToiletId(null)}
+          onClose={() => setSelectedMarker(null)}
+        />
+      )}
+      {selectedPlace && (
+        <SavedPlaceInfoCard
+          place={selectedPlace}
+          onNavigate={() => handleNavigate(selectedPlace)}
+          onEdit={() => handleEditPlace(selectedPlace)}
+          onDelete={() => handleDeletePlace(selectedPlace)}
+          onClose={() => setSelectedMarker(null)}
+        />
+      )}
+      {formState && formCoordinates && (
+        <SavedPlaceForm
+          coordinates={formCoordinates}
+          initialState={formInitialState}
+          submitLabel={formState.mode === 'edit' ? 'Speichern' : 'Anlegen'}
+          onSubmit={handleSubmitForm}
+          onCancel={() => setFormState(null)}
         />
       )}
     </View>
@@ -146,6 +277,17 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: tokens.colors.danger,
+    fontSize: tokens.typography.fontSize.sm,
+    textAlign: 'center',
+  },
+  offlineBanner: {
+    backgroundColor: tokens.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: tokens.colors.border,
+    padding: tokens.spacing.sm,
+  },
+  offlineText: {
+    color: tokens.colors.textSecondary,
     fontSize: tokens.typography.fontSize.sm,
     textAlign: 'center',
   },
