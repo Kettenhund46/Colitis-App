@@ -72,3 +72,12 @@ export const screeningReminders = sqliteTable('screening_reminders', {
   note: text('note'),
   notificationId: text('notification_id'),
 });
+
+export const cachedToilets = sqliteTable('cached_toilets', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  osmId: text('osm_id').notNull(),
+  latitude: real('latitude').notNull(),
+  longitude: real('longitude').notNull(),
+  name: text('name'),
+  openingHours: text('opening_hours'),
+});

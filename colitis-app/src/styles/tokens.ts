@@ -8,6 +8,7 @@ const colors = {
   danger: '#B5533C',
   success: '#5B8C7B',
   border: '#E4DACB',
+  overlay: 'rgba(46, 42, 38, 0.4)',
 } as const;
 
 const spacing = {

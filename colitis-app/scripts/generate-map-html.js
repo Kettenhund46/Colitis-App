@@ -18,6 +18,7 @@ const bridgeScript = `
   }).addTo(map);
 
   var markers = {};
+  var placeMarkers = {};
 
   window.setCenter = function(lat, lon) {
     map.setView([lat, lon], 15);
@@ -32,15 +33,40 @@ const bridgeScript = `
     toilets.forEach(function(toilet) {
       var marker = L.marker([toilet.latitude, toilet.longitude]).addTo(map);
       marker.on('click', function() {
-        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'markerTap', id: toilet.id }));
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'markerTap', id: toilet.id, kind: 'toilet' }));
       });
       markers[toilet.id] = marker;
+    });
+  };
+
+  window.setSavedPlaces = function(placesJson) {
+    var places = JSON.parse(placesJson);
+    Object.keys(placeMarkers).forEach(function(id) {
+      map.removeLayer(placeMarkers[id]);
+      delete placeMarkers[id];
+    });
+    places.forEach(function(place) {
+      var marker = L.circleMarker([place.latitude, place.longitude], {
+        radius: 10,
+        color: '#5B8C7B',
+        fillColor: '#5B8C7B',
+        fillOpacity: 0.9,
+        weight: 2
+      }).addTo(map);
+      marker.on('click', function() {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'markerTap', id: String(place.id), kind: 'place' }));
+      });
+      placeMarkers[place.id] = marker;
     });
   };
 
   map.on('moveend', function() {
     var center = map.getCenter();
     window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'regionChange', latitude: center.lat, longitude: center.lng }));
+  });
+
+  map.on('contextmenu', function(e) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'longPress', latitude: e.latlng.lat, longitude: e.latlng.lng }));
   });
 
   window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'ready' }));

@@ -2,11 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { tokens } from './tokens';
 
 const HEX_COLOR_PATTERN = /^#[0-9A-Fa-f]{6}$/;
+const RGBA_COLOR_PATTERN = /^rgba\(\d+,\s*\d+,\s*\d+,\s*[\d.]+\)$/;
+const COLOR_PATTERN = /^(#[0-9A-Fa-f]{6}|rgba\(\d+,\s*\d+,\s*\d+,\s*[\d.]+\))$/;
 
 describe('design tokens', () => {
-  it('defines a hex value for every color token', () => {
+  it('defines a hex or rgba value for every color token', () => {
     Object.values(tokens.colors).forEach((value) => {
-      expect(value).toMatch(HEX_COLOR_PATTERN);
+      expect(value).toMatch(COLOR_PATTERN);
     });
   });
 
