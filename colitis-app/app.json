@@ -43,7 +43,8 @@
       ],
       "expo-secure-store",
       "expo-notifications",
-      "./plugins/withNearestToiletShortcut"
+      "./plugins/withNearestToiletShortcut",
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true
