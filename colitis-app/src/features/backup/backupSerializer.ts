@@ -47,5 +47,5 @@ export function parseBackupData(json: string): BackupData {
     }
   }
 
-  return candidate as BackupData;
+  return candidate as unknown as BackupData;
 }

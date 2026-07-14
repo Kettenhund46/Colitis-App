@@ -2,7 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const hasHardwareAsync = vi.fn((..._args: unknown[]) => Promise.resolve(true));
 const isEnrolledAsync = vi.fn((..._args: unknown[]) => Promise.resolve(true));
-const authenticateAsync = vi.fn((..._args: unknown[]) => Promise.resolve({ success: true }));
+const authenticateAsync = vi.fn<(..._args: unknown[]) => Promise<{ success: boolean; error?: string }>>(
+  (..._args: unknown[]) => Promise.resolve({ success: true }),
+);
 
 vi.mock('expo-local-authentication', () => ({
   hasHardwareAsync: (...args: unknown[]) => hasHardwareAsync(...args),
