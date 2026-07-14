@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: 'rgba(46, 42, 38, 0.4)',
+    backgroundColor: tokens.colors.overlay,
     justifyContent: 'flex-end',
   },
   card: {
