@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const storeMock = new Map<string, string>();
+let cryptoCallCount = 0;
 
 vi.mock('expo-secure-store', () => ({
   getItemAsync: vi.fn((key: string) => Promise.resolve(storeMock.get(key) ?? null)),
@@ -8,18 +9,24 @@ vi.mock('expo-secure-store', () => ({
     storeMock.set(key, value);
     return Promise.resolve();
   }),
+  deleteItemAsync: vi.fn((key: string) => {
+    storeMock.delete(key);
+    return Promise.resolve();
+  }),
 }));
 
 vi.mock('expo-crypto', () => ({
-  getRandomBytesAsync: vi.fn((length: number) =>
-    Promise.resolve(new Uint8Array(length).map((_, i) => i % 256))
-  ),
+  getRandomBytesAsync: vi.fn((length: number) => {
+    cryptoCallCount++;
+    return Promise.resolve(new Uint8Array(length).map((_, i) => (i + cryptoCallCount) % 256));
+  }),
 }));
 
-import { generateOrGetDbKey } from './encryption';
+import { generateOrGetDbKey, clearDbKey } from './encryption';
 
 beforeEach(() => {
   storeMock.clear();
+  cryptoCallCount = 0;
   vi.clearAllMocks();
 });
 
@@ -40,5 +47,14 @@ describe('generateOrGetDbKey', () => {
     const second = await generateOrGetDbKey();
     expect(second).toBe(first);
     expect(Crypto.getRandomBytesAsync).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('clearDbKey', () => {
+  it('removes the stored key so a subsequent call generates a new one', async () => {
+    const first = await generateOrGetDbKey();
+    await clearDbKey();
+    const second = await generateOrGetDbKey();
+    expect(second).not.toBe(first);
   });
 });
