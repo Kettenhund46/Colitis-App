@@ -2,16 +2,25 @@ import { useEffect, useRef, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { MAP_HTML } from '../mapHtml.generated';
-import type { Coordinates, Toilet, WebViewToNativeMessage } from '../types';
+import type { Coordinates, SavedPlace, Toilet, WebViewToNativeMessage } from '../types';
 
 interface ToiletMapViewProps {
   center: Coordinates;
   toilets: Toilet[];
+  savedPlaces: SavedPlace[];
   onRegionChange: (center: Coordinates) => void;
-  onMarkerTap: (toiletId: string) => void;
+  onMarkerTap: (id: string, kind: 'toilet' | 'place') => void;
+  onLongPress: (coordinates: Coordinates) => void;
 }
 
-export function ToiletMapView({ center, toilets, onRegionChange, onMarkerTap }: ToiletMapViewProps) {
+export function ToiletMapView({
+  center,
+  toilets,
+  savedPlaces,
+  onRegionChange,
+  onMarkerTap,
+  onLongPress,
+}: ToiletMapViewProps) {
   const webViewRef = useRef<WebView>(null);
   const [isReady, setIsReady] = useState(false);
   const isRegionChangeEchoRef = useRef(false);
@@ -34,6 +43,13 @@ export function ToiletMapView({ center, toilets, onRegionChange, onMarkerTap }: 
     webViewRef.current?.injectJavaScript(`window.setToilets(${JSON.stringify(JSON.stringify(toilets))}); true;`);
   }, [isReady, toilets]);
 
+  useEffect(() => {
+    if (!isReady) {
+      return;
+    }
+    webViewRef.current?.injectJavaScript(`window.setSavedPlaces(${JSON.stringify(JSON.stringify(savedPlaces))}); true;`);
+  }, [isReady, savedPlaces]);
+
   function handleMessage(event: { nativeEvent: { data: string } }) {
     let message: WebViewToNativeMessage;
     try {
@@ -48,7 +64,9 @@ export function ToiletMapView({ center, toilets, onRegionChange, onMarkerTap }: 
       isRegionChangeEchoRef.current = true;
       onRegionChange({ latitude: message.latitude, longitude: message.longitude });
     } else if (message.type === 'markerTap') {
-      onMarkerTap(message.id);
+      onMarkerTap(message.id, message.kind);
+    } else if (message.type === 'longPress') {
+      onLongPress({ latitude: message.latitude, longitude: message.longitude });
     }
   }
 
