@@ -1,5 +1,5 @@
 import {
-  cancelScheduledReminder,
+  cancelAllScheduledReminders,
   configureNotificationHandling,
   requestNotificationPermission,
   scheduleDailyReminder,
@@ -13,19 +13,16 @@ import type { BackupData } from './types';
 export async function rescheduleAllReminders(db: BackupDb, data: BackupData): Promise<void> {
   configureNotificationHandling();
 
-  for (const reminderTime of data.tables.medicationReminderTimes) {
-    if (reminderTime.notificationId) {
-      await cancelScheduledReminder(reminderTime.notificationId);
-    }
-  }
-  for (const screeningReminder of data.tables.screeningReminders) {
-    if (screeningReminder.notificationId) {
-      await cancelScheduledReminder(screeningReminder.notificationId);
-    }
-  }
+  await cancelAllScheduledReminders();
 
   const granted = await requestNotificationPermission();
   if (!granted) {
+    for (const reminderTime of data.tables.medicationReminderTimes) {
+      await setReminderTimeNotificationId(db, reminderTime.id, null);
+    }
+    for (const screeningReminder of data.tables.screeningReminders) {
+      await setScreeningReminderNotificationId(db, screeningReminder.id, null);
+    }
     return;
   }
 
