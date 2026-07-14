@@ -40,6 +40,7 @@ export default function ToilettenScreen() {
   const [locationDenied, setLocationDenied] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [offlineHint, setOfflineHint] = useState<string | null>(null);
+  const [placeError, setPlaceError] = useState<string | null>(null);
   const [isLocationResolved, setIsLocationResolved] = useState(false);
   const searchRequestIdRef = useRef(0);
 
@@ -123,14 +124,17 @@ export default function ToilettenScreen() {
         return;
       }
       console.error('[Toiletten] Toiletten konnten nicht geladen werden:', error);
-      await handleSearchFailure();
+      await handleSearchFailure(requestId);
     }
   }
 
-  async function handleSearchFailure() {
+  async function handleSearchFailure(requestId: number) {
     try {
       const db = await createEncryptedDb();
       const cached = await listCachedToilets(db);
+      if (requestId !== searchRequestIdRef.current) {
+        return;
+      }
       if (cached.length > 0) {
         setToilets(cached);
         setOfflineHint('Offline — zeigt zuletzt geladene Toiletten');
@@ -139,6 +143,9 @@ export default function ToilettenScreen() {
       }
     } catch (cacheError: unknown) {
       console.error('[Toiletten] Cache konnte nicht gelesen werden:', cacheError);
+    }
+    if (requestId !== searchRequestIdRef.current) {
+      return;
     }
     setLoadError('Toiletten konnten nicht geladen werden.');
     setOfflineHint(null);
@@ -169,14 +176,20 @@ export default function ToilettenScreen() {
   }
 
   async function handleSubmitForm(input: SavedPlaceInput) {
-    const db = await createEncryptedDb();
-    if (formState?.mode === 'edit') {
-      await updateSavedPlace(db, formState.place.id, input);
-    } else {
-      await createSavedPlace(db, input);
+    try {
+      const db = await createEncryptedDb();
+      if (formState?.mode === 'edit') {
+        await updateSavedPlace(db, formState.place.id, input);
+      } else {
+        await createSavedPlace(db, input);
+      }
+      setPlaceError(null);
+      setFormState(null);
+      await reloadSavedPlaces();
+    } catch (error: unknown) {
+      console.error('[Toiletten] Sicheren Ort speichern fehlgeschlagen:', error);
+      setPlaceError('Sicherer Ort konnte nicht gespeichert werden.');
     }
-    setFormState(null);
-    await reloadSavedPlaces();
   }
 
   function handleDeletePlace(place: SavedPlace) {
@@ -186,10 +199,16 @@ export default function ToilettenScreen() {
         text: 'Löschen',
         style: 'destructive',
         onPress: async () => {
-          const db = await createEncryptedDb();
-          await deleteSavedPlace(db, place.id);
-          setSelectedMarker(null);
-          await reloadSavedPlaces();
+          try {
+            const db = await createEncryptedDb();
+            await deleteSavedPlace(db, place.id);
+            setPlaceError(null);
+            setSelectedMarker(null);
+            await reloadSavedPlaces();
+          } catch (error: unknown) {
+            console.error('[Toiletten] Sicheren Ort löschen fehlgeschlagen:', error);
+            setPlaceError('Sicherer Ort konnte nicht gelöscht werden.');
+          }
         },
       },
     ]);
@@ -224,6 +243,11 @@ export default function ToilettenScreen() {
       {offlineHint && (
         <View style={styles.offlineBanner}>
           <Text style={styles.offlineText}>{offlineHint}</Text>
+        </View>
+      )}
+      {placeError && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorText}>{placeError}</Text>
         </View>
       )}
       <ToiletMapView
