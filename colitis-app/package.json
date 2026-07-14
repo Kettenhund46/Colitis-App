@@ -3,6 +3,8 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@noble/ciphers": "^2.2.0",
+    "@noble/hashes": "^2.2.0",
     "drizzle-orm": "^0.45.2",
     "expo": "~57.0.4",
     "expo-constants": "~57.0.3",
