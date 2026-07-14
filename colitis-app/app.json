@@ -42,7 +42,8 @@
         }
       ],
       "expo-secure-store",
-      "expo-notifications"
+      "expo-notifications",
+      "./plugins/withNearestToiletShortcut"
     ],
     "experiments": {
       "typedRoutes": true
