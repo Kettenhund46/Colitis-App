@@ -12,6 +12,7 @@ import {
   scheduleDailyReminder,
   cancelScheduledReminder,
 } from '../../../src/features/medications/notifications/notificationService';
+import { buildMedicationReminderContent } from '../../../src/features/medications/notifications/reminderContent';
 import { MedicationForm } from '../../../src/features/medications/components/MedicationForm';
 import { tokens } from '../../../src/styles/tokens';
 import type { Medication, MedicationInput } from '../../../src/features/medications/types';
@@ -64,10 +65,10 @@ export default function MedikamentBearbeitenScreen() {
         const granted = await requestNotificationPermission();
         if (granted) {
           for (const reminderTime of inserted) {
-            const notificationId = await scheduleDailyReminder(reminderTime.time, {
-              title: 'Medikamenten-Erinnerung',
-              body: `${input.name} – ${input.dose}`,
-            });
+            const notificationId = await scheduleDailyReminder(
+              reminderTime.time,
+              buildMedicationReminderContent(input)
+            );
             await setReminderTimeNotificationId(db, reminderTime.id, notificationId);
           }
         }

@@ -24,6 +24,19 @@ import { tokens } from '../../../src/styles/tokens';
 
 type BackupFormMode = 'export' | 'import' | null;
 
+function isBackupEnvelopeShape(value: unknown): value is BackupEnvelope {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const candidate = value as Record<string, unknown>;
+  return (
+    'version' in candidate &&
+    typeof candidate.saltHex === 'string' &&
+    typeof candidate.nonceHex === 'string' &&
+    typeof candidate.ciphertextHex === 'string'
+  );
+}
+
 export default function EinstellungenScreen() {
   const [isLockEnabled, setIsLockEnabled] = useState(false);
   const [isSettingPin, setIsSettingPin] = useState(false);
@@ -94,7 +107,7 @@ export default function EinstellungenScreen() {
       setBackupMessage(null);
     } catch (error: unknown) {
       console.error('[Einstellungen] Backup-Export fehlgeschlagen:', error);
-      setBackupMessage('Backup konnte nicht erstellt werden.');
+      setBackupMessage(error instanceof Error ? error.message : 'Backup konnte nicht erstellt werden.');
     }
   }
 
@@ -118,13 +131,18 @@ export default function EinstellungenScreen() {
       return;
     }
 
-    let envelope: BackupEnvelope;
+    let parsedEnvelope: unknown;
     try {
-      envelope = JSON.parse(pendingImportContent) as BackupEnvelope;
+      parsedEnvelope = JSON.parse(pendingImportContent);
     } catch {
       setBackupMessage('Sicherungsdatei ist kein gültiges Format.');
       return;
     }
+    if (!isBackupEnvelopeShape(parsedEnvelope)) {
+      setBackupMessage('Sicherungsdatei ist kein gültiges Format.');
+      return;
+    }
+    const envelope = parsedEnvelope;
     if (envelope.version !== BACKUP_FORMAT_VERSION) {
       setBackupMessage('Sicherungsdatei hat eine unbekannte oder nicht unterstützte Version.');
       return;
@@ -154,16 +172,25 @@ export default function EinstellungenScreen() {
         text: 'Wiederherstellen',
         style: 'destructive',
         onPress: async () => {
+          let db: Awaited<ReturnType<typeof createEncryptedDb>>;
           try {
-            const db = await createEncryptedDb();
+            db = await createEncryptedDb();
             await importBackupData(db, data);
-            await rescheduleAllReminders(db, data);
-            setBackupFormMode(null);
-            setPendingImportContent(null);
-            setBackupMessage('Backup erfolgreich wiederhergestellt.');
           } catch (error: unknown) {
             console.error('[Einstellungen] Backup-Import fehlgeschlagen:', error);
             setBackupMessage('Backup konnte nicht wiederhergestellt werden.');
+            return;
+          }
+
+          setBackupFormMode(null);
+          setPendingImportContent(null);
+
+          try {
+            await rescheduleAllReminders(db, data);
+            setBackupMessage('Backup erfolgreich wiederhergestellt.');
+          } catch (error: unknown) {
+            console.error('[Einstellungen] Erinnerungen konnten nicht neu geplant werden:', error);
+            setBackupMessage('Daten wiederhergestellt. Erinnerungen konnten nicht neu geplant werden.');
           }
         },
       },

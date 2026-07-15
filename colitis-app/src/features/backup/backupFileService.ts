@@ -17,7 +17,11 @@ export async function writeAndShareBackup(envelopeJson: string): Promise<void> {
   if (!isAvailable) {
     throw new Error('Teilen ist auf diesem Gerät nicht verfügbar.');
   }
-  await Sharing.shareAsync(file.uri);
+  try {
+    await Sharing.shareAsync(file.uri);
+  } finally {
+    file.delete();
+  }
 }
 
 export async function pickBackupFileContent(): Promise<string | null> {

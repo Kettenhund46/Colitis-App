@@ -5,6 +5,10 @@ import {
   scheduleDailyReminder,
   scheduleScreeningReminder,
 } from '../medications/notifications/notificationService';
+import {
+  buildMedicationReminderContent,
+  buildScreeningReminderContent,
+} from '../medications/notifications/reminderContent';
 import { setReminderTimeNotificationId } from '../medications/db/medicationsRepository';
 import { setScreeningReminderNotificationId } from '../medications/db/screeningRepository';
 import type { BackupDb } from './db/backupRepository';
@@ -28,21 +32,18 @@ export async function rescheduleAllReminders(db: BackupDb, data: BackupData): Pr
 
   for (const reminderTime of data.tables.medicationReminderTimes) {
     const medication = data.tables.medications.find((candidate) => candidate.id === reminderTime.medicationId);
-    const notificationId = await scheduleDailyReminder(reminderTime.time, {
-      title: 'Medikamenten-Erinnerung',
-      body: medication ? `Zeit für ${medication.name}` : 'Zeit für dein Medikament',
-    });
+    const content = medication
+      ? buildMedicationReminderContent(medication)
+      : { title: 'Medikamenten-Erinnerung', body: 'Zeit für dein Medikament' };
+    const notificationId = await scheduleDailyReminder(reminderTime.time, content);
     await setReminderTimeNotificationId(db, reminderTime.id, notificationId);
   }
 
   for (const screeningReminder of data.tables.screeningReminders) {
-    const notificationId = await scheduleScreeningReminder(screeningReminder.nextDueDate, {
-      title: 'Vorsorge-Koloskopie',
-      body:
-        screeningReminder.note && screeningReminder.note.length > 0
-          ? screeningReminder.note
-          : 'Deine Vorsorge-Koloskopie ist fällig.',
-    });
+    const notificationId = await scheduleScreeningReminder(
+      screeningReminder.nextDueDate,
+      buildScreeningReminderContent(screeningReminder)
+    );
     await setScreeningReminderNotificationId(db, screeningReminder.id, notificationId);
   }
 }
