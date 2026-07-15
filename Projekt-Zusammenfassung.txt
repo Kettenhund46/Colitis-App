@@ -1,5 +1,5 @@
 COLITIS-ULCEROSA-APP – PROJEKT-ZUSAMMENFASSUNG
-Stand: 2026-07-14
+Stand: 2026-07-15
 
 ===========================================================
 1. ZIEL DES PROJEKTS
@@ -343,6 +343,76 @@ Schritt 10 – Plan 6b "Sichere Orte, Offline-Fallback & Schnellzugriff"
     ist der komplette Toiletten-Finder (Schritt 6, Adrians persönlich
     wichtigste Funktion) fertig
 
+Schritt 11 – Plan 7 "App-Sperre & Backup" schreiben und umsetzen:
+  - Nächster Umsetzungsschritt aus der Spec, bewusst auf zwei Dinge
+    begrenzt: eine optionale PIN-/Biometrie-Sperre vor dem App-Inhalt und
+    ein manuelles, verschlüsseltes Voll-Backup (Export/Import) aller
+    persönlichen Daten; der in der Hauptspec ebenfalls erwähnte
+    PDF/CSV-Export für Arztgespräche blieb bewusst außen vor:
+    docs/superpowers/specs/2026-07-14-colitis-app-app-sperre-backup-design.md
+    und docs/superpowers/plans/2026-07-14-colitis-app-app-sperre-backup.md
+  - Vor der Umsetzung wurden sieben offene Design-Fragen mit Adrian
+    abgestimmt: Umfang (nur Sperre + Backup, kein PDF-Export), Sperr-
+    Auslöser (bei jedem App-Start und Vordergrund-Wechsel), Standard-
+    Zustand (standardmäßig aus, Opt-in), PIN vs. Biometrie (PIN
+    verpflichtend, Biometrie optionaler Schnellzugriff mit PIN als
+    Rückfallebene), Backup-Format (strukturierter Datenexport aller
+    Tabellen), Import-Verhalten (kompletter Ersatz mit Bestätigung) und
+    das Verhalten bei "PIN vergessen" (bewusst gewählt: Zurücksetzen
+    löscht unwiderruflich alle App-Daten statt einer schwächeren
+    Wiederherstellung, da es kein Konto/Server gibt, auf das man
+    zurückfallen könnte)
+  - Wichtige technische Korrektur während der Planung: für die
+    Backup-Verschlüsselung war zunächst `crypto-js` angedacht. Eine
+    Prüfung ergab, dass die Bibliothek nicht mehr gepflegt wird und seit
+    Version 4.0.0 für Zufallszahlen ein natives `Crypto`-Modul
+    voraussetzt, das in React Native nicht verfügbar ist – erneut im
+    gleichen Muster wie schon bei `react-native-maps` und
+    `expo-quick-actions` in früheren Schritten. Die Entscheidung fiel auf
+    `@noble/hashes` + `@noble/ciphers` (reines JavaScript, ohne
+    Abhängigkeiten, aktiv gepflegt), wobei sämtliche Zufallswerte über
+    das bereits vorhandene und geprüfte `expo-crypto` bezogen werden
+  - Eine weitere technische Klärung vor dem Schreiben des Plans: unklar
+    war, ob Datenbank-Transaktionen im verwendeten SQLite-Treiber
+    synchron oder asynchron ablaufen (wichtig für den atomaren
+    Backup-Import). Ein Blick in den tatsächlichen Treiber-Quellcode
+    (statt Verlass auf allgemeine Dokumentationsbeispiele) bestätigte:
+    synchron, ohne `await` im Transaktions-Callback – dieses Wissen
+    floss direkt und verbindlich in den Plan ein, um einen stillen
+    Korrektheits-Fehler beim Backup-Import zu vermeiden
+  - Umsetzung per Subagent-Driven Development in einem isolierten
+    Arbeitsbereich (8 Teilaufgaben: Domain-Typen + reine Logik →
+    Backup-Verschlüsselung → PIN-Speicherung + Biometrie-Wrapper →
+    App-Reset "PIN vergessen" + DB-Cache-Reset → Sperr-Bildschirm +
+    Root-Layout-Gate → Backup-Repository → Backup-Datei-Service +
+    Formular + Erinnerungen-Neuplanung → Einstellungen-Screen-
+    Verdrahtung), jede Teilaufgabe einzeln reviewt
+  - Drei Teilaufgaben brauchten je eine Korrekturrunde, alle auf echte,
+    aus dem Plan-Code selbst stammende Fehler zurückgeführt (nicht dem
+    jeweiligen Arbeits-Agenten angelastet): (1) ein Typprüfungs-Fehler in
+    einem Testmodul; (2) eine fehlende Testabsicherung für die
+    Fremdschlüssel-Löschreihenfolge beim Backup-Import – durch
+    probeweises Umdrehen der Löschreihenfolge wurde bestätigt, dass der
+    neue Test einen echten Regressions-Fall abfängt; (3) verwaiste,
+    nie stornierte Benachrichtigungen nach einer Backup-Wiederherstellung
+    sowie veraltete Benachrichtigungs-IDs in der Datenbank bei
+    verweigerter Benachrichtigungs-Berechtigung
+  - Die Abschluss-Review (mit dem leistungsfähigsten verfügbaren Modell)
+    verfolgte beide Kern-Abläufe (Sperr-Lebenszyklus und Backup-
+    Lebenszyklus) einmal vollständig End-to-End durch alle 8
+    Teilaufgaben hinweg und fand zwei weitere, erst im Zusammenspiel
+    sichtbare Probleme: eine irreführende Fehlermeldung, wenn nach einem
+    erfolgreichen Backup-Import nur die anschließende
+    Erinnerungs-Neuplanung fehlschlug (hätte fälschlich einen
+    Daten-Totalverlust suggeriert), sowie eine im Design-Dokument
+    zugesagte, aber nicht umgesetzte Aufräumung der temporären
+    Backup-Datei nach dem Teilen. Beide behoben, zusammen mit drei
+    kleineren Punkten (u. a. abweichender Erinnerungstext zwischen
+    Neuanlage und Wiederherstellung eines Medikaments), erneut geprüft
+    und bestätigt
+  - Nach erfolgreicher Prüfung wurde der Arbeitsbereich lokal in main
+    gemergt, aufgeräumt und auf Adrians Wunsch zu GitHub gepusht
+
 ===========================================================
 3. AKTUELLER STAND / WAS WURDE UMGESETZT
 ===========================================================
@@ -609,6 +679,62 @@ Qualitätssicherung (Plan 6b):
      Schnellzugriff-Hilfsfunktionen, nur kleinere unkritische
      Anmerkungen bewusst zurückgestellt
 
+Abgeschlossen (neu): Plan 7 "App-Sperre & Backup" (alle 8 Teilaufgaben
+implementiert, reviewt, dreimal korrigiert, in der Abschluss-Review nochmal
+korrigiert und gemergt) – damit sind alle 7 Kern-Umsetzungsschritte der
+Spec fertig
+
+Konkret ist jetzt zusätzlich vorhanden:
+
+n) App-Sperre & Backup (Einstellungen-Tab)
+   - Optionale, standardmäßig deaktivierte PIN-Sperre (6-stellig,
+     numerisch) vor dem gesamten App-Inhalt, zusätzliche Gate-Ebene direkt
+     nach dem bestehenden Datenbank-Lade-/Migrations-Gate; erscheint bei
+     jedem App-Start und bei jedem Wechsel aus dem Hintergrund
+   - Optionaler Biometrie-Schnellzugriff (Fingerabdruck/Gesicht), sofern
+     am Gerät eingerichtet – der App-PIN bleibt immer als Rückfallebene
+     nutzbar, keine geräteeigene Displaysperre als Fallback
+   - PIN wird nie im Klartext gespeichert (nur gesalzener SHA-256-Hash im
+     abgesicherten Systemspeicher)
+   - "PIN vergessen": mehrstufige Bestätigung (Abtippen des Wortes
+     "LÖSCHEN"), danach unwiderrufliches Löschen von Datenbank,
+     Datenbank-Schlüssel und PIN – die App verhält sich wie eine
+     Neuinstallation; ein vorher erstelltes Backup ist danach der einzige
+     Weg, die Daten zurückzubekommen
+   - Verschlüsseltes Voll-Backup der sieben persönlichen Tabellen
+     (Tagebuch, Auslöser, Medikamente, Einnahme-Log, Erinnerungszeiten,
+     sichere Orte, Vorsorge-Termine) – bewusst ohne die Wissensartikel
+     (werden automatisch neu geseedet) und ohne den Toiletten-Cache (füllt
+     sich automatisch neu)
+   - Eigenes Backup-Passwort (mind. 8 Zeichen, unabhängig vom PIN),
+     Verschlüsselung über PBKDF2 (100.000 Iterationen) + AES-256-GCM;
+     falsches Passwort wird beim Entschlüsseln eindeutig als Fehler
+     erkannt statt stillen Datenmülls zu liefern
+   - Export über den normalen Betriebssystem-Teilen-Dialog (kein
+     automatischer Cloud-Upload); Import über den Datei-Auswahl-Dialog mit
+     deutlicher Warnung vor dem unwiderruflichen Ersetzen aller
+     vorhandenen Daten, komplett in einer einzigen Datenbank-Transaktion
+     (alles oder nichts)
+   - Nach einem Import werden alle Erinnerungs-Benachrichtigungen
+     automatisch neu geplant, da die alten Benachrichtigungs-IDs im
+     Backup ungültig geworden sind
+
+Qualitätssicherung (Plan 7):
+   - 178 automatisierte Tests (Vitest) insgesamt, alle grün (52 neue Tests
+     für PIN-Logik, Backup-Verschlüsselung, Biometrie-Wrapper,
+     App-Reset, Backup-Repository und Erinnerungstext-Bausteine)
+   - Typprüfung (TypeScript) durchgehend fehlerfrei
+   - Jede der 8 Teilaufgaben einzeln reviewt (drei davon mit je einer
+     Korrekturrunde: Typprüfungs-Fehler in einem Testmodul; fehlende
+     Testabsicherung der Fremdschlüssel-Löschreihenfolge beim
+     Backup-Import, empirisch als echten Regressions-Fang bestätigt;
+     verwaiste Benachrichtigungen und veraltete Benachrichtigungs-IDs nach
+     einer Wiederherstellung), zusätzlich eine Abschluss-Review über den
+     gesamten Plan mit End-to-End-Durchlauf beider Kern-Abläufe (Sperre
+     und Backup) – zwei weitere echte Probleme gefunden und behoben
+     (irreführende Fehlermeldung nach teilweise fehlgeschlagenem Import;
+     fehlende Aufräumung der temporären Backup-Datei nach dem Teilen)
+
 ===========================================================
 4. WAS NOCH FEHLT / NÄCHSTE SCHRITTE
 ===========================================================
@@ -633,11 +759,11 @@ Schritt 1 bis Schritt 6 vollständig umgesetzt:
          persönlich wichtigste Funktion, in zwei Plänen umgesetzt
          (6a Karte/Standort/Overpass, 6b sichere Orte/Offline/
          Schnellzugriff)                                     — FERTIG
-  [ ] 7. App-Sperre & Backup (PIN/Biometrie-Sperre, verschlüsselter
-         Export/Import)
-         ← NÄCHSTER SCHRITT
+  [x] 7. App-Sperre & Backup (PIN/Biometrie-Sperre, verschlüsselter
+         Export/Import)                                       — FERTIG
   [ ] 8. Polish & Testlauf (Design-Feinschliff, echter Alltagstest,
          Fehlerbehandlung schärfen)
+         ← NÄCHSTER SCHRITT
 
 Danach, separat und noch nicht geplant:
   - Phase 2: News-/Leitlinien-Feed-Automatisierung (PubMed, AWMF-
@@ -705,6 +831,13 @@ Außerdem noch offen (kann nicht automatisiert erledigt werden):
 - docs/superpowers/plans/2026-07-13-colitis-app-toiletten-sichere-orte.md
     Der detaillierte Umsetzungsplan für Schritt 6b "Sichere Orte,
     Offline-Fallback & Schnellzugriff" (bereits umgesetzt)
+
+- docs/superpowers/specs/2026-07-14-colitis-app-app-sperre-backup-design.md
+    Design-Spec für Schritt 7 "App-Sperre & Backup" (bereits umgesetzt)
+
+- docs/superpowers/plans/2026-07-14-colitis-app-app-sperre-backup.md
+    Der detaillierte Umsetzungsplan für Schritt 7 "App-Sperre & Backup"
+    (bereits umgesetzt)
 
 - colitis-app/
     Der eigentliche Programmcode der App (Expo/TypeScript-Projekt)
