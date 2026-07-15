@@ -10,6 +10,7 @@ import {
   requestNotificationPermission,
   scheduleDailyReminder,
 } from '../../../src/features/medications/notifications/notificationService';
+import { buildMedicationReminderContent } from '../../../src/features/medications/notifications/reminderContent';
 import { MedicationForm } from '../../../src/features/medications/components/MedicationForm';
 import { tokens } from '../../../src/styles/tokens';
 import type { MedicationInput } from '../../../src/features/medications/types';
@@ -35,10 +36,10 @@ export default function NeuesMedikamentScreen() {
         const granted = await requestNotificationPermission();
         if (granted) {
           for (const reminderTime of created.reminderTimes) {
-            const notificationId = await scheduleDailyReminder(reminderTime.time, {
-              title: 'Medikamenten-Erinnerung',
-              body: `${created.name} – ${created.dose}`,
-            });
+            const notificationId = await scheduleDailyReminder(
+              reminderTime.time,
+              buildMedicationReminderContent(created)
+            );
             await setReminderTimeNotificationId(db, reminderTime.id, notificationId);
           }
         }

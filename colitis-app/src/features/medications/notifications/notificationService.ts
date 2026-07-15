@@ -52,3 +52,7 @@ export async function cancelScheduledReminder(notificationId: string): Promise<v
     console.error('[Medikamente] Erinnerung konnte nicht storniert werden:', error);
   }
 }
+
+export async function cancelAllScheduledReminders(): Promise<void> {
+  await Notifications.cancelAllScheduledNotificationsAsync();
+}

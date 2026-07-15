@@ -5,12 +5,16 @@ import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import migrations from '../drizzle/migrations';
 import { createEncryptedDb } from '../src/db/client';
+import { resetAppData } from '../src/lib/appReset';
+import { LockScreen } from '../src/features/appLock/components/LockScreen';
+import { useAppLockGate } from '../src/features/appLock/useAppLockGate';
 import * as schema from '../src/db/schema';
 import { tokens } from '../src/styles/tokens';
 
 export default function RootLayout() {
   const [db, setDb] = useState<ExpoSQLiteDatabase<typeof schema> | null>(null);
   const [initError, setInitError] = useState<string | null>(null);
+  const [dbGeneration, setDbGeneration] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -18,6 +22,7 @@ export default function RootLayout() {
       .then((createdDb) => {
         if (isMounted) {
           setDb(createdDb);
+          setInitError(null);
         }
       })
       .catch((error: unknown) => {
@@ -29,7 +34,13 @@ export default function RootLayout() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [dbGeneration]);
+
+  async function handleReset() {
+    await resetAppData();
+    setDb(null);
+    setDbGeneration((generation) => generation + 1);
+  }
 
   if (initError) {
     return (
@@ -47,11 +58,18 @@ export default function RootLayout() {
     );
   }
 
-  return <MigratedLayout db={db} />;
+  return <MigratedLayout db={db} onReset={handleReset} />;
 }
 
-function MigratedLayout({ db }: { db: ExpoSQLiteDatabase<typeof schema> }) {
+function MigratedLayout({
+  db,
+  onReset,
+}: {
+  db: ExpoSQLiteDatabase<typeof schema>;
+  onReset: () => Promise<void>;
+}) {
   const { success, error } = useMigrations(db, migrations);
+  const { isResolved, isLockRequired, unlock } = useAppLockGate();
 
   if (error) {
     console.error('[DB] Migration fehlgeschlagen:', error);
@@ -62,12 +80,16 @@ function MigratedLayout({ db }: { db: ExpoSQLiteDatabase<typeof schema> }) {
     );
   }
 
-  if (!success) {
+  if (!success || !isResolved) {
     return (
       <View style={styles.centered}>
         <Text style={styles.text}>Datenbank wird vorbereitet …</Text>
       </View>
     );
+  }
+
+  if (isLockRequired) {
+    return <LockScreen onUnlock={unlock} onReset={onReset} />;
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;

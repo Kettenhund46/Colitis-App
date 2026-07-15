@@ -3,7 +3,7 @@ import { drizzle, type ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 import { generateOrGetDbKey } from '../lib/encryption';
 import * as schema from './schema';
 
-const DB_FILE_NAME = 'colitis.db';
+export const DB_FILE_NAME = 'colitis.db';
 
 let cachedDbPromise: Promise<ExpoSQLiteDatabase<typeof schema>> | null = null;
 
@@ -44,4 +44,8 @@ async function openEncryptedDb(): Promise<ExpoSQLiteDatabase<typeof schema>> {
   await sqliteDb.execAsync('PRAGMA foreign_keys = ON;');
 
   return drizzle(sqliteDb, { schema });
+}
+
+export function resetDbCache(): void {
+  cachedDbPromise = null;
 }

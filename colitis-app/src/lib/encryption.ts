@@ -19,3 +19,7 @@ export async function generateOrGetDbKey(): Promise<string> {
   await SecureStore.setItemAsync(DB_KEY_STORAGE_KEY, newKey);
   return newKey;
 }
+
+export async function clearDbKey(): Promise<void> {
+  await SecureStore.deleteItemAsync(DB_KEY_STORAGE_KEY);
+}

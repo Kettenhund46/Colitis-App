@@ -19,6 +19,7 @@ import {
   cancelScheduledReminder,
   scheduleScreeningReminder,
 } from '../../../src/features/medications/notifications/notificationService';
+import { buildScreeningReminderContent } from '../../../src/features/medications/notifications/reminderContent';
 import { MedicationList } from '../../../src/features/medications/components/MedicationList';
 import { ScreeningReminderCard } from '../../../src/features/medications/components/ScreeningReminderCard';
 import { tokens } from '../../../src/styles/tokens';
@@ -106,10 +107,7 @@ export default function MedikamenteScreen() {
       let notificationId: string | null = null;
       const granted = await requestNotificationPermission();
       if (granted) {
-        notificationId = await scheduleScreeningReminder(input.nextDueDate, {
-          title: 'Vorsorge-Koloskopie',
-          body: input.note && input.note.length > 0 ? input.note : 'Deine Vorsorge-Koloskopie ist fällig.',
-        });
+        notificationId = await scheduleScreeningReminder(input.nextDueDate, buildScreeningReminderContent(input));
       }
 
       await setScreeningReminderNotificationId(db, current.id, notificationId);
