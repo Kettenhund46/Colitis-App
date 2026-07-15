@@ -81,3 +81,14 @@ export const cachedToilets = sqliteTable('cached_toilets', {
   name: text('name'),
   openingHours: text('opening_hours'),
 });
+
+export const cachedFeedItems = sqliteTable('cached_feed_items', {
+  id: text('id').primaryKey(),
+  source: text('source', { enum: ['pubmed', 'awmf', 'fda', 'ema'] }).notNull(),
+  category: text('category', { enum: ['studie', 'leitlinie', 'zulassung'] }).notNull(),
+  title: text('title').notNull(),
+  summaryDe: text('summary_de').notNull(),
+  publishedDate: text('published_date').notNull(),
+  url: text('url').notNull(),
+  isRead: integer('is_read', { mode: 'boolean' }).notNull().default(false),
+});
