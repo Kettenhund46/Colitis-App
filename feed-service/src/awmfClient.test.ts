@@ -112,4 +112,18 @@ describe('fetchAwmfItems', () => {
 
     expect(items.map((item) => item.id)).toEqual(['awmf:073-027:v2.1']);
   });
+
+  it('keeps processing the second guideline when the first fetch throws a network error', async () => {
+    fetchMock
+      .mockRejectedValueOnce(new Error('network unreachable'))
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve('<div class="version">Version 2.1</div><div class="date">01.02.2025</div>'),
+      });
+
+    const items = await fetchAwmfItems([]);
+
+    expect(items.map((item) => item.id)).toEqual(['awmf:073-027:v2.1']);
+  });
 });
