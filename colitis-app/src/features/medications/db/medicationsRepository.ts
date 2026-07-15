@@ -55,6 +55,13 @@ async function loadReminderTimes(db: MedicationsDb, medicationId: number): Promi
   return rows.map((row) => ({ id: row.id, time: row.time, notificationId: row.notificationId }));
 }
 
+async function assertMedicationExists(db: MedicationsDb, medicationId: number): Promise<void> {
+  const rows = await db.select({ id: medications.id }).from(medications).where(eq(medications.id, medicationId));
+  if (rows.length === 0) {
+    throw new Error(`Medikament mit ID ${medicationId} wurde nicht gefunden.`);
+  }
+}
+
 export async function listMedications(db: MedicationsDb): Promise<Medication[]> {
   const medicationRows = await db.select().from(medications).orderBy(asc(medications.name));
 
@@ -100,6 +107,8 @@ export async function updateMedication(
   medicationId: number,
   input: MedicationInput
 ): Promise<ReminderTimesReplaceResult> {
+  await assertMedicationExists(db, medicationId);
+
   await db
     .update(medications)
     .set({
@@ -125,6 +134,7 @@ export async function endMedication(
   medicationId: number,
   endDate: string
 ): Promise<MedicationReminderTime[]> {
+  await assertMedicationExists(db, medicationId);
   await db.update(medications).set({ endDate }).where(eq(medications.id, medicationId));
   return loadReminderTimes(db, medicationId);
 }
@@ -141,5 +151,6 @@ export async function setReminderTimeNotificationId(
 }
 
 export async function logMedicationTaken(db: MedicationsDb, medicationId: number, takenAt: string): Promise<void> {
+  await assertMedicationExists(db, medicationId);
   await db.insert(medicationLog).values({ medicationId, takenAt });
 }

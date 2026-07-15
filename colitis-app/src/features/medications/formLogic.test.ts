@@ -46,6 +46,29 @@ describe('validateMedicationForm', () => {
     });
     expect(errors).toEqual([]);
   });
+
+  it('rejects a start date that does not exist on the calendar', () => {
+    const errors = validateMedicationForm({
+      ...INITIAL_MEDICATION_FORM_STATE,
+      name: 'Salofalk',
+      dose: '500mg',
+      schedule: '1x täglich',
+      startDate: '2026-13-45',
+    });
+    expect(errors).toContain('Bitte ein gültiges Startdatum eingeben (JJJJ-MM-TT).');
+  });
+
+  it('rejects an end date before the start date', () => {
+    const errors = validateMedicationForm({
+      ...INITIAL_MEDICATION_FORM_STATE,
+      name: 'Salofalk',
+      dose: '500mg',
+      schedule: '1x täglich',
+      startDate: '2026-07-12',
+      endDate: '2026-07-01',
+    });
+    expect(errors).toContain('Das Enddatum darf nicht vor dem Startdatum liegen.');
+  });
 });
 
 describe('buildMedicationInput', () => {
