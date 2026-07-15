@@ -66,6 +66,33 @@ describe('buildEmaFeedItems', () => {
 
     expect(buildEmaFeedItems(SAMPLE_RSS, WATCHLIST, previousItems)).toEqual([]);
   });
+
+  it('assigns distinct ids to recurring CHMP meeting-highlights articles whose URLs only differ past the old 60-char cutoff', () => {
+    // Both links share a long common prefix (well over 60 chars once slugified)
+    // and only differ in the trailing date range, mirroring EMA's real monthly
+    // "meeting highlights" URL pattern. Regression test for the truncated-slug id
+    // collision bug.
+    const chmpRss = `<?xml version="1.0"?>
+<rss><channel>
+<item>
+<title>Meeting highlights from the Committee for Medicinal Products for Human Use (CHMP) 15-18 July 2026, including Vedolizumab</title>
+<link>https://www.ema.europa.eu/en/news/meeting-highlights-committee-medicinal-products-human-use-chmp-15-18-july-2026</link>
+<description>Vedolizumab was discussed at this CHMP meeting.</description>
+<pubDate>Fri, 18 Jul 2026 10:00:00 GMT</pubDate>
+</item>
+<item>
+<title>Meeting highlights from the Committee for Medicinal Products for Human Use (CHMP) 14-17 April 2026, including Vedolizumab</title>
+<link>https://www.ema.europa.eu/en/news/meeting-highlights-committee-medicinal-products-human-use-chmp-14-17-april-2026</link>
+<description>Vedolizumab was discussed at this CHMP meeting.</description>
+<pubDate>Fri, 17 Apr 2026 10:00:00 GMT</pubDate>
+</item>
+</channel></rss>`;
+
+    const items = buildEmaFeedItems(chmpRss, WATCHLIST);
+
+    expect(items).toHaveLength(2);
+    expect(items[0].id).not.toBe(items[1].id);
+  });
 });
 
 const fetchMock = vi.fn();

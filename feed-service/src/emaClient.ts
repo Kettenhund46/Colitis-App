@@ -51,11 +51,14 @@ function matchesWatchlist(item: RssItem, watchlist: WatchedDrug[]): boolean {
 }
 
 function slugifyForId(value: string): string {
+  // No length truncation: recurring monthly articles (e.g. CHMP meeting
+  // highlights) share a long common prefix and only differ in a suffix
+  // (e.g. a date range) that can fall past any fixed cutoff, which would
+  // collapse distinct articles into the same id and break dedup.
   return value
     .replace(/[^a-zA-Z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
-    .toLowerCase()
-    .slice(0, 60);
+    .toLowerCase();
 }
 
 export function buildEmaFeedItems(xml: string, watchlist: WatchedDrug[], previousItems: FeedItem[] = []): FeedItem[] {
