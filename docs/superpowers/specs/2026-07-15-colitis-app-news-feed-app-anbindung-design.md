@@ -145,9 +145,9 @@ Die Repository-Funktion `syncFeedItems(db, items: FeedItem[])`:
 - Gelesene Einträge werden optisch abgesetzt (reduzierte Deckkraft /
   gedämpfte Textfarbe über bestehende Design-Tokens), bleiben aber normal
   antippbar.
-- Antippen einer Karte: öffnet `url` über `expo-web-browser`
-  (`WebBrowser.openBrowserAsync`, identisch zum bestehenden Muster bei
-  Wissensartikel-Quellenangaben) UND ruft optimistisch sofort
+- Antippen einer Karte: öffnet `url` über `Linking.openURL` (identisch zum
+  bestehenden Muster bei Wissensartikel-Quellenangaben und beim
+  Navigations-Link im Toiletten-Finder) UND ruft optimistisch sofort
   `markFeedItemAsRead` auf (lokaler State wird sofort aktualisiert, der
   DB-Schreibvorgang läuft im Hintergrund; schlägt er fehl, wird das
   geloggt, aber weder das Öffnen des Links noch die UI blockiert).
