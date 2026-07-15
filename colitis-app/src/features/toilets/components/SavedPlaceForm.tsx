@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   chip: {
     paddingVertical: tokens.spacing.xs,
     paddingHorizontal: tokens.spacing.md,
-    borderRadius: 16,
+    borderRadius: tokens.radius.pill,
     borderWidth: 1,
     borderColor: tokens.colors.border,
   },

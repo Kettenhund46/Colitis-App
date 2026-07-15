@@ -105,7 +105,7 @@ export function LockScreen({ onUnlock, onReset }: LockScreenProps) {
           einzige Weg, die Daten wiederzubekommen.
         </Text>
         {resetError && <Text style={styles.warning}>{resetError}</Text>}
-        <Text style={styles.label}>Tippe zur Bestätigung "{RESET_CONFIRMATION_PHRASE}" ein:</Text>
+        <Text style={styles.label}>Tippe zur Bestätigung „{RESET_CONFIRMATION_PHRASE}“ ein:</Text>
         <TextInput
           style={styles.textInput}
           placeholderTextColor={tokens.colors.textSecondary}

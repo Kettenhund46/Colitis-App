@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing.md,
   },
   button: {
-    backgroundColor: tokens.colors.primary,
+    backgroundColor: tokens.colors.accent,
     borderRadius: 8,
     paddingVertical: tokens.spacing.sm,
     paddingHorizontal: tokens.spacing.lg,
