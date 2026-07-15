@@ -51,11 +51,15 @@ export default function EinstellungenScreen() {
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
-      isAppLockEnabled().then((enabled) => {
-        if (isActive) {
-          setIsLockEnabled(enabled);
-        }
-      });
+      isAppLockEnabled()
+        .then((enabled) => {
+          if (isActive) {
+            setIsLockEnabled(enabled);
+          }
+        })
+        .catch((error: unknown) => {
+          console.error('[Einstellungen] Sperrstatus konnte nicht gelesen werden:', error);
+        });
       return () => {
         isActive = false;
       };
