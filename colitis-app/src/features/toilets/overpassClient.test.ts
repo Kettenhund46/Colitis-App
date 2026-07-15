@@ -51,21 +51,23 @@ describe('fetchNearbyToilets', () => {
 
   it('aborts the request after a client-side timeout and reports a German error', async () => {
     vi.useFakeTimers();
-    fetchMock.mockImplementationOnce((_url: string, options: { signal: AbortSignal }) => {
-      return new Promise((_resolve, reject) => {
-        options.signal.addEventListener('abort', () => {
-          const abortError = new Error('The operation was aborted');
-          abortError.name = 'AbortError';
-          reject(abortError);
+    try {
+      fetchMock.mockImplementationOnce((_url: string, options: { signal: AbortSignal }) => {
+        return new Promise((_resolve, reject) => {
+          options.signal.addEventListener('abort', () => {
+            const abortError = new Error('The operation was aborted');
+            abortError.name = 'AbortError';
+            reject(abortError);
+          });
         });
       });
-    });
 
-    const resultPromise = fetchNearbyToilets({ latitude: 0, longitude: 0 }, 1500);
-    const assertion = expect(resultPromise).rejects.toThrow('Overpass-Anfrage abgebrochen (Zeitüberschreitung).');
-    await vi.advanceTimersByTimeAsync(OVERPASS_CLIENT_TIMEOUT_MS);
-    await assertion;
-
-    vi.useRealTimers();
+      const resultPromise = fetchNearbyToilets({ latitude: 0, longitude: 0 }, 1500);
+      const assertion = expect(resultPromise).rejects.toThrow('Overpass-Anfrage abgebrochen (Zeitüberschreitung).');
+      await vi.advanceTimersByTimeAsync(OVERPASS_CLIENT_TIMEOUT_MS);
+      await assertion;
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
