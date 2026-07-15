@@ -46,4 +46,19 @@ describe('fetchWithTimeout', () => {
       vi.useRealTimers();
     }
   });
+
+  it('forwards method, headers and body from the given init', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200 });
+
+    await fetchWithTimeout('https://example.com', 'timed out', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: '{"a":1}',
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://example.com',
+      expect.objectContaining({ method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"a":1}' })
+    );
+  });
 });
