@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Text, TextInput, View, StyleSheet } from 'react-native';
+import { Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
 import { seedKnowledgeArticles, listKnowledgeArticles } from '../../../src/features/knowledge/db/knowledgeRepository';
 import { filterKnowledgeArticles } from '../../../src/features/knowledge/search';
@@ -55,6 +55,14 @@ export default function WissenScreen() {
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Neuigkeiten ansehen"
+        style={styles.newsLink}
+        onPress={() => router.push('/wissen/feed')}
+      >
+        <Text style={styles.newsLinkText}>Neuigkeiten ansehen →</Text>
+      </Pressable>
       <TextInput
         style={styles.searchInput}
         placeholder="Artikel durchsuchen …"
@@ -91,6 +99,18 @@ const styles = StyleSheet.create({
   errorText: {
     color: tokens.colors.danger,
     fontSize: tokens.typography.fontSize.sm,
+    textAlign: 'center',
+  },
+  newsLink: {
+    backgroundColor: tokens.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: tokens.colors.border,
+    padding: tokens.spacing.md,
+  },
+  newsLinkText: {
+    color: tokens.colors.primary,
+    fontSize: tokens.typography.fontSize.sm,
+    fontWeight: tokens.typography.fontWeight.medium,
     textAlign: 'center',
   },
   searchInput: {
