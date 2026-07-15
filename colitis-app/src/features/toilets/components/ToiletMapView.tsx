@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { MAP_HTML } from '../mapHtml.generated';
+import { tokens } from '../../../styles/tokens';
 import type { Coordinates, SavedPlace, Toilet, WebViewToNativeMessage } from '../types';
 
 interface ToiletMapViewProps {
@@ -23,6 +24,7 @@ export function ToiletMapView({
 }: ToiletMapViewProps) {
   const webViewRef = useRef<WebView>(null);
   const [isReady, setIsReady] = useState(false);
+  const [hasLoadError, setHasLoadError] = useState(false);
   const isRegionChangeEchoRef = useRef(false);
 
   useEffect(() => {
@@ -70,12 +72,26 @@ export function ToiletMapView({
     }
   }
 
+  function handleLoadError() {
+    setHasLoadError(true);
+  }
+
+  if (hasLoadError) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Karte konnte nicht geladen werden.</Text>
+      </View>
+    );
+  }
+
   return (
     <WebView
       ref={webViewRef}
       style={styles.webview}
       source={{ html: MAP_HTML }}
       onMessage={handleMessage}
+      onError={handleLoadError}
+      onHttpError={handleLoadError}
       originWhitelist={['*']}
     />
   );
@@ -84,5 +100,17 @@ export function ToiletMapView({
 const styles = StyleSheet.create({
   webview: {
     flex: 1,
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: tokens.spacing.lg,
+    backgroundColor: tokens.colors.background,
+  },
+  errorText: {
+    color: tokens.colors.danger,
+    fontSize: tokens.typography.fontSize.md,
+    textAlign: 'center',
   },
 });
