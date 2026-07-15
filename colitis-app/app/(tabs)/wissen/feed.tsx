@@ -108,7 +108,7 @@ export default function NewsFeedScreen() {
           <Text style={styles.offlineText}>{offlineHint}</Text>
         </View>
       )}
-      {isLoading ? (
+      {isLoading && items.length === 0 ? (
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Neuigkeiten werden geladen …</Text>
         </View>

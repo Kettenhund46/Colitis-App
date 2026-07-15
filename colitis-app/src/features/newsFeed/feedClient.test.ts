@@ -17,6 +17,59 @@ describe('parseFeedPublication', () => {
       'Feed-Antwort hat ein unerwartetes Format.'
     );
   });
+
+  it('returns the publication when all items have a valid shape', () => {
+    const data = {
+      generatedAt: '2026-07-15T05:00:00.000Z',
+      items: [
+        {
+          id: '1',
+          source: 'pubmed',
+          category: 'studie',
+          title: 'Titel',
+          summaryDe: 'Zusammenfassung',
+          publishedDate: '2026-07-01',
+          url: 'https://example.com/1',
+        },
+      ],
+    };
+    expect(parseFeedPublication(data)).toEqual(data);
+  });
+
+  it('throws when an item has an unrecognized source', () => {
+    const data = {
+      generatedAt: '2026-07-15T05:00:00.000Z',
+      items: [
+        {
+          id: '1',
+          source: 'unknown',
+          category: 'studie',
+          title: 'Titel',
+          summaryDe: 'Zusammenfassung',
+          publishedDate: '2026-07-01',
+          url: 'https://example.com/1',
+        },
+      ],
+    };
+    expect(() => parseFeedPublication(data)).toThrow('Feed-Antwort hat ein unerwartetes Format.');
+  });
+
+  it('throws when an item is missing a required field', () => {
+    const data = {
+      generatedAt: '2026-07-15T05:00:00.000Z',
+      items: [
+        {
+          id: '1',
+          source: 'pubmed',
+          category: 'studie',
+          summaryDe: 'Zusammenfassung',
+          publishedDate: '2026-07-01',
+          url: 'https://example.com/1',
+        },
+      ],
+    };
+    expect(() => parseFeedPublication(data)).toThrow('Feed-Antwort hat ein unerwartetes Format.');
+  });
 });
 
 const fetchMock = vi.fn();

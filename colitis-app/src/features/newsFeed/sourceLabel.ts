@@ -8,5 +8,5 @@ const SOURCE_LABELS: Record<FeedItem['source'], string> = {
 };
 
 export function sourceLabelFor(source: FeedItem['source']): string {
-  return SOURCE_LABELS[source];
+  return SOURCE_LABELS[source] ?? source;
 }
