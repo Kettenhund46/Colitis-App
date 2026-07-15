@@ -1,0 +1,31 @@
+name: Update News Feed
+
+on:
+  schedule:
+    - cron: '0 5 * * 1'
+  workflow_dispatch: {}
+
+jobs:
+  update-feed:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        working-directory: feed-service
+        run: npm ci
+
+      - name: Run feed update
+        working-directory: feed-service
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          FEED_PUBLISH_TOKEN: ${{ secrets.FEED_PUBLISH_TOKEN }}
+        run: npx tsx src/index.ts

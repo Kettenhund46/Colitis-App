@@ -1,0 +1,1 @@
+export const HTTP_CLIENT_TIMEOUT_MS = 15000;
