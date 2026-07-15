@@ -470,6 +470,87 @@ Schritt 12 – Plan 8 "Polish & Testlauf" schreiben und umsetzen:
     sind alle 8 groben Umsetzungsschritte der ursprünglichen Phase-1-Spec
     fertig
 
+Schritt 13 – Phase 2, Teil A "News-Feed Datenquelle" schreiben und umsetzen:
+  - Erster Schritt von Phase 2 (News-/Leitlinien-Feed-Automatisierung), bisher
+    nur grob als Idee vermerkt. Wegen des Umfangs bewusst wie schon Schritt 6
+    in zwei Teile aufgeteilt: Teil A (Server-seitige Datenquelle, dieser
+    Schritt) und Teil B (Anbindung in der App, noch nicht geplant):
+    docs/superpowers/specs/2026-07-15-colitis-app-news-feed-datenquelle-design.md
+    und
+    docs/superpowers/plans/2026-07-15-colitis-app-news-feed-datenquelle.md
+  - Vor der Umsetzung wurden mehrere grundsätzliche Design-Fragen mit Adrian
+    abgestimmt: Zweck des Feeds (passiver Nachschlage-Feed statt aktiver
+    Benachrichtigungen), Hosting des Cronjobs (GitHub Actions statt eigenem
+    Server), Sichtbarkeit der Ausgabedatei (öffentlich, da nur aggregierte
+    Fachmeldungen ohne persönliche Daten), Umfang der PubMed-Filterung (eng
+    gefiltert auf Studientyp statt aller Treffer), Umfang von
+    AWMF/FDA/EMA-Überwachung (gezielt auf zwei bekannte Leitlinien bzw. die
+    bereits in der Wissens-DB gelistete Wirkstoffliste statt breiter Suche),
+    Sprache der Feed-Einträge (deutsche KI-Kurzzusammenfassung per Claude API
+    statt reiner Original-Titel), Umgang mit älteren Einträgen (rollierendes
+    6-Monats-Fenster statt unbegrenzt wachsender Liste) und Offline-/
+    Gelesen-Verhalten auf App-Seite (beides gewünscht, wird Teil B)
+  - Wichtige technische Korrektur während der Planung: GitHub Pages auf einem
+    privaten Repository setzt einen GitHub Pro/Team/Enterprise-Plan voraus;
+    Adrians Account ist auf dem Free-Plan. Daraufhin wurde die Architektur auf
+    ein separates, eigenes öffentliches Mini-Repo (colitis-app-feed) für die
+    veröffentlichte Feed-Datei umgestellt, wodurch sich GitHub Pages sogar
+    komplett erübrigt – die App kann die Datei direkt über eine
+    raw.githubusercontent.com-URL ohne jede Authentifizierung laden
+  - Umsetzung per Subagent-Driven Development in einem isolierten
+    Arbeitsbereich (8 Teilaufgaben: Projekt-Grundgerüst → Datum-/Fenster-/
+    Merge-Logik → HTTP-Hilfsfunktion + PubMed-Client → AWMF-Client →
+    FDA-/EMA-Client → deutsche Kurzzusammenfassung per Claude API →
+    Veröffentlichung über die GitHub Contents API → Orchestrator,
+    Einstiegspunkt und GitHub-Actions-Workflow), jede Teilaufgabe einzeln
+    reviewt
+  - Wichtiger Zwischenfall bei Teilaufgabe 4 (AWMF-Client): der geplante Plan
+    verlangte einen Live-Format-Check der echten AWMF-Leitlinien-Seiten vor
+    Abschluss der Aufgabe. Dieser Check ergab, dass die AWMF-Register-Seiten
+    eine vollständig client-seitig gerenderte Angular-Anwendung sind – ein
+    einfacher HTTP-Abruf (wie ihn der Cronjob nutzt) bekommt nur ein leeres
+    HTML-Gerüst zurück, niemals den sichtbaren Versions-/Datumstext. Der
+    Arbeits-Agent fand zwar die echte, interne JSON-API sowie einen darin
+    eingebetteten Zugangsschlüssel im minifizierten JavaScript der Seite,
+    hat diesen aber bewusst nicht verwendet, getestet oder committet, da das
+    Verwenden eines fremden, nicht für Dritte vorgesehenen "Admin"-Schlüssels
+    eine Entscheidung ist, die nicht eigenmächtig getroffen werden sollte.
+    Zusätzlich sperrt die robots.txt von awmf.org explizit den Zugriff durch
+    ClaudeBot. Dies wurde transparent an Adrian eskaliert; die Entscheidung
+    fiel darauf, den bereits geschriebenen, sicheren Code (schlägt beim
+    Parsen kontrolliert fehl, loggt, überspringt, stürzt nie ab) unverändert
+    zu übernehmen und die AWMF-Quelle vorerst als bewusst inaktiv zu führen,
+    statt gegen den erklärten Willen von AWMF zu scrapen. PubMed und FDA/EMA
+    sind davon unberührt und funktionieren regulär
+  - Bei Teilaufgabe 5 (FDA-/EMA-Client) ergab derselbe vorgeschriebene
+    Live-Check: openFDA entspricht exakt der angenommenen Struktur, aber die
+    im Plan vorgesehene EMA-RSS-URL lieferte live einen 404-Fehler. Der
+    Arbeits-Agent fand und nutzte die tatsächlich aktuelle URL
+    (news.xml statt rss.xml) – eine reine technische Korrektur ohne
+    Sperr-/Rechte-Thematik, transparent dokumentiert
+  - Zwei Teilaufgaben brauchten je eine Korrekturrunde, beide mit echten,
+    von der Review gefundenen Fehlern: (1) beim AWMF-Client fehlte ein
+    automatisierter Test für den Netzwerkfehler-Pfad (nur der
+    Parse-Fehler-Pfad war abgedeckt) – ergänzt; (2) beim EMA-Client kürzte
+    die ID-Bildung lange URL-Pfade auf 60 Zeichen, wodurch wiederkehrende
+    Inhalte (z. B. monatliche CHMP-Meldungen) auf dieselbe ID kollidiert
+    wären und echte neue Treffer stillschweigend als "bereits bekannt"
+    verworfen worden wären – die Kürzung wurde entfernt und mit einem
+    Regressionstest abgesichert
+  - Die Abschluss-Review (mit dem leistungsfähigsten verfügbaren Modell)
+    prüfte gezielt das Zusammenspiel aller 8 Teilaufgaben (u. a. ob der
+    Einstiegspunkt wirklich alle echten Funktionen mit den richtigen
+    Signaturen verdrahtet, nicht nur die Test-Attrappen) und bestätigte
+    "bereit zum Zusammenführen"; einzige Anmerkung war ein durch das
+    6-Monats-Fenster bedingter, unschädlicher Nebeneffekt (ein FDA-Eintrag
+    außerhalb des Fensters wird trotzdem einmal unnötig zusammengefasst,
+    bevor er beim Veröffentlichen wieder herausfällt) – bewusst als
+    Backlog-Punkt zurückgestellt. Zwei kostenlose, ausdrücklich empfohlene
+    Workflow-Härtungen (eingeschränkte Berechtigungen, reproduzierbare
+    Installation über npm ci) wurden direkt noch mit übernommen
+  - Nach erfolgreicher Prüfung wurde der Arbeitsbereich lokal in main
+    gemergt, aufgeräumt und auf Adrians Wunsch zu GitHub gepusht
+
 ===========================================================
 3. AKTUELLER STAND / WAS WURDE UMGESETZT
 ===========================================================
@@ -859,6 +940,50 @@ Qualitätssicherung (Plan 8):
      nebeneinander behalten hatten (ja) – eine letzte kleine Inkonsistenz
      wurde direkt noch mit erledigt
 
+Abgeschlossen (neu): Phase 2, Teil A "News-Feed Datenquelle" (alle 8
+Teilaufgaben implementiert, reviewt, zweimal korrigiert und gemergt) – erster
+Baustein von Phase 2, unabhängig vom bisherigen App-Code
+
+Konkret ist jetzt zusätzlich vorhanden:
+
+p) feed-service/ – eigenständiger Cronjob-Dienst (kein Teil der App)
+   - Neuer, von der Expo-App komplett unabhängiger TypeScript-Ordner mit
+     eigenem package.json, ausgeführt über tsx, ohne neue Netzwerk-
+     Abhängigkeit (natives fetch)
+   - Wöchentlicher GitHub-Actions-Workflow (Montag 05:00 UTC, zusätzlich
+     manuell auslösbar), der PubMed (eng gefiltert auf Studien/Leitlinien/
+     systematische Übersichtsarbeiten zu Colitis Ulcerosa), zwei bekannte
+     AWMF-Leitlinien (Colitis ulcerosa, Klinische Ernährung bei CED) sowie
+     FDA-Zulassungen und EMA-Meldungen (beide gefiltert auf die bereits in
+     der Wissens-DB gelistete Wirkstoffliste) abfragt
+   - Neue Treffer werden per Claude API (Haiku-Modell) zu einem kurzen,
+     laienverständlichen deutschen Klappentext im ruhigen Ton der App
+     zusammengefasst
+   - Ergebnis wird als feed.json mit rollierendem 6-Monats-Fenster in einem
+     separaten, eigenen öffentlichen Mini-Repo (colitis-app-feed)
+     veröffentlicht (über die GitHub Contents API, kein git-Kommando nötig),
+     dort ohne Authentifizierung über eine raw.githubusercontent.com-URL
+     abrufbar – Schnittstelle für den späteren Teil B (App-Anbindung)
+   - AWMF-Quelle ist aktuell bewusst inaktiv: die echte AWMF-Seite lässt
+     sich mit einem einfachen HTTP-Abruf technisch nicht auslesen (siehe
+     Schritt 13); der Code ist sicher (schlägt kontrolliert fehl, stürzt
+     nie ab), liefert aber vorerst keine echten Leitlinien-Updates
+
+Qualitätssicherung (Phase 2, Teil A):
+   - 71 automatisierte Tests (Vitest) insgesamt, alle grün
+   - Typprüfung (TypeScript) durchgehend fehlerfrei
+   - Jede der 8 Teilaufgaben einzeln reviewt (zwei davon mit je einer
+     Korrekturrunde: fehlender Netzwerkfehler-Test beim AWMF-Client;
+     ID-Kollisionsfehler durch Slug-Kürzung beim EMA-Client, empirisch als
+     echten Fang bestätigt), zusätzlich eine Abschluss-Review über den
+     gesamten Plan (Verdikt "bereit zum Zusammenführen"), die gezielt
+     prüfte, ob der Einstiegspunkt alle echten Funktionen aus allen 8
+     Teilaufgaben korrekt und mit den richtigen Signaturen verdrahtet
+   - Live-Verifikation gegen die echten externen Quellen war explizit Teil
+     der betroffenen Teilaufgaben (nicht nur Tests gegen Attrappen) – dabei
+     wurden die AWMF-Einschränkung und die falsche EMA-URL aus dem Plan
+     gefunden und behandelt, bevor der Code gemergt wurde
+
 ===========================================================
 4. WAS NOCH FEHLT / NÄCHSTE SCHRITTE
 ===========================================================
@@ -890,10 +1015,13 @@ mittlerweile vollständig umgesetzt:
 
 Damit ist die komplette Phase-1-Spec (MVP) umgesetzt.
 
-Als nächstes, separat und noch nicht geplant:
-  - Phase 2: News-/Leitlinien-Feed-Automatisierung (PubMed, AWMF-
-    Leitlinien, FDA/EMA-Meldungen) – erfordert einen kleinen Server/
-    Cronjob, wird als eigene Spec geplant, sobald Phase 1 fertig läuft
+Phase 2 (News-/Leitlinien-Feed-Automatisierung) ist begonnen:
+  [x] Teil A: Server-seitige Datenquelle (feed-service/, wöchentlicher
+      GitHub-Actions-Cronjob, Veröffentlichung ins Mini-Repo
+      colitis-app-feed)                                        — FERTIG
+  [ ] Teil B: Anbindung in der App (Wissen-Tab, Anzeige, Offline-Cache,
+      Gelesen-Status) – noch nicht geplant, nächster Schritt sobald
+      gewünscht
 
 Außerdem noch offen (kann nicht automatisiert erledigt werden):
   - Manueller Test auf einem echten Android-Gerät bzw. Emulator
@@ -902,6 +1030,18 @@ Außerdem noch offen (kann nicht automatisiert erledigt werden):
     benötigt, was in dieser Entwicklungsumgebung nicht zur Verfügung
     steht. Eine strukturierte Checkliste dafür liegt bereits bereit:
     docs/superpowers/colitis-app-alltagstest-checkliste.md
+  - Manuelle Einrichtung für Phase 2 Teil A (feed-service/README.md
+    beschreibt die Schritte im Detail): das öffentliche Mini-Repo
+    colitis-app-feed bei GitHub anlegen sowie die zwei Secrets
+    ANTHROPIC_API_KEY und FEED_PUBLISH_TOKEN im privaten Colitis-App-Repo
+    hinterlegen. Erst danach liefert der bereits gemergte Cronjob echte
+    Ergebnisse
+  - AWMF-Leitlinien-Überwachung ist aktuell bewusst inaktiv (siehe
+    Schritt 13): die echte AWMF-Seite lässt sich technisch nicht per
+    einfachem HTTP-Abruf auslesen, und robots.txt sperrt automatisierten
+    Zugriff explizit. Für später vorgemerkt, falls sich das ändert (z. B.
+    ein offizieller, öffentlicher Weg von AWMF) oder Adrian eine andere
+    Lösung wünscht
 
 ===========================================================
 5. WICHTIGE DATEIEN IM PROJEKT
@@ -977,9 +1117,27 @@ Außerdem noch offen (kann nicht automatisiert erledigt werden):
     Android-Gerät (noch nicht abgehakt, kein Testgerät in dieser
     Entwicklungsumgebung verfügbar)
 
+- docs/superpowers/specs/2026-07-15-colitis-app-news-feed-datenquelle-design.md
+    Design-Spec für Phase 2, Teil A "News-Feed Datenquelle" (bereits
+    umgesetzt)
+
+- docs/superpowers/plans/2026-07-15-colitis-app-news-feed-datenquelle.md
+    Der detaillierte Umsetzungsplan für Phase 2, Teil A "News-Feed
+    Datenquelle" (bereits umgesetzt)
+
+- feed-service/
+    Der eigenständige Cronjob-Dienst für Phase 2, Teil A (TypeScript,
+    unabhängig von colitis-app/); feed-service/README.md beschreibt die
+    noch offene manuelle Einrichtung (öffentliches Mini-Repo + Secrets)
+
 - colitis-app/
     Der eigentliche Programmcode der App (Expo/TypeScript-Projekt)
 
 - GitHub: https://github.com/Kettenhund46/Colitis-App.git
     Privates Remote-Repository, aktueller Stand von main ist dort
     gesichert
+
+- GitHub: https://github.com/Kettenhund46/colitis-app-feed
+    Öffentliches Mini-Repo für die veröffentlichte Feed-Datei (feed.json)
+    aus Phase 2, Teil A – muss von Adrian noch manuell angelegt werden
+    (siehe feed-service/README.md)
