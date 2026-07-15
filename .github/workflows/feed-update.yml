@@ -8,6 +8,8 @@ on:
 jobs:
   update-feed:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,7 +21,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: feed-service
-        run: npm install
+        run: npm ci
 
       - name: Run feed update
         working-directory: feed-service
