@@ -34,6 +34,7 @@ export default function MedikamenteScreen() {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [screeningReminder, setScreeningReminder] = useState<ScreeningReminder | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     configureNotificationHandling();
@@ -42,6 +43,7 @@ export default function MedikamenteScreen() {
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
+      setIsLoading(true);
 
       createEncryptedDb()
         .then(async (db) => {
@@ -53,12 +55,14 @@ export default function MedikamenteScreen() {
             setMedications(loadedMedications);
             setScreeningReminder(loadedScreening);
             setError(null);
+            setIsLoading(false);
           }
         })
         .catch((loadError: unknown) => {
           console.error('[Medikamente] Laden fehlgeschlagen:', loadError);
           if (isActive) {
             setError('Medikamente konnten nicht geladen werden.');
+            setIsLoading(false);
           }
         });
 
@@ -127,13 +131,19 @@ export default function MedikamenteScreen() {
         </View>
       )}
       <ScreeningReminderCard reminder={screeningReminder} onSave={handleSaveScreeningReminder} />
-      <MedicationList
-        medications={medications}
-        today={new Date()}
-        onTakenToday={handleTakenToday}
-        onEnd={handleEnd}
-        onEdit={(medicationId) => router.push(`/medikamente/${medicationId}`)}
-      />
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Medikamente werden geladen …</Text>
+        </View>
+      ) : (
+        <MedicationList
+          medications={medications}
+          today={new Date()}
+          onTakenToday={handleTakenToday}
+          onEnd={handleEnd}
+          onEdit={(medicationId) => router.push(`/medikamente/${medicationId}`)}
+        />
+      )}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Neues Medikament anlegen"
@@ -155,6 +165,16 @@ const styles = StyleSheet.create({
     padding: tokens.spacing.sm,
   },
   errorText: { color: tokens.colors.danger, fontSize: tokens.typography.fontSize.sm, textAlign: 'center' },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: tokens.spacing.lg,
+  },
+  loadingText: {
+    color: tokens.colors.textSecondary,
+    fontSize: tokens.typography.fontSize.md,
+  },
   addButton: {
     position: 'absolute',
     right: tokens.spacing.lg,

@@ -11,10 +11,12 @@ export default function TagebuchScreen() {
   const router = useRouter();
   const [entries, setEntries] = useState<DiaryEntryWithTriggers[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
+      setIsLoading(true);
 
       createEncryptedDb()
         .then((db) => listDiaryEntries(db))
@@ -22,12 +24,14 @@ export default function TagebuchScreen() {
           if (isActive) {
             setEntries(loadedEntries);
             setError(null);
+            setIsLoading(false);
           }
         })
         .catch((loadError: unknown) => {
           console.error('[Tagebuch] Laden der Einträge fehlgeschlagen:', loadError);
           if (isActive) {
             setError('Einträge konnten nicht geladen werden.');
+            setIsLoading(false);
           }
         });
 
@@ -52,7 +56,13 @@ export default function TagebuchScreen() {
       >
         <Text style={styles.analysisLinkText}>Muster-Auswertung ansehen →</Text>
       </Pressable>
-      <DiaryHistoryList entries={entries} />
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Einträge werden geladen …</Text>
+        </View>
+      ) : (
+        <DiaryHistoryList entries={entries} />
+      )}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Neuen Eintrag anlegen"
@@ -92,6 +102,16 @@ const styles = StyleSheet.create({
     fontSize: tokens.typography.fontSize.sm,
     fontWeight: tokens.typography.fontWeight.medium,
     textAlign: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: tokens.spacing.lg,
+  },
+  loadingText: {
+    color: tokens.colors.textSecondary,
+    fontSize: tokens.typography.fontSize.md,
   },
   addButton: {
     position: 'absolute',
