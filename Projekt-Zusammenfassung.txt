@@ -413,6 +413,63 @@ Schritt 11 – Plan 7 "App-Sperre & Backup" schreiben und umsetzen:
   - Nach erfolgreicher Prüfung wurde der Arbeitsbereich lokal in main
     gemergt, aufgeräumt und auf Adrians Wunsch zu GitHub gepusht
 
+Schritt 12 – Plan 8 "Polish & Testlauf" schreiben und umsetzen:
+  - Letzter grober Umsetzungsschritt aus der ursprünglichen 8-stufigen Spec,
+    bewusst kein neues Feature, sondern ein App-weiter Konsistenz- und
+    Robustheits-Durchgang über alle 7 fertigen Schritte hinweg:
+    docs/superpowers/specs/2026-07-15-colitis-app-polish-testlauf-design.md
+    und docs/superpowers/plans/2026-07-15-colitis-app-polish-testlauf.md
+  - Vor dem Schreiben der Spec wurden zwei Recherche-Agenten (rein lesend)
+    eingesetzt, die die komplette App systematisch auf Design-Inkonsistenzen
+    bzw. Fehlerbehandlungs-Lücken durchsucht haben, mit exakten Fundstellen.
+    Dadurch bekam der Plan konkrete "behebe X an Stelle Y"-Aufträge statt
+    offener Sucheaufträge an die Arbeits-Agenten
+  - Vor der Umsetzung wurden mehrere Design-Fragen mit Adrian abgestimmt:
+    Umfang des "Design-Feinschliffs" (systematischer Konsistenz-Review aller
+    5 Tabs statt nur gezielter Einzelstellen), Umfang der "Fehlerbehandlung
+    schärfen" (systematischer Fehlerpfad-Review statt nur der bekannten
+    Backlog-Punkte), ob der über 7 Pläne angesammelte Backlog kleiner,
+    bewusst zurückgestellter Punkte mit aufgeräumt werden soll (ja), und wie
+    mit dem "echten Alltagstest" umgegangen wird, da weiterhin kein
+    Android-Testgerät zur Verfügung steht (Entscheidung: eine strukturierte
+    Test-Checkliste als eigenes Dokument erstellen statt den Punkt nur zu
+    vermerken)
+  - Die Audits fanden neben den 3 bekannten Backlog-Punkten (fehlende
+    Existenzprüfung in zwei Medikamenten-Repository-Funktionen, zu
+    allgemeine Fehlermeldung im Schnellzugriff-Screen, keine Kalender-
+    Gültigkeitsprüfung über das reine Datumsformat hinaus) zwei bisher
+    unbekannte, echte kritische Fehler rund um die App-Sperre: die App
+    konnte bei einem SecureStore-Fehler dauerhaft auf dem Lade-Screen hängen
+    bleiben, und der "PIN vergessen"-Reset hatte keinerlei Fehlerbehandlung
+    für seine vier Teilschritte
+  - Umsetzung per Subagent-Driven Development in einem isolierten
+    Arbeitsbereich (6 Teilaufgaben, gruppiert nach Codebereich statt nach
+    Design/Fehlerbehandlung getrennt, um Dateikonflikte zwischen
+    aufeinanderfolgenden Arbeits-Agenten zu vermeiden: App-Sperre robuster
+    machen → Medikamente-Validierung & Robustheit → Toiletten-
+    Fehlerbehandlung → Ladezustände ergänzen → Design-Token-Konsistenz →
+    Alltagstest-Checkliste erstellen), jede Teilaufgabe einzeln reviewt
+  - Eine Teilaufgabe brauchte eine Korrekturrunde: die Review fand einen aus
+    dem Plan-Code selbst stammenden Test-Hygiene-Fehler (ein neuer Test mit
+    künstlichen Zeitgebern rief `vi.useRealTimers()` nicht in einem
+    `finally`-Block auf, wodurch ein fehlschlagender Test die künstliche
+    Zeitsteuerung für nachfolgende Tests hätte verfälschen können) – als
+    plan-bedingter Fehler erkannt (nicht dem Arbeits-Agenten angelastet) und
+    behoben
+  - Die Abschluss-Review (mit dem leistungsfähigsten verfügbaren Modell)
+    prüfte gezielt das Zusammenspiel der Teilaufgaben, die zwei Dateien
+    gemeinsam anfassten (Sperr-Bildschirm, Schnellzugriff-Screen), und
+    bestätigte, dass beide jeweiligen Änderungssätze sauber nebeneinander
+    bestehen blieben, ohne dass eine Teilaufgabe die andere überschrieben
+    hatte. Verdikt "bereit zum Zusammenführen"; eine letzte, kleine
+    Inkonsistenz (eine von mehreren gehärteten Stellen ohne Fehlerbehandlung
+    beim Lesen des Sperr-Status in den Einstellungen) wurde trotzdem direkt
+    noch mit erledigt, da sie genau ins Thema des gesamten Schritts passte
+  - Nach erfolgreicher Prüfung wurde der Arbeitsbereich lokal in main
+    gemergt, aufgeräumt und auf Adrians Wunsch zu GitHub gepusht – damit
+    sind alle 8 groben Umsetzungsschritte der ursprünglichen Phase-1-Spec
+    fertig
+
 ===========================================================
 3. AKTUELLER STAND / WAS WURDE UMGESETZT
 ===========================================================
@@ -735,12 +792,79 @@ Qualitätssicherung (Plan 7):
      (irreführende Fehlermeldung nach teilweise fehlgeschlagenem Import;
      fehlende Aufräumung der temporären Backup-Datei nach dem Teilen)
 
+Abgeschlossen (neu): Plan 8 "Polish & Testlauf" (alle 6 Teilaufgaben
+implementiert, reviewt, einmal korrigiert und gemergt) – damit sind alle 8
+groben Umsetzungsschritte der Phase-1-Spec fertig
+
+Konkret ist jetzt zusätzlich vorhanden bzw. gehärtet:
+
+o) App-weiter Konsistenz- und Robustheits-Durchgang (kein neues Feature)
+   - App-Sperre: kein Hängenbleiben mehr auf dem Lade-Screen bei einem
+     SecureStore-Fehler (sicherer Default: Sperre gilt als aktiv, Ausweg
+     bleibt der bestehende "PIN vergessen"-Reset); der Reset selbst läuft
+     jetzt alle vier Teilschritte best-effort durch statt beim ersten
+     Fehler abzubrechen, und meldet am Ende zusammenfassend, welche
+     Schritte fehlschlugen; Biometrie-/PIN-Prüfung im Sperr-Bildschirm und
+     das Aktivieren/Deaktivieren der Sperre in den Einstellungen sind jetzt
+     gegen Fehler abgesichert
+   - Medikamente: echte Kalender-Gültigkeitsprüfung für Datumsangaben
+     (vorher wurde z. B. "2026-13-45" nur als Formatfehler geprüft und ein
+     ungültiges Datum von JavaScript still auf ein falsches Kalenderdatum
+     umgerechnet); zusätzliche Prüfung, dass das Enddatum nicht vor dem
+     Startdatum liegt; Existenzprüfung in drei Medikamenten-Repository-
+     Funktionen (Bearbeiten, Beenden, Einnahme protokollieren) statt roher
+     Datenbank-Fehler bei einer ungültigen ID
+   - Toiletten-Finder: die Overpass-Suche hat jetzt ein 15-Sekunden-
+     Anfrage-Timeout (vorher konnte eine hängende Verbindung, z. B. in
+     einem Café-WLAN mit Anmeldeseite, die Suche unbegrenzt blockieren);
+     die Karten-Ansicht zeigt bei einem Ladefehler jetzt eine deutsche
+     Fehlermeldung statt einer leeren Fläche; der Homescreen-Schnellzugriff
+     unterscheidet jetzt einen echten Datenbankfehler von "noch keine
+     Toiletten oder sicheren Orte bekannt"
+   - Vier Listen-Screens (Tagebuch, Auswertung, Wissen, Medikamente) zeigen
+     beim ersten Laden jetzt "wird geladen …" statt kurz unterscheidungslos
+     den Leer-Zustand zu zeigen
+   - Design-Konsistenz über alle 5 Tabs hinweg: einheitlicher Eckenradius-
+     Token für zwei bisher unterschiedlich gerundete Auswahl-Chips,
+     korrigierte deutsche Anführungszeichen an 12 Textstellen (Wissen-
+     Artikel, Medikamente-Leerzustand, PIN-Reset-Bestätigung), der bisher
+     unangetastete Standard-404-Fehlerbildschirm an die App-Design-Tokens
+     angeschlossen, eine Button-Farbe im Schnellzugriff-Screen an die
+     bestehende Farbe-zu-Aktionstyp-Konvention angeglichen
+   - Neue Alltagstest-Checkliste als eigenes Dokument
+     (docs/superpowers/colitis-app-alltagstest-checkliste.md) für den
+     späteren Test auf einem echten Android-Gerät, gegliedert nach
+     Standort, Benachrichtigungen, Sperre, Backup/Restore, Offline-
+     Verhalten und allgemeinem Alltagseindruck
+
+Qualitätssicherung (Plan 8):
+   - 192 automatisierte Tests (Vitest) insgesamt, alle grün (14 neue Tests
+     für Kalender-Validierung, Existenzprüfungen und das Overpass-
+     Anfrage-Timeout)
+   - Typprüfung (TypeScript) durchgehend fehlerfrei
+   - Vor dem Schreiben der Spec wurden zwei Recherche-Agenten eingesetzt,
+     die die App systematisch nach Design-Inkonsistenzen bzw.
+     Fehlerbehandlungs-Lücken durchsucht haben; dabei kamen neben den drei
+     bekannten, bewusst zurückgestellten Backlog-Punkten zwei bisher
+     unbekannte, echte kritische Fehler rund um die App-Sperre ans Licht
+     (siehe oben), die dadurch vor dem eigentlichen Umsetzungsplan bereits
+     bekannt und gezielt behebbar waren
+   - Jede der 6 Teilaufgaben einzeln reviewt (eine davon mit einer
+     Korrekturrunde: ein neuer Test mit künstlichen Zeitgebern rief
+     `vi.useRealTimers()` nicht in einem `finally`-Block auf – als
+     plan-bedingter Fehler erkannt und behoben), zusätzlich eine
+     Abschluss-Review über den gesamten Plan, die gezielt prüfte, ob die
+     zwei von je zwei Teilaufgaben gemeinsam angefassten Dateien
+     (Sperr-Bildschirm, Schnellzugriff-Screen) beide Änderungssätze sauber
+     nebeneinander behalten hatten (ja) – eine letzte kleine Inkonsistenz
+     wurde direkt noch mit erledigt
+
 ===========================================================
 4. WAS NOCH FEHLT / NÄCHSTE SCHRITTE
 ===========================================================
 
-Die Spec sieht insgesamt 8 grobe Umsetzungsschritte vor. Bisher sind
-Schritt 1 bis Schritt 6 vollständig umgesetzt:
+Die Spec sieht insgesamt 8 grobe Umsetzungsschritte vor. Alle 8 sind
+mittlerweile vollständig umgesetzt:
 
   [x] 1. Projekt-Setup (Expo-Projekt, Ordnerstruktur, Design-Tokens,
          verschlüsselte Datenbank mit Schema)                — FERTIG
@@ -761,11 +885,12 @@ Schritt 1 bis Schritt 6 vollständig umgesetzt:
          Schnellzugriff)                                     — FERTIG
   [x] 7. App-Sperre & Backup (PIN/Biometrie-Sperre, verschlüsselter
          Export/Import)                                       — FERTIG
-  [ ] 8. Polish & Testlauf (Design-Feinschliff, echter Alltagstest,
-         Fehlerbehandlung schärfen)
-         ← NÄCHSTER SCHRITT
+  [x] 8. Polish & Testlauf (App-weiter Design-Konsistenz- und
+         Fehlerbehandlungs-Durchgang, Alltagstest-Checkliste)  — FERTIG
 
-Danach, separat und noch nicht geplant:
+Damit ist die komplette Phase-1-Spec (MVP) umgesetzt.
+
+Als nächstes, separat und noch nicht geplant:
   - Phase 2: News-/Leitlinien-Feed-Automatisierung (PubMed, AWMF-
     Leitlinien, FDA/EMA-Meldungen) – erfordert einen kleinen Server/
     Cronjob, wird als eigene Spec geplant, sobald Phase 1 fertig läuft
@@ -775,7 +900,8 @@ Außerdem noch offen (kann nicht automatisiert erledigt werden):
     (Standortberechtigung, Benachrichtigungen, Offline-Verhalten,
     PIN-/Biometrie-Sperre) – dafür wird ein Gerät mit Android-Toolchain
     benötigt, was in dieser Entwicklungsumgebung nicht zur Verfügung
-    steht
+    steht. Eine strukturierte Checkliste dafür liegt bereits bereit:
+    docs/superpowers/colitis-app-alltagstest-checkliste.md
 
 ===========================================================
 5. WICHTIGE DATEIEN IM PROJEKT
@@ -838,6 +964,18 @@ Außerdem noch offen (kann nicht automatisiert erledigt werden):
 - docs/superpowers/plans/2026-07-14-colitis-app-app-sperre-backup.md
     Der detaillierte Umsetzungsplan für Schritt 7 "App-Sperre & Backup"
     (bereits umgesetzt)
+
+- docs/superpowers/specs/2026-07-15-colitis-app-polish-testlauf-design.md
+    Design-Spec für Schritt 8 "Polish & Testlauf" (bereits umgesetzt)
+
+- docs/superpowers/plans/2026-07-15-colitis-app-polish-testlauf.md
+    Der detaillierte Umsetzungsplan für Schritt 8 "Polish & Testlauf"
+    (bereits umgesetzt)
+
+- docs/superpowers/colitis-app-alltagstest-checkliste.md
+    Checkliste für den späteren manuellen Alltagstest auf einem echten
+    Android-Gerät (noch nicht abgehakt, kein Testgerät in dieser
+    Entwicklungsumgebung verfügbar)
 
 - colitis-app/
     Der eigentliche Programmcode der App (Expo/TypeScript-Projekt)
