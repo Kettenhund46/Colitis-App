@@ -9,14 +9,26 @@ export function useAppLockGate() {
 
   useEffect(() => {
     let isActive = true;
-    isAppLockEnabled().then((enabled) => {
-      if (!isActive) {
-        return;
-      }
-      setIsLockEnabled(enabled);
-      setIsUnlocked(!enabled);
-      setIsResolved(true);
-    });
+    isAppLockEnabled()
+      .then((enabled) => {
+        if (!isActive) {
+          return;
+        }
+        setIsLockEnabled(enabled);
+        setIsUnlocked(!enabled);
+        setIsResolved(true);
+      })
+      .catch((error: unknown) => {
+        console.error('[AppLock] Sperrstatus konnte nicht gelesen werden:', error);
+        if (!isActive) {
+          return;
+        }
+        // Sicherer Default bei unsicherem Zustand: Sperre gilt als aktiv,
+        // Ausweg bleibt der bestehende "PIN vergessen"-Reset in LockScreen.
+        setIsLockEnabled(true);
+        setIsUnlocked(false);
+        setIsResolved(true);
+      });
     return () => {
       isActive = false;
     };
@@ -27,12 +39,18 @@ export function useAppLockGate() {
       if (nextState !== 'active') {
         return;
       }
-      isAppLockEnabled().then((enabled) => {
-        setIsLockEnabled(enabled);
-        if (enabled) {
+      isAppLockEnabled()
+        .then((enabled) => {
+          setIsLockEnabled(enabled);
+          if (enabled) {
+            setIsUnlocked(false);
+          }
+        })
+        .catch((error: unknown) => {
+          console.error('[AppLock] Sperrstatus konnte nicht aktualisiert werden:', error);
+          setIsLockEnabled(true);
           setIsUnlocked(false);
-        }
-      });
+        });
     });
     return () => {
       subscription.remove();
