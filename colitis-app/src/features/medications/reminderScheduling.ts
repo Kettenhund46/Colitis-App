@@ -1,3 +1,5 @@
+import { isValidCalendarDate } from './dateValidation';
+
 export interface DailyTrigger {
   type: 'daily';
   hour: number;
@@ -26,6 +28,9 @@ export function buildDailyReminderTrigger(time: string): DailyTrigger {
 }
 
 export function buildScreeningReminderTrigger(nextDueDate: string, now: Date): DateTrigger | null {
+  if (!isValidCalendarDate(nextDueDate)) {
+    throw new Error(`Ungültiges Vorsorge-Datum: "${nextDueDate}" (erwartet JJJJ-MM-TT)`);
+  }
   const [year, month, day] = nextDueDate.split('-').map(Number);
   const dueDate = new Date(year, month - 1, day, SCREENING_REMINDER_HOUR, SCREENING_REMINDER_MINUTE, 0, 0);
   if (dueDate.getTime() <= now.getTime()) {

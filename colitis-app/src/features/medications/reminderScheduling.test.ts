@@ -50,4 +50,9 @@ describe('buildScreeningReminderTrigger', () => {
       date: new Date(2026, 5, 1, 9, 0, 0, 0),
     });
   });
+
+  it('throws a German error for a calendar-invalid due date instead of silently rolling it over', () => {
+    const now = new Date(2026, 0, 1, 8, 0, 0, 0);
+    expect(() => buildScreeningReminderTrigger('2026-13-45', now)).toThrow('Ungültiges Vorsorge-Datum');
+  });
 });

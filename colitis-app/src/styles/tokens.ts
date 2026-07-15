@@ -35,4 +35,10 @@ const typography = {
   },
 } as const;
 
-export const tokens = { colors, spacing, typography } as const;
+const radius = {
+  sm: 8,
+  md: 12,
+  pill: 20,
+} as const;
+
+export const tokens = { colors, spacing, typography, radius } as const;

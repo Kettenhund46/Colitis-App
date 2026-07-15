@@ -17,30 +17,47 @@ export function LockScreen({ onUnlock, onReset }: LockScreenProps) {
   const [isResetMode, setIsResetMode] = useState(false);
   const [resetConfirmation, setResetConfirmation] = useState('');
   const [isResetting, setIsResetting] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
 
   useEffect(() => {
     let isActive = true;
-    isBiometricsAvailable().then(async (available) => {
-      if (!isActive) {
-        return;
-      }
-      setBiometricsAvailable(available);
-      if (available) {
-        const success = await authenticateWithBiometrics('Colitis-App entsperren');
-        if (success && isActive) {
-          onUnlock();
+    isBiometricsAvailable()
+      .then(async (available) => {
+        if (!isActive) {
+          return;
         }
-      }
-    });
+        setBiometricsAvailable(available);
+        if (available) {
+          try {
+            const success = await authenticateWithBiometrics('Colitis-App entsperren');
+            if (success && isActive) {
+              onUnlock();
+            }
+          } catch (biometricsError: unknown) {
+            console.error('[AppLock] Biometrie-Prüfung fehlgeschlagen:', biometricsError);
+          }
+        }
+      })
+      .catch((availabilityError: unknown) => {
+        console.error('[AppLock] Biometrie-Verfügbarkeit konnte nicht geprüft werden:', availabilityError);
+        if (isActive) {
+          setBiometricsAvailable(false);
+        }
+      });
     return () => {
       isActive = false;
     };
   }, [onUnlock]);
 
   async function handleBiometricsRetry() {
-    const success = await authenticateWithBiometrics('Colitis-App entsperren');
-    if (success) {
-      onUnlock();
+    try {
+      const success = await authenticateWithBiometrics('Colitis-App entsperren');
+      if (success) {
+        onUnlock();
+      }
+    } catch (biometricsError: unknown) {
+      console.error('[AppLock] Biometrie-Entsperrung fehlgeschlagen:', biometricsError);
+      setError('Biometrie ist gerade nicht verfügbar. Bitte PIN verwenden.');
     }
   }
 
@@ -49,11 +66,17 @@ export function LockScreen({ onUnlock, onReset }: LockScreenProps) {
     setPin(digitsOnly);
     setError(null);
     if (digitsOnly.length === PIN_LENGTH) {
-      const isValid = await verifyPin(digitsOnly);
-      if (isValid) {
-        onUnlock();
-      } else {
-        setError('Falscher PIN. Bitte erneut versuchen.');
+      try {
+        const isValid = await verifyPin(digitsOnly);
+        if (isValid) {
+          onUnlock();
+        } else {
+          setError('Falscher PIN. Bitte erneut versuchen.');
+          setPin('');
+        }
+      } catch (verifyError: unknown) {
+        console.error('[AppLock] PIN-Prüfung fehlgeschlagen:', verifyError);
+        setError('PIN konnte nicht geprüft werden. Bitte erneut versuchen.');
         setPin('');
       }
     }
@@ -61,8 +84,12 @@ export function LockScreen({ onUnlock, onReset }: LockScreenProps) {
 
   async function handleResetConfirm() {
     setIsResetting(true);
+    setResetError(null);
     try {
       await onReset();
+    } catch (resetErrorValue: unknown) {
+      console.error('[AppLock] Zurücksetzen fehlgeschlagen:', resetErrorValue);
+      setResetError('Zurücksetzen konnte nicht vollständig abgeschlossen werden. Bitte erneut versuchen.');
     } finally {
       setIsResetting(false);
     }
@@ -77,7 +104,8 @@ export function LockScreen({ onUnlock, onReset }: LockScreenProps) {
           Das Zurücksetzen löscht alle App-Daten unwiderruflich. Ein vorher erstelltes Backup ist danach der
           einzige Weg, die Daten wiederzubekommen.
         </Text>
-        <Text style={styles.label}>Tippe zur Bestätigung "{RESET_CONFIRMATION_PHRASE}" ein:</Text>
+        {resetError && <Text style={styles.warning}>{resetError}</Text>}
+        <Text style={styles.label}>Tippe zur Bestätigung „{RESET_CONFIRMATION_PHRASE}“ ein:</Text>
         <TextInput
           style={styles.textInput}
           placeholderTextColor={tokens.colors.textSecondary}

@@ -43,6 +43,7 @@ export default function EinstellungenScreen() {
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [pinError, setPinError] = useState<string | null>(null);
+  const [lockActionError, setLockActionError] = useState<string | null>(null);
   const [backupFormMode, setBackupFormMode] = useState<BackupFormMode>(null);
   const [backupMessage, setBackupMessage] = useState<string | null>(null);
   const [pendingImportContent, setPendingImportContent] = useState<string | null>(null);
@@ -50,11 +51,15 @@ export default function EinstellungenScreen() {
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
-      isAppLockEnabled().then((enabled) => {
-        if (isActive) {
-          setIsLockEnabled(enabled);
-        }
-      });
+      isAppLockEnabled()
+        .then((enabled) => {
+          if (isActive) {
+            setIsLockEnabled(enabled);
+          }
+        })
+        .catch((error: unknown) => {
+          console.error('[Einstellungen] Sperrstatus konnte nicht gelesen werden:', error);
+        });
       return () => {
         isActive = false;
       };
@@ -62,12 +67,18 @@ export default function EinstellungenScreen() {
   );
 
   async function handleToggleLock(value: boolean) {
+    setLockActionError(null);
     if (value) {
       setIsSettingPin(true);
       return;
     }
-    await disableAppLock();
-    setIsLockEnabled(false);
+    try {
+      await disableAppLock();
+      setIsLockEnabled(false);
+    } catch (error: unknown) {
+      console.error('[Einstellungen] Sperre konnte nicht deaktiviert werden:', error);
+      setLockActionError('Sperre konnte nicht deaktiviert werden. Bitte erneut versuchen.');
+    }
   }
 
   async function handleSetPin() {
@@ -79,12 +90,17 @@ export default function EinstellungenScreen() {
       setPinError('Die beiden PINs stimmen nicht überein.');
       return;
     }
-    await setPin(newPin);
-    setIsLockEnabled(true);
-    setIsSettingPin(false);
-    setNewPin('');
-    setConfirmPin('');
-    setPinError(null);
+    try {
+      await setPin(newPin);
+      setIsLockEnabled(true);
+      setIsSettingPin(false);
+      setNewPin('');
+      setConfirmPin('');
+      setPinError(null);
+    } catch (error: unknown) {
+      console.error('[Einstellungen] PIN konnte nicht gespeichert werden:', error);
+      setPinError('PIN konnte nicht gespeichert werden. Bitte erneut versuchen.');
+    }
   }
 
   async function handleExport(password: string) {
@@ -204,6 +220,7 @@ export default function EinstellungenScreen() {
         <Text style={styles.rowLabel}>PIN-/Biometrie-Sperre aktivieren</Text>
         <Switch value={isLockEnabled} onValueChange={handleToggleLock} />
       </View>
+      {lockActionError && <Text style={styles.error}>{lockActionError}</Text>}
 
       {isSettingPin && (
         <View style={styles.card}>

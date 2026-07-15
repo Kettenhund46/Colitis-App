@@ -10,7 +10,7 @@ import { buildNavigationUrl } from '../src/features/toilets/navigationLink';
 import { tokens } from '../src/styles/tokens';
 import type { Coordinates } from '../src/features/toilets/types';
 
-type Status = 'loading' | 'no-location' | 'no-candidates' | 'done';
+type Status = 'loading' | 'no-location' | 'no-candidates' | 'error' | 'done';
 
 export default function SchnellzugriffScreen() {
   const router = useRouter();
@@ -60,7 +60,7 @@ export default function SchnellzugriffScreen() {
     run().catch((error: unknown) => {
       console.error('[Schnellzugriff] Fehler:', error);
       if (isActive) {
-        setStatus('no-candidates');
+        setStatus('error');
       }
     });
 
@@ -80,6 +80,8 @@ export default function SchnellzugriffScreen() {
   const message =
     status === 'no-location'
       ? 'Standort nicht verfügbar. Bitte Standortberechtigung erteilen.'
+      : status === 'error'
+      ? 'Es ist ein Fehler aufgetreten. Bitte versuche es erneut.'
       : 'Es sind noch keine Toiletten oder sicheren Orte bekannt.';
 
   return (
@@ -112,7 +114,7 @@ const styles = StyleSheet.create({
     marginBottom: tokens.spacing.md,
   },
   button: {
-    backgroundColor: tokens.colors.primary,
+    backgroundColor: tokens.colors.accent,
     borderRadius: 8,
     paddingVertical: tokens.spacing.sm,
     paddingHorizontal: tokens.spacing.lg,

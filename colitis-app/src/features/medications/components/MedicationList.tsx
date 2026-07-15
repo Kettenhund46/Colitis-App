@@ -16,7 +16,7 @@ export function MedicationList({ medications, today, onTakenToday, onEnd, onEdit
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>
-          Noch keine Medikamente. Tippe auf „+", um dein erstes Medikament anzulegen.
+          Noch keine Medikamente. Tippe auf „+“, um dein erstes Medikament anzulegen.
         </Text>
       </View>
     );

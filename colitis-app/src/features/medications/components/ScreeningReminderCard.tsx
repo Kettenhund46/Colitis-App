@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
 import { tokens } from '../../../styles/tokens';
+import { isValidCalendarDate } from '../dateValidation';
 import type { ScreeningReminder, NewScreeningReminderInput } from '../types';
 
 interface ScreeningReminderCardProps {
   reminder: ScreeningReminder | null;
   onSave: (input: NewScreeningReminderInput) => void | Promise<void>;
 }
-
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 export function ScreeningReminderCard({ reminder, onSave }: ScreeningReminderCardProps) {
   const [intervalMonths, setIntervalMonths] = useState(reminder ? String(reminder.intervalMonths) : '');
@@ -23,7 +22,7 @@ export function ScreeningReminderCard({ reminder, onSave }: ScreeningReminderCar
       setError('Bitte ein gültiges Intervall in Monaten eingeben (ganze Zahl größer 0).');
       return;
     }
-    if (!DATE_PATTERN.test(nextDueDate)) {
+    if (!isValidCalendarDate(nextDueDate)) {
       setError('Bitte ein gültiges Datum eingeben (JJJJ-MM-TT).');
       return;
     }

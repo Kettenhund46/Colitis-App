@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   choiceButton: {
     paddingVertical: tokens.spacing.xs,
     paddingHorizontal: tokens.spacing.md,
-    borderRadius: 20,
+    borderRadius: tokens.radius.pill,
     borderWidth: 1,
     borderColor: tokens.colors.border,
     backgroundColor: tokens.colors.surface,

@@ -1,3 +1,4 @@
+import { isValidCalendarDate } from './dateValidation';
 import type { MedicationInput } from './types';
 
 export interface MedicationFormState {
@@ -19,7 +20,6 @@ export const INITIAL_MEDICATION_FORM_STATE: MedicationFormState = {
 };
 
 const REMINDER_TIME_PATTERN = /^([0-1]\d|2[0-3]):([0-5]\d)$/;
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 export function validateMedicationForm(state: MedicationFormState): string[] {
   const errors: string[] = [];
@@ -33,11 +33,19 @@ export function validateMedicationForm(state: MedicationFormState): string[] {
   if (state.schedule.trim().length === 0) {
     errors.push('Bitte ein Einnahmeschema eingeben.');
   }
-  if (!DATE_PATTERN.test(state.startDate)) {
+  if (!isValidCalendarDate(state.startDate)) {
     errors.push('Bitte ein gültiges Startdatum eingeben (JJJJ-MM-TT).');
   }
-  if (state.endDate.length > 0 && !DATE_PATTERN.test(state.endDate)) {
+  if (state.endDate.length > 0 && !isValidCalendarDate(state.endDate)) {
     errors.push('Bitte ein gültiges Enddatum eingeben (JJJJ-MM-TT) oder leer lassen.');
+  }
+  if (
+    state.endDate.length > 0 &&
+    isValidCalendarDate(state.startDate) &&
+    isValidCalendarDate(state.endDate) &&
+    state.endDate < state.startDate
+  ) {
+    errors.push('Das Enddatum darf nicht vor dem Startdatum liegen.');
   }
   for (const time of state.reminderTimes) {
     if (!REMINDER_TIME_PATTERN.test(time)) {

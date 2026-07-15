@@ -154,4 +154,29 @@ describe('medications repository', () => {
     expect(rows[0].medicationId).toBe(created.id);
     expect(rows[0].takenAt).toBe('2026-07-12T08:05:00.000Z');
   });
+
+  it('throws when updating a medication that does not exist', async () => {
+    await expect(
+      updateMedication(db, 999999, {
+        name: 'Ghost',
+        dose: '1mg',
+        schedule: '1x täglich',
+        startDate: '2026-07-12',
+        endDate: null,
+        reminderTimes: [],
+      })
+    ).rejects.toThrow('Medikament mit ID 999999 wurde nicht gefunden.');
+  });
+
+  it('throws when logging a taken dose for a medication that does not exist', async () => {
+    await expect(logMedicationTaken(db, 999999, '2026-07-12T08:00:00.000Z')).rejects.toThrow(
+      'Medikament mit ID 999999 wurde nicht gefunden.'
+    );
+  });
+
+  it('throws when ending a medication that does not exist', async () => {
+    await expect(endMedication(db, 999999, '2026-08-01')).rejects.toThrow(
+      'Medikament mit ID 999999 wurde nicht gefunden.'
+    );
+  });
 });

@@ -13,10 +13,12 @@ export default function WissenScreen() {
   const [articles, setArticles] = useState<KnowledgeArticle[]>([]);
   const [query, setQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
+      setIsLoading(true);
 
       createEncryptedDb()
         .then(async (db) => {
@@ -27,12 +29,14 @@ export default function WissenScreen() {
           if (isActive) {
             setArticles(loadedArticles);
             setError(null);
+            setIsLoading(false);
           }
         })
         .catch((loadError: unknown) => {
           console.error('[Wissen] Laden der Artikel fehlgeschlagen:', loadError);
           if (isActive) {
             setError('Inhalte konnten nicht geladen werden.');
+            setIsLoading(false);
           }
         });
 
@@ -59,10 +63,16 @@ export default function WissenScreen() {
         onChangeText={setQuery}
         accessibilityLabel="Wissensartikel durchsuchen"
       />
-      <KnowledgeArticleList
-        articles={visibleArticles}
-        onSelect={(slug) => router.push(`/wissen/${slug}`)}
-      />
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Artikel werden geladen …</Text>
+        </View>
+      ) : (
+        <KnowledgeArticleList
+          articles={visibleArticles}
+          onSelect={(slug) => router.push(`/wissen/${slug}`)}
+        />
+      )}
     </View>
   );
 }
@@ -91,6 +101,16 @@ const styles = StyleSheet.create({
     margin: tokens.spacing.md,
     padding: tokens.spacing.sm,
     color: tokens.colors.textPrimary,
+    fontSize: tokens.typography.fontSize.md,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: tokens.spacing.lg,
+  },
+  loadingText: {
+    color: tokens.colors.textSecondary,
     fontSize: tokens.typography.fontSize.md,
   },
 });

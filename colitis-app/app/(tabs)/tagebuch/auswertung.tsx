@@ -11,10 +11,12 @@ import type { TriggerPatternStat } from '../../../src/features/diary/analysis';
 export default function AuswertungScreen() {
   const [patterns, setPatterns] = useState<TriggerPatternStat[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
+      setIsLoading(true);
 
       createEncryptedDb()
         .then((db) => listDiaryEntries(db))
@@ -22,12 +24,14 @@ export default function AuswertungScreen() {
           if (isActive) {
             setPatterns(computeTriggerPatterns(entries));
             setError(null);
+            setIsLoading(false);
           }
         })
         .catch((loadError: unknown) => {
           console.error('[Auswertung] Laden der Auswertung fehlgeschlagen:', loadError);
           if (isActive) {
             setError('Auswertung konnte nicht geladen werden.');
+            setIsLoading(false);
           }
         });
 
@@ -44,7 +48,13 @@ export default function AuswertungScreen() {
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
-      <TriggerAnalysisView patterns={patterns} />
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Auswertung wird geladen …</Text>
+        </View>
+      ) : (
+        <TriggerAnalysisView patterns={patterns} />
+      )}
     </View>
   );
 }
@@ -64,5 +74,15 @@ const styles = StyleSheet.create({
     color: tokens.colors.danger,
     fontSize: tokens.typography.fontSize.sm,
     textAlign: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: tokens.spacing.lg,
+  },
+  loadingText: {
+    color: tokens.colors.textSecondary,
+    fontSize: tokens.typography.fontSize.md,
   },
 });
