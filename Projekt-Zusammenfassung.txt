@@ -1,5 +1,5 @@
 COLITIS-ULCEROSA-APP – PROJEKT-ZUSAMMENFASSUNG
-Stand: 2026-07-15
+Stand: 2026-07-16
 
 ===========================================================
 1. ZIEL DES PROJEKTS
@@ -551,6 +551,58 @@ Schritt 13 – Phase 2, Teil A "News-Feed Datenquelle" schreiben und umsetzen:
   - Nach erfolgreicher Prüfung wurde der Arbeitsbereich lokal in main
     gemergt, aufgeräumt und auf Adrians Wunsch zu GitHub gepusht
 
+Schritt 14 – Phase 2, Teil B "News-Feed App-Anbindung" schreiben und
+umsetzen:
+  - Zweiter und letzter Schritt von Phase 2: Anbindung des in Teil A
+    veröffentlichten Feeds an die App (Wissen-Tab, Anzeige, Offline-Cache,
+    dauerhafter Gelesen-Status):
+    docs/superpowers/specs/2026-07-15-colitis-app-news-feed-app-anbindung-design.md
+    und
+    docs/superpowers/plans/2026-07-15-colitis-app-news-feed-app-anbindung.md
+  - Design-Spec-Korrektur vor der Umsetzung: externe Links werden über
+    Linking.openURL (React-Native-Kernmodul) geöffnet statt über
+    expo-web-browser, wie es dem bereits etablierten Muster (Wissensartikel-
+    Quellen, Toiletten-Navigationslink) entspricht
+  - Architektur: neuer Feature-Ordner src/features/newsFeed/ mit reiner
+    Sync-Diff-Logik, einem Repository gegen eine neue Tabelle
+    cached_feed_items (Textschlüssel ohne Autoincrement, bewusste
+    Abweichung von der sonstigen Konvention, da die Feed-Item-ID vom
+    Server bereits global eindeutig ist) und einem Fetch-Client für die
+    öffentliche Feed-Datei aus Teil A; neuer Screen im Drei-Zustände-Muster
+    (Live → Cache mit Offline-Hinweis → harter Fehler), analog zum
+    Toiletten-Finder
+  - Umsetzung per Subagent-Driven Development (5 Teilaufgaben: DB-Schema/
+    Migration/Typen → Sync-Diff-Logik + Repository → Fetch-Client →
+    Quellen-Label + Liste-Komponente → Screen/Navigation/Verdrahtung),
+    jede Teilaufgabe einzeln reviewt
+  - Technischer Nebenfund: das Skript zum automatischen Extrahieren
+    einzelner Teilaufgaben-Texte aus dem Plan-Dokument scheiterte an einer
+    eingerückten Code-Block-Markierung im Dokument selbst (Formatierungs-
+    Eigenheit, kein inhaltlicher Fehler). Statt das bereits committete
+    Plan-Dokument nachträglich zu ändern, wurden die Arbeitsaufträge für
+    die betroffenen Teilaufgaben direkt aus dem gelesenen Plan-Text
+    übernommen
+  - Die Abschluss-Review (mit dem leistungsfähigsten verfügbaren Modell)
+    prüfte gezielt das Zusammenspiel aller 5 Teilaufgaben und fand zwei
+    "Should Fix"-Befunde: (1) die Ladeanzeige blendete beim erneuten
+    Fokussieren des Screens die bereits gecachte Liste vollständig aus,
+    bis der Netzwerk-Refresh abgeschlossen war (widersprach dem Zweck des
+    Offline-Caches); (2) einzelne Feed-Einträge vom Server wurden nur in
+    der äußeren Hülle geprüft, nicht in ihren Feldern – ein fehlerhafter
+    Eintrag hätte in der Quellen-Anzeige als "undefined" auftauchen
+    können. Beide Punkte wurden in einer Korrekturrunde nach Testgetriebener
+    Entwicklung behoben (neue, vorher fehlschlagende Tests), die erneute
+    Prüfung bestätigte "bereit zum Zusammenführen"
+  - 218 automatisierte Tests (Vitest) für colitis-app insgesamt, alle grün;
+    Typprüfung durchgehend fehlerfrei
+  - Nach erfolgreicher Prüfung lokal in main gemergt, Arbeitsbereich
+    aufgeräumt und auf Adrians Wunsch zu GitHub gepusht
+  - Wichtig: der neue News-Feed-Screen zeigt erst echte Inhalte, sobald die
+    unter Punkt 4 weiterhin offene manuelle Einrichtung von Phase 2 Teil A
+    (öffentliches Mini-Repo colitis-app-feed + zwei GitHub-Secrets)
+    erledigt ist – bis dahin greift bestimmungsgemäß der Fehler-/
+    Offline-Zustand des Drei-Zustände-Musters
+
 ===========================================================
 3. AKTUELLER STAND / WAS WURDE UMGESETZT
 ===========================================================
@@ -984,6 +1036,39 @@ Qualitätssicherung (Phase 2, Teil A):
      wurden die AWMF-Einschränkung und die falsche EMA-URL aus dem Plan
      gefunden und behandelt, bevor der Code gemergt wurde
 
+Abgeschlossen (neu): Phase 2, Teil B "News-Feed App-Anbindung" (alle 5
+Teilaufgaben implementiert, reviewt, eine Korrekturrunde nach der
+Abschluss-Review, gemergt) – damit ist Phase 2 vollständig umgesetzt
+
+Konkret ist jetzt zusätzlich vorhanden:
+
+q) Neuer Unterbereich "Neuigkeiten" im Wissen-Tab (colitis-app/)
+   - src/features/newsFeed/: Typen, reine Sync-Diff-Logik
+     (computeFeedSyncPlan), Repository gegen eine neue verschlüsselte
+     SQLite-Tabelle cached_feed_items (Drizzle-Migration 0003), Fetch-
+     Client für die Feed-Datei aus Teil A (15s Timeout, wie beim
+     Toiletten-Finder), Quellen-Label-Zuordnung und Liste-Komponente
+   - app/(tabs)/wissen/feed.tsx: neuer Screen im etablierten
+     Drei-Zustände-Muster (Live → Cache mit Offline-Hinweis → harter
+     Fehler), erreichbar über einen neuen Link auf dem bestehenden
+     Wissen-Tab
+   - Antippen eines Eintrags öffnet den externen Link (Linking.openURL)
+     und markiert ihn sofort optimistisch als gelesen; der Gelesen-Status
+     bleibt über künftige Synchronisierungen hinweg erhalten und wird nur
+     beim allerersten Einlesen eines neuen Eintrags auf "ungelesen"
+     gesetzt
+   - Liste bleibt beim erneuten Öffnen des Screens sichtbar, während im
+     Hintergrund aktualisiert wird (kein Ausblenden hinter einer
+     Ladeanzeige, solange bereits Einträge im Cache sind)
+
+Qualitätssicherung (Phase 2, Teil B):
+   - 218 automatisierte Tests (Vitest) für colitis-app insgesamt, alle
+     grün; Typprüfung (TypeScript) durchgehend fehlerfrei
+   - Jede der 5 Teilaufgaben einzeln reviewt, zusätzlich eine
+     Abschluss-Review über den gesamten Branch (Verdikt "bereit zum
+     Zusammenführen, mit Korrekturen") mit anschließender Korrekturrunde
+     und erneuter Bestätigung
+
 ===========================================================
 4. WAS NOCH FEHLT / NÄCHSTE SCHRITTE
 ===========================================================
@@ -1015,27 +1100,34 @@ mittlerweile vollständig umgesetzt:
 
 Damit ist die komplette Phase-1-Spec (MVP) umgesetzt.
 
-Phase 2 (News-/Leitlinien-Feed-Automatisierung) ist begonnen:
+Phase 2 (News-/Leitlinien-Feed-Automatisierung) ist vollständig umgesetzt:
   [x] Teil A: Server-seitige Datenquelle (feed-service/, wöchentlicher
       GitHub-Actions-Cronjob, Veröffentlichung ins Mini-Repo
       colitis-app-feed)                                        — FERTIG
-  [ ] Teil B: Anbindung in der App (Wissen-Tab, Anzeige, Offline-Cache,
-      Gelesen-Status) – noch nicht geplant, nächster Schritt sobald
-      gewünscht
+  [x] Teil B: Anbindung in der App (neuer "Neuigkeiten"-Bereich im
+      Wissen-Tab, Anzeige, Offline-Cache, dauerhafter Gelesen-Status)
+                                                                 — FERTIG
+
+Damit sind alle bisher geplanten Phasen (Phase 1 MVP + Phase 2) inhaltlich
+fertig. Aktuell liegt kein weiterer Umsetzungsplan vor.
 
 Außerdem noch offen (kann nicht automatisiert erledigt werden):
   - Manueller Test auf einem echten Android-Gerät bzw. Emulator
     (Standortberechtigung, Benachrichtigungen, Offline-Verhalten,
-    PIN-/Biometrie-Sperre) – dafür wird ein Gerät mit Android-Toolchain
-    benötigt, was in dieser Entwicklungsumgebung nicht zur Verfügung
-    steht. Eine strukturierte Checkliste dafür liegt bereits bereit:
-    docs/superpowers/colitis-app-alltagstest-checkliste.md
+    PIN-/Biometrie-Sperre, News-Feed) – dafür wird ein Gerät mit
+    Android-Toolchain benötigt, was in dieser Entwicklungsumgebung nicht
+    zur Verfügung steht. Eine strukturierte Checkliste dafür liegt bereits
+    bereit: docs/superpowers/colitis-app-alltagstest-checkliste.md – für
+    den neuen News-Feed-Bereich (Teil B) fehlt darin noch ein eigener
+    Abschnitt, das war im Umsetzungsplan bewusst als separater Schritt
+    vorgesehen, sobald Adrian das möchte
   - Manuelle Einrichtung für Phase 2 Teil A (feed-service/README.md
     beschreibt die Schritte im Detail): das öffentliche Mini-Repo
     colitis-app-feed bei GitHub anlegen sowie die zwei Secrets
     ANTHROPIC_API_KEY und FEED_PUBLISH_TOKEN im privaten Colitis-App-Repo
     hinterlegen. Erst danach liefert der bereits gemergte Cronjob echte
-    Ergebnisse
+    Ergebnisse – und erst dann zeigt auch der neue News-Feed-Screen aus
+    Teil B echte Inhalte statt des Fehler-/Offline-Zustands
   - AWMF-Leitlinien-Überwachung ist aktuell bewusst inaktiv (siehe
     Schritt 13): die echte AWMF-Seite lässt sich technisch nicht per
     einfachem HTTP-Abruf auslesen, und robots.txt sperrt automatisierten
@@ -1124,6 +1216,14 @@ Außerdem noch offen (kann nicht automatisiert erledigt werden):
 - docs/superpowers/plans/2026-07-15-colitis-app-news-feed-datenquelle.md
     Der detaillierte Umsetzungsplan für Phase 2, Teil A "News-Feed
     Datenquelle" (bereits umgesetzt)
+
+- docs/superpowers/specs/2026-07-15-colitis-app-news-feed-app-anbindung-design.md
+    Design-Spec für Phase 2, Teil B "News-Feed App-Anbindung" (bereits
+    umgesetzt)
+
+- docs/superpowers/plans/2026-07-15-colitis-app-news-feed-app-anbindung.md
+    Der detaillierte Umsetzungsplan für Phase 2, Teil B "News-Feed
+    App-Anbindung" (bereits umgesetzt)
 
 - feed-service/
     Der eigenständige Cronjob-Dienst für Phase 2, Teil A (TypeScript,
