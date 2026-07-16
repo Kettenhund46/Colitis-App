@@ -97,8 +97,9 @@ export default function ToilettenScreen() {
           } catch (error: unknown) {
             console.error('[Toiletten] Standort konnte nicht ermittelt werden:', error);
             if (isActive) {
+              const detail = error instanceof Error ? error.message : String(error);
               setLocationError(
-                error instanceof TimeoutError ? error.message : 'Standort konnte nicht ermittelt werden.'
+                error instanceof TimeoutError ? error.message : `Standort konnte nicht ermittelt werden. [DIAG: ${detail}]`
               );
               setIsLocationResolved(true);
             }
