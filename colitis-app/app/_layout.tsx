@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
+import { useFonts } from 'expo-font';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import migrations from '../drizzle/migrations';
@@ -12,6 +14,7 @@ import * as schema from '../src/db/schema';
 import { tokens } from '../src/styles/tokens';
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts(MaterialCommunityIcons.font);
   const [db, setDb] = useState<ExpoSQLiteDatabase<typeof schema> | null>(null);
   const [initError, setInitError] = useState<string | null>(null);
   const [dbGeneration, setDbGeneration] = useState(0);
@@ -40,6 +43,22 @@ export default function RootLayout() {
     await resetAppData();
     setDb(null);
     setDbGeneration((generation) => generation + 1);
+  }
+
+  if (fontError) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.text}>Fehler beim Laden der Symbole: {fontError.message}</Text>
+      </View>
+    );
+  }
+
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.text}>Wird vorbereitet …</Text>
+      </View>
+    );
   }
 
   if (initError) {
