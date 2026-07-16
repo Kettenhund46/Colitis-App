@@ -6,12 +6,13 @@ import type { Medication } from '../types';
 interface MedicationListProps {
   medications: Medication[];
   today: Date;
+  takenTodayIds: Set<number>;
   onTakenToday: (medicationId: number) => void;
   onEnd: (medicationId: number) => void;
   onEdit: (medicationId: number) => void;
 }
 
-export function MedicationList({ medications, today, onTakenToday, onEnd, onEdit }: MedicationListProps) {
+export function MedicationList({ medications, today, takenTodayIds, onTakenToday, onEnd, onEdit }: MedicationListProps) {
   if (medications.length === 0) {
     return (
       <View style={styles.emptyContainer}>
@@ -33,6 +34,7 @@ export function MedicationList({ medications, today, onTakenToday, onEnd, onEdit
       keyExtractor={(medication) => String(medication.id)}
       renderItem={({ item }) => {
         const isActive = isMedicationActive(item.endDate, today);
+        const isTakenToday = takenTodayIds.has(item.id);
         return (
           <View style={[styles.card, !isActive && styles.cardEnded]}>
             <Text style={styles.cardName}>{item.name}</Text>
@@ -49,11 +51,17 @@ export function MedicationList({ medications, today, onTakenToday, onEnd, onEdit
               {isActive && (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`${item.name} heute genommen`}
-                  style={styles.takenButton}
+                  accessibilityState={{ disabled: isTakenToday }}
+                  accessibilityLabel={
+                    isTakenToday ? `${item.name} heute bereits genommen` : `${item.name} heute genommen`
+                  }
+                  disabled={isTakenToday}
+                  style={isTakenToday ? styles.takenButton : styles.notTakenButton}
                   onPress={() => onTakenToday(item.id)}
                 >
-                  <Text style={styles.takenButtonText}>Heute genommen</Text>
+                  <Text style={isTakenToday ? styles.takenButtonText : styles.notTakenButtonText}>
+                    {isTakenToday ? 'Heute genommen ✓' : 'Heute genommen'}
+                  </Text>
                 </Pressable>
               )}
               <Pressable
@@ -128,6 +136,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.spacing.md,
   },
   takenButtonText: { color: tokens.colors.surface, fontSize: tokens.typography.fontSize.sm },
+  notTakenButton: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: tokens.colors.primary,
+    paddingVertical: tokens.spacing.xs,
+    paddingHorizontal: tokens.spacing.md,
+  },
+  notTakenButtonText: { color: tokens.colors.primary, fontSize: tokens.typography.fontSize.sm },
   editButton: {
     borderRadius: 8,
     borderWidth: 1,

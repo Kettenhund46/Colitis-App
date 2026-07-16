@@ -1,4 +1,4 @@
-import { asc, eq } from 'drizzle-orm';
+import { asc, eq, like } from 'drizzle-orm';
 import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core';
 import { medications, medicationReminderTimes, medicationLog } from '../../../db/schema';
 import * as schema from '../../../db/schema';
@@ -153,4 +153,21 @@ export async function setReminderTimeNotificationId(
 export async function logMedicationTaken(db: MedicationsDb, medicationId: number, takenAt: string): Promise<void> {
   await assertMedicationExists(db, medicationId);
   await db.insert(medicationLog).values({ medicationId, takenAt });
+}
+
+export async function listMedicationIdsTakenOn(db: MedicationsDb, date: string): Promise<number[]> {
+  const rows = await db
+    .select({ medicationId: medicationLog.medicationId })
+    .from(medicationLog)
+    .where(like(medicationLog.takenAt, `${date}%`));
+  return [...new Set(rows.map((row) => row.medicationId))];
+}
+
+export async function deleteMedication(db: MedicationsDb, medicationId: number): Promise<MedicationReminderTime[]> {
+  await assertMedicationExists(db, medicationId);
+  const reminderTimes = await loadReminderTimes(db, medicationId);
+  await db.delete(medicationLog).where(eq(medicationLog.medicationId, medicationId));
+  await db.delete(medicationReminderTimes).where(eq(medicationReminderTimes.medicationId, medicationId));
+  await db.delete(medications).where(eq(medications.id, medicationId));
+  return reminderTimes;
 }

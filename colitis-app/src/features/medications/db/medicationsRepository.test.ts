@@ -8,8 +8,10 @@ import {
   endMedication,
   setReminderTimeNotificationId,
   logMedicationTaken,
+  listMedicationIdsTakenOn,
+  deleteMedication,
 } from './medicationsRepository';
-import { medicationLog } from '../../../db/schema';
+import { medicationLog, medicationReminderTimes } from '../../../db/schema';
 
 describe('medications repository', () => {
   let db: ReturnType<typeof createTestDb>;
@@ -178,5 +180,82 @@ describe('medications repository', () => {
     await expect(endMedication(db, 999999, '2026-08-01')).rejects.toThrow(
       'Medikament mit ID 999999 wurde nicht gefunden.'
     );
+  });
+
+  it('lists medication ids taken on a given date', async () => {
+    const takenToday = await createMedication(db, {
+      name: 'Salofalk',
+      dose: '500mg',
+      schedule: '1x täglich',
+      startDate: '2026-07-12',
+      endDate: null,
+      reminderTimes: [],
+    });
+    const takenYesterday = await createMedication(db, {
+      name: 'Tremfya',
+      dose: '100mg',
+      schedule: 'alle 8 Wochen',
+      startDate: '2026-07-12',
+      endDate: null,
+      reminderTimes: [],
+    });
+    const neverTaken = await createMedication(db, {
+      name: 'Azathioprin',
+      dose: '50mg',
+      schedule: '1x täglich',
+      startDate: '2026-07-12',
+      endDate: null,
+      reminderTimes: [],
+    });
+
+    await logMedicationTaken(db, takenToday.id, '2026-07-16T08:05:00.000Z');
+    await logMedicationTaken(db, takenYesterday.id, '2026-07-15T08:05:00.000Z');
+
+    const ids = await listMedicationIdsTakenOn(db, '2026-07-16');
+
+    expect(ids).toContain(takenToday.id);
+    expect(ids).not.toContain(takenYesterday.id);
+    expect(ids).not.toContain(neverTaken.id);
+  });
+
+  it('deduplicates medication ids taken multiple times on the same date', async () => {
+    const created = await createMedication(db, {
+      name: 'Salofalk',
+      dose: '500mg',
+      schedule: '2x täglich',
+      startDate: '2026-07-12',
+      endDate: null,
+      reminderTimes: [],
+    });
+
+    await logMedicationTaken(db, created.id, '2026-07-16T08:00:00.000Z');
+    await logMedicationTaken(db, created.id, '2026-07-16T20:00:00.000Z');
+
+    const ids = await listMedicationIdsTakenOn(db, '2026-07-16');
+
+    expect(ids).toEqual([created.id]);
+  });
+
+  it('deletes a medication along with its reminder times and log entries', async () => {
+    const created = await createMedication(db, {
+      name: 'Salofalk',
+      dose: '500mg',
+      schedule: '1x täglich',
+      startDate: '2026-07-12',
+      endDate: null,
+      reminderTimes: ['08:00', '20:00'],
+    });
+    await logMedicationTaken(db, created.id, '2026-07-16T08:05:00.000Z');
+
+    const removedReminderTimes = await deleteMedication(db, created.id);
+
+    expect(removedReminderTimes.map((reminderTime) => reminderTime.time)).toEqual(['08:00', '20:00']);
+    expect(await getMedicationById(db, created.id)).toBeNull();
+    expect(await db.select().from(medicationReminderTimes)).toHaveLength(0);
+    expect(await db.select().from(medicationLog)).toHaveLength(0);
+  });
+
+  it('throws when deleting a medication that does not exist', async () => {
+    await expect(deleteMedication(db, 999999)).rejects.toThrow('Medikament mit ID 999999 wurde nicht gefunden.');
   });
 });

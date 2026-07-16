@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Pressable, Text, View, StyleSheet } from 'react-native';
+import { Alert, Pressable, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
 import {
   listMedications,
   logMedicationTaken,
-  endMedication,
-  setReminderTimeNotificationId,
+  listMedicationIdsTakenOn,
+  deleteMedication,
 } from '../../../src/features/medications/db/medicationsRepository';
+import { formatLocalDate } from '../../../src/features/medications/medicationStatus';
 import {
   getScreeningReminder,
   upsertScreeningReminder,
@@ -32,6 +33,7 @@ import type {
 export default function MedikamenteScreen() {
   const router = useRouter();
   const [medications, setMedications] = useState<Medication[]>([]);
+  const [takenTodayIds, setTakenTodayIds] = useState<Set<number>>(new Set());
   const [screeningReminder, setScreeningReminder] = useState<ScreeningReminder | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,13 +49,15 @@ export default function MedikamenteScreen() {
 
       createEncryptedDb()
         .then(async (db) => {
-          const [loadedMedications, loadedScreening] = await Promise.all([
+          const [loadedMedications, loadedScreening, loadedTakenTodayIds] = await Promise.all([
             listMedications(db),
             getScreeningReminder(db),
+            listMedicationIdsTakenOn(db, formatLocalDate(new Date())),
           ]);
           if (isActive) {
             setMedications(loadedMedications);
             setScreeningReminder(loadedScreening);
+            setTakenTodayIds(new Set(loadedTakenTodayIds));
             setError(null);
             setIsLoading(false);
           }
@@ -76,23 +80,39 @@ export default function MedikamenteScreen() {
     try {
       const db = await createEncryptedDb();
       await logMedicationTaken(db, medicationId, new Date().toISOString());
+      setTakenTodayIds((current) => new Set(current).add(medicationId));
     } catch (takenError: unknown) {
       console.error('[Medikamente] Eintragen der Einnahme fehlgeschlagen:', takenError);
       setError('Einnahme konnte nicht gespeichert werden.');
     }
   }
 
-  async function handleEnd(medicationId: number) {
+  function handleEnd(medicationId: number) {
+    const medication = medications.find((entry) => entry.id === medicationId);
+    if (!medication) {
+      return;
+    }
+    Alert.alert('Medikament beenden?', `„${medication.name}“ wird aus der Liste gelöscht.`, [
+      { text: 'Abbrechen', style: 'cancel' },
+      {
+        text: 'Beenden',
+        style: 'destructive',
+        onPress: () => void confirmEnd(medicationId),
+      },
+    ]);
+  }
+
+  async function confirmEnd(medicationId: number) {
     try {
       const db = await createEncryptedDb();
-      const reminderTimes = await endMedication(db, medicationId, new Date().toISOString().slice(0, 10));
+      const reminderTimes = await deleteMedication(db, medicationId);
       for (const reminderTime of reminderTimes) {
         if (reminderTime.notificationId) {
           await cancelScheduledReminder(reminderTime.notificationId);
-          await setReminderTimeNotificationId(db, reminderTime.id, null);
         }
       }
       setMedications(await listMedications(db));
+      setError(null);
     } catch (endError: unknown) {
       console.error('[Medikamente] Beenden fehlgeschlagen:', endError);
       setError('Medikament konnte nicht beendet werden.');
@@ -139,6 +159,7 @@ export default function MedikamenteScreen() {
         <MedicationList
           medications={medications}
           today={new Date()}
+          takenTodayIds={takenTodayIds}
           onTakenToday={handleTakenToday}
           onEnd={handleEnd}
           onEdit={(medicationId) => router.push(`/medikamente/${medicationId}`)}
