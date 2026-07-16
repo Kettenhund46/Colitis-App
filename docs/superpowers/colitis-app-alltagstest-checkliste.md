@@ -41,6 +41,14 @@ sobald ein Testgerät zur Verfügung steht.
 - [ ] Flugmodus aktivieren, Homescreen-Schnellzugriff "Nächste Toilette" antippen — findet ohne Netzabfrage den nächstgelegenen gecachten Punkt und öffnet die Navigations-App
 - [ ] Flugmodus deaktivieren, Karte erneut verschieben — Live-Suche funktioniert wieder normal
 
+## News-Feed (Wissen-Tab)
+
+- [ ] Wissen-Tab öffnen, "Neuigkeiten ansehen" antippen — Liste lädt (oder zeigt bei noch fehlender Teil-A-Einrichtung erwartungsgemäß den Offline-/Fehler-Zustand statt eines Absturzes)
+- [ ] Einen Eintrag antippen — externer Link öffnet sich im Browser, Eintrag wird sofort sichtbar als gelesen markiert (abgeblasste Darstellung)
+- [ ] Neuigkeiten-Screen verlassen und wieder öffnen — Gelesen-Status des angetippten Eintrags bleibt erhalten
+- [ ] Flugmodus aktivieren, Neuigkeiten-Screen öffnen — zuletzt geladene Liste bleibt mit Offline-Hinweistext sichtbar statt leer/Fehler
+- [ ] Flugmodus deaktivieren, Screen erneut fokussieren — Liste bleibt während des Hintergrund-Refreshs durchgehend sichtbar (kein Ausblenden hinter einer Ladeanzeige)
+
 ## Allgemeiner Alltagseindruck
 
 - [ ] Ladezeiten beim App-Start und beim Wechseln zwischen Tabs fühlen sich nicht zu lang an
