@@ -1,8 +1,9 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Pressable, Text, View, StyleSheet } from 'react-native';
+import { Alert, Pressable, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
-import { listDiaryEntries } from '../../../src/features/diary/db/diaryRepository';
+import { listDiaryEntries, deleteDiaryEntry } from '../../../src/features/diary/db/diaryRepository';
+import { exportDiaryEntriesAsPdf } from '../../../src/features/diary/diaryPdfExport';
 import { DiaryHistoryList } from '../../../src/features/diary/components/DiaryHistoryList';
 import { tokens } from '../../../src/styles/tokens';
 import type { DiaryEntryWithTriggers } from '../../../src/features/diary/types';
@@ -12,6 +13,7 @@ export default function TagebuchScreen() {
   const [entries, setEntries] = useState<DiaryEntryWithTriggers[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -41,6 +43,42 @@ export default function TagebuchScreen() {
     }, [])
   );
 
+  function handleDelete(entryId: number) {
+    Alert.alert('Eintrag löschen?', 'Dieser Tagebucheintrag wird endgültig gelöscht.', [
+      { text: 'Abbrechen', style: 'cancel' },
+      {
+        text: 'Löschen',
+        style: 'destructive',
+        onPress: () => void confirmDelete(entryId),
+      },
+    ]);
+  }
+
+  async function confirmDelete(entryId: number) {
+    try {
+      const db = await createEncryptedDb();
+      await deleteDiaryEntry(db, entryId);
+      setEntries(await listDiaryEntries(db));
+      setError(null);
+    } catch (deleteError: unknown) {
+      console.error('[Tagebuch] Löschen fehlgeschlagen:', deleteError);
+      setError('Eintrag konnte nicht gelöscht werden.');
+    }
+  }
+
+  async function handleExportPdf() {
+    setIsExporting(true);
+    try {
+      await exportDiaryEntriesAsPdf(entries);
+      setError(null);
+    } catch (exportError: unknown) {
+      console.error('[Tagebuch] PDF-Export fehlgeschlagen:', exportError);
+      setError('PDF-Export fehlgeschlagen.');
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <View style={styles.container}>
       {error && (
@@ -56,12 +94,22 @@ export default function TagebuchScreen() {
       >
         <Text style={styles.analysisLinkText}>Muster-Auswertung ansehen →</Text>
       </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: isExporting || entries.length === 0 }}
+        accessibilityLabel="Tagebuch als PDF exportieren"
+        disabled={isExporting || entries.length === 0}
+        style={[styles.exportLink, (isExporting || entries.length === 0) && styles.exportLinkDisabled]}
+        onPress={handleExportPdf}
+      >
+        <Text style={styles.exportLinkText}>{isExporting ? 'PDF wird erstellt …' : 'Als PDF exportieren'}</Text>
+      </Pressable>
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Einträge werden geladen …</Text>
         </View>
       ) : (
-        <DiaryHistoryList entries={entries} />
+        <DiaryHistoryList entries={entries} onDelete={handleDelete} />
       )}
       <Pressable
         accessibilityRole="button"
@@ -98,6 +146,21 @@ const styles = StyleSheet.create({
     padding: tokens.spacing.md,
   },
   analysisLinkText: {
+    color: tokens.colors.primary,
+    fontSize: tokens.typography.fontSize.sm,
+    fontWeight: tokens.typography.fontWeight.medium,
+    textAlign: 'center',
+  },
+  exportLink: {
+    backgroundColor: tokens.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: tokens.colors.border,
+    padding: tokens.spacing.md,
+  },
+  exportLinkDisabled: {
+    opacity: 0.5,
+  },
+  exportLinkText: {
     color: tokens.colors.primary,
     fontSize: tokens.typography.fontSize.sm,
     fontWeight: tokens.typography.fontWeight.medium,

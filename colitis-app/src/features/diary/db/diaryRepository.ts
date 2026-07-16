@@ -33,6 +33,11 @@ export async function createDiaryEntry(db: DiaryDb, input: NewDiaryEntryInput): 
   return entryId;
 }
 
+export async function deleteDiaryEntry(db: DiaryDb, entryId: number): Promise<void> {
+  await db.delete(triggers).where(eq(triggers.diaryEntryId, entryId));
+  await db.delete(diaryEntries).where(eq(diaryEntries.id, entryId));
+}
+
 export async function listDiaryEntries(db: DiaryDb): Promise<DiaryEntryWithTriggers[]> {
   const entries = await db.select().from(diaryEntries).orderBy(desc(diaryEntries.occurredAt));
 

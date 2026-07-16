@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SYMPTOM_OPTIONS, STOOL_CONSISTENCY_OPTIONS, TRIGGER_CATEGORY_OPTIONS } from './constants';
+import { SYMPTOM_OPTIONS, STOOL_CONSISTENCY_OPTIONS, TRIGGER_CATEGORY_OPTIONS, labelFor } from './constants';
 
 describe('diary constants', () => {
   it('has no duplicate symptom keys', () => {
@@ -22,5 +22,15 @@ describe('diary constants', () => {
     for (const option of allOptions) {
       expect(option.label.length).toBeGreaterThan(0);
     }
+  });
+
+  describe('labelFor', () => {
+    it('returns the German label for a known key', () => {
+      expect(labelFor(SYMPTOM_OPTIONS, 'bauchschmerzen')).toBe('Bauchschmerzen');
+    });
+
+    it('returns the raw key when no matching option exists', () => {
+      expect(labelFor(SYMPTOM_OPTIONS, 'unbekannt')).toBe('unbekannt');
+    });
   });
 });

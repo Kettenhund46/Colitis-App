@@ -1,28 +1,15 @@
-import { FlatList, Text, View, StyleSheet } from 'react-native';
+import { FlatList, Pressable, Text, View, StyleSheet } from 'react-native';
 import { tokens } from '../../../styles/tokens';
-import { STOOL_CONSISTENCY_OPTIONS, SYMPTOM_OPTIONS, TRIGGER_CATEGORY_OPTIONS } from '../constants';
-import type { SelectOption } from '../constants';
+import { STOOL_CONSISTENCY_OPTIONS, SYMPTOM_OPTIONS, TRIGGER_CATEGORY_OPTIONS, labelFor } from '../constants';
+import { formatOccurredAt } from '../formatting';
 import type { DiaryEntryWithTriggers } from '../types';
 
 interface DiaryHistoryListProps {
   entries: DiaryEntryWithTriggers[];
+  onDelete: (entryId: number) => void;
 }
 
-function labelFor(options: SelectOption<string>[], key: string): string {
-  return options.find((option) => option.key === key)?.label ?? key;
-}
-
-function formatOccurredAt(occurredAt: string): string {
-  return new Date(occurredAt).toLocaleDateString('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-export function DiaryHistoryList({ entries }: DiaryHistoryListProps) {
+export function DiaryHistoryList({ entries, onDelete }: DiaryHistoryListProps) {
   if (entries.length === 0) {
     return (
       <View style={styles.emptyContainer}>
@@ -58,6 +45,14 @@ export function DiaryHistoryList({ entries }: DiaryHistoryListProps) {
             </Text>
           )}
           {item.note && <Text style={styles.cardNote}>{item.note}</Text>}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Eintrag vom ${formatOccurredAt(item.occurredAt)} löschen`}
+            style={styles.deleteButton}
+            onPress={() => onDelete(item.id)}
+          >
+            <Text style={styles.deleteButtonText}>Löschen</Text>
+          </Pressable>
         </View>
       )}
     />
@@ -112,5 +107,18 @@ const styles = StyleSheet.create({
     fontSize: tokens.typography.fontSize.sm,
     marginTop: tokens.spacing.xs,
     fontStyle: 'italic',
+  },
+  deleteButton: {
+    alignSelf: 'flex-start',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: tokens.colors.danger,
+    paddingVertical: tokens.spacing.xs,
+    paddingHorizontal: tokens.spacing.md,
+    marginTop: tokens.spacing.sm,
+  },
+  deleteButtonText: {
+    color: tokens.colors.danger,
+    fontSize: tokens.typography.fontSize.sm,
   },
 });

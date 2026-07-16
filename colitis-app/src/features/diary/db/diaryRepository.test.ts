@@ -4,7 +4,8 @@ import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as schema from '../../../db/schema';
-import { createDiaryEntry, listDiaryEntries } from './diaryRepository';
+import { createDiaryEntry, listDiaryEntries, deleteDiaryEntry } from './diaryRepository';
+import { triggers } from '../../../db/schema';
 
 function createTestDb() {
   const sqlite = new Database(':memory:');
@@ -87,5 +88,51 @@ describe('diary repository', () => {
 
     const [entry] = await listDiaryEntries(db);
     expect(entry.symptoms).toEqual(['kraempfe', 'gelenkschmerzen']);
+  });
+
+  it('deletes a diary entry along with its triggers', async () => {
+    const id = await createDiaryEntry(db, {
+      occurredAt: '2026-07-08T10:00:00.000Z',
+      stoolFrequency: 3,
+      hasBlood: false,
+      stoolConsistency: 'weich',
+      painLevel: 4,
+      symptoms: [],
+      note: null,
+      triggerCategories: ['stress', 'ernaehrung'],
+    });
+
+    await deleteDiaryEntry(db, id);
+
+    expect(await listDiaryEntries(db)).toEqual([]);
+    expect(await db.select().from(triggers)).toEqual([]);
+  });
+
+  it('leaves other entries untouched when deleting one entry', async () => {
+    const keptId = await createDiaryEntry(db, {
+      occurredAt: '2026-07-06T08:00:00.000Z',
+      stoolFrequency: 1,
+      hasBlood: false,
+      stoolConsistency: 'normal',
+      painLevel: 1,
+      symptoms: [],
+      note: null,
+      triggerCategories: [],
+    });
+    const deletedId = await createDiaryEntry(db, {
+      occurredAt: '2026-07-08T08:00:00.000Z',
+      stoolFrequency: 5,
+      hasBlood: true,
+      stoolConsistency: 'waessrig',
+      painLevel: 8,
+      symptoms: [],
+      note: null,
+      triggerCategories: [],
+    });
+
+    await deleteDiaryEntry(db, deletedId);
+
+    const remaining = await listDiaryEntries(db);
+    expect(remaining.map((entry) => entry.id)).toEqual([keptId]);
   });
 });

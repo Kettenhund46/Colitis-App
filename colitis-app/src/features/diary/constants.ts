@@ -42,3 +42,7 @@ export const SYMPTOM_OPTIONS: SelectOption<SymptomKey>[] = [
   { key: 'appetitlosigkeit', label: 'Appetitlosigkeit' },
   { key: 'gewichtsverlust', label: 'Gewichtsverlust' },
 ];
+
+export function labelFor(options: SelectOption<string>[], key: string): string {
+  return options.find((option) => option.key === key)?.label ?? key;
+}
