@@ -1111,16 +1111,62 @@ Phase 2 (News-/Leitlinien-Feed-Automatisierung) ist vollständig umgesetzt:
 Damit sind alle bisher geplanten Phasen (Phase 1 MVP + Phase 2) inhaltlich
 fertig. Aktuell liegt kein weiterer Umsetzungsplan vor.
 
+Erster echter Alltagstest auf Adrians Handy (16.07.2026) und Korrekturen:
+  - Android-Build-Workflow eingerichtet: EAS Build (Expos kostenloser
+    Cloud-Build-Dienst, Konto "kettenhund46"), da diese Entwicklungs-
+    umgebung kein lokales Android-SDK/Emulator hat. Profil "preview"
+    erzeugt eine eigenständige, installierbare APK. Damit läuft die App
+    zum allerersten Mal überhaupt echt auf einem Gerät – vorher gab es
+    nur automatisierte Vitest-Tests, nie einen echten Start
+  - Dieser erste echte Start deckte sofort mehrere Fehler auf, die reine
+    Tests strukturell nicht finden können:
+    · Fehlende Wurzel-Route "/" (kein app/(tabs)/index.tsx) führte beim
+      Öffnen der App direkt zu "Diese Seite existiert nicht" – behoben
+      durch eine neue, unsichtbare Weiterleitung zum Tagebuch-Tab
+    · Location.getCurrentPositionAsync() hat keinen eingebauten Timeout
+      (offiziell von Expo so dokumentiert) und blieb auf Adrians
+      Testgerät bei einem kalten GPS-Fix unendlich hängen, ohne jede
+      Fehlermeldung – ein 15-Sekunden-Timeout-Wrapper ergänzt
+    · Auf besagtem Testgerät (nicht Adrians Alltagshandy) fehlen
+      funktionierende Google Play Services (Fehler SERVICE_INVALID),
+      worauf expo-location für die Standortermittlung angewiesen ist –
+      kein dokumentierter Play-Services-unabhängiger Fallback in Expo,
+      und da nur ein Testgerät betroffen ist, bewusst nicht umgebaut,
+      nur die Fehlermeldung dafür sauber gehalten (Karte bleibt über
+      manuelles Verschieben nutzbar)
+    · Neue Tab-Icons (@expo/vector-icons, MaterialCommunityIcons)
+      ergänzt; dabei ein Font-Lade-Wettlaufproblem gefunden (manche
+      Icons blieben leer) und mit dem offiziell empfohlenen Vorladen
+      der Icon-Schriftart vor dem ersten Rendern behoben
+  - Zusätzlich von Adrian beim Testen gemeldete Fehler/Wünsche behoben:
+    · Medikamente: "Heute genommen"-Button hatte gar keinen echten
+      Zustand (leuchtete immer grün) – zeigt jetzt korrekt an, ob heute
+      bereits geloggt wurde, und deaktiviert sich danach
+    · Medikamente: "Beenden" setzte zwar das Enddatum auf heute, aber
+      die Aktiv-Prüfung behandelt ein Enddatum von heute noch als aktiv
+      – sichtbar wirkungslos. Auf Adrians Wunsch umgebaut: fragt jetzt
+      per Dialog nach und löscht das Medikament danach vollständig
+      (weicht bewusst vom ursprünglichen "nur ausgrauen" ab)
+    · Tagebuch: Einträge löschen ergänzt (gab es bisher gar nicht)
+    · Tagebuch: PDF-Export ergänzt (war bereits in der ursprünglichen
+      Phase-1-Spec als "Export als PDF/CSV für Arztgespräche" vorgesehen,
+      aber nie umgesetzt worden – jetzt nachgeholt: expo-print baut aus
+      allen Einträgen eine PDF, System-Teilen-Dialog zum Herunterladen)
+  - Code für alle vier zusätzlichen Fixes ist fertig, automatisiert
+    getestet (239 Tests, davon viele neu) und nach GitHub gepusht
+    (bis Commit e58773d) – aber NOCH NICHT auf dem Gerät verifiziert:
+    der letzte Testbuild wurde wegen einer ungewöhnlich langen
+    kostenlosen EAS-Warteschlange auf Adrians Wunsch abgebrochen, da er
+    an diesem Tag nicht mehr weiterarbeiten konnte. Nächster Schritt:
+    neuen Build starten und die vier Fixes (Medikamente-Buttons,
+    Tagebuch-Löschen, PDF-Export) tatsächlich auf dem Gerät prüfen
+
 Außerdem noch offen (kann nicht automatisiert erledigt werden):
-  - Manueller Test auf einem echten Android-Gerät bzw. Emulator
-    (Standortberechtigung, Benachrichtigungen, Offline-Verhalten,
-    PIN-/Biometrie-Sperre, News-Feed) – dafür wird ein Gerät mit
-    Android-Toolchain benötigt, was in dieser Entwicklungsumgebung nicht
-    zur Verfügung steht. Eine strukturierte Checkliste dafür liegt bereits
-    bereit: docs/superpowers/colitis-app-alltagstest-checkliste.md – für
-    den neuen News-Feed-Bereich (Teil B) fehlt darin noch ein eigener
-    Abschnitt, das war im Umsetzungsplan bewusst als separater Schritt
-    vorgesehen, sobald Adrian das möchte
+  - Rest der Alltagstest-Checkliste (Benachrichtigungen, PIN-/Biometrie-
+    Sperre, Backup/Restore, News-Feed, allgemeiner Alltagseindruck) noch
+    nicht durchgegangen – nur der Abschnitt Standort-Berechtigung wurde
+    bisher getestet (siehe oben). Checkliste liegt bereit unter
+    docs/superpowers/colitis-app-alltagstest-checkliste.md
   - Manuelle Einrichtung für Phase 2 Teil A (feed-service/README.md
     beschreibt die Schritte im Detail): das öffentliche Mini-Repo
     colitis-app-feed bei GitHub anlegen sowie die zwei Secrets
