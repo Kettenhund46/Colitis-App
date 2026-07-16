@@ -11,7 +11,12 @@ import { fetchNearbyToilets } from '../../../src/features/toilets/overpassClient
 import { haversineDistanceMeters } from '../../../src/features/toilets/distance';
 import { hasMovedSignificantly } from '../../../src/features/toilets/regionChange';
 import { buildNavigationUrl } from '../../../src/features/toilets/navigationLink';
-import { SEARCH_RADIUS_METERS, REGION_CHANGE_THRESHOLD_METERS } from '../../../src/features/toilets/constants';
+import {
+  SEARCH_RADIUS_METERS,
+  REGION_CHANGE_THRESHOLD_METERS,
+  LOCATION_TIMEOUT_MS,
+} from '../../../src/features/toilets/constants';
+import { withTimeout, TimeoutError } from '../../../src/lib/withTimeout';
 import { createEncryptedDb } from '../../../src/db/client';
 import {
   createSavedPlace,
@@ -38,6 +43,7 @@ export default function ToilettenScreen() {
   const [selectedMarker, setSelectedMarker] = useState<SelectedMarker | null>(null);
   const [formState, setFormState] = useState<FormMode>(null);
   const [locationDenied, setLocationDenied] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [offlineHint, setOfflineHint] = useState<string | null>(null);
   const [placeError, setPlaceError] = useState<string | null>(null);
@@ -70,21 +76,36 @@ export default function ToilettenScreen() {
             return;
           }
           setLocationDenied(false);
-          const position = await Location.getCurrentPositionAsync({});
-          if (!isActive) {
-            return;
+          try {
+            const position = await withTimeout(
+              Location.getCurrentPositionAsync({}),
+              LOCATION_TIMEOUT_MS,
+              'Standortabfrage abgebrochen (Zeitüberschreitung).'
+            );
+            if (!isActive) {
+              return;
+            }
+            const coords: Coordinates = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            };
+            setUserLocation(coords);
+            setMapCenter(coords);
+            setLocationError(null);
+            setIsLocationResolved(true);
+            await searchAround(coords);
+          } catch (error: unknown) {
+            console.error('[Toiletten] Standort konnte nicht ermittelt werden:', error);
+            if (isActive) {
+              setLocationError(
+                error instanceof TimeoutError ? error.message : 'Standort konnte nicht ermittelt werden.'
+              );
+              setIsLocationResolved(true);
+            }
           }
-          const coords: Coordinates = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          };
-          setUserLocation(coords);
-          setMapCenter(coords);
-          setIsLocationResolved(true);
-          await searchAround(coords);
         })
         .catch((error: unknown) => {
-          console.error('[Toiletten] Standort konnte nicht ermittelt werden:', error);
+          console.error('[Toiletten] Standortberechtigung konnte nicht abgefragt werden:', error);
           if (isActive) {
             setLocationDenied(true);
             setIsLocationResolved(true);
@@ -235,6 +256,11 @@ export default function ToilettenScreen() {
   return (
     <View style={styles.container}>
       {locationDenied && <LocationPermissionBanner />}
+      {locationError && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorText}>{locationError}</Text>
+        </View>
+      )}
       {loadError && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>{loadError}</Text>

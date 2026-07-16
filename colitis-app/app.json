@@ -48,6 +48,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "357249b5-de31-44a7-a01e-bd4ce99165dc"
+      }
+    },
+    "owner": "kettenhund46"
   }
 }
