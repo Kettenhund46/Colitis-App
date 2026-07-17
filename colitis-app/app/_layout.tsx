@@ -10,10 +10,23 @@ import { createEncryptedDb } from '../src/db/client';
 import { resetAppData } from '../src/lib/appReset';
 import { LockScreen } from '../src/features/appLock/components/LockScreen';
 import { useAppLockGate } from '../src/features/appLock/useAppLockGate';
+import { ThemeProvider, useTheme } from '../src/theme/ThemeContext';
+import { DailyJokeModal } from '../src/features/dailyJoke/components/DailyJokeModal';
 import * as schema from '../src/db/schema';
 import { tokens } from '../src/styles/tokens';
+import type { ThemeColors } from '../src/theme/types';
 
 export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <RootLayoutInner />
+    </ThemeProvider>
+  );
+}
+
+function RootLayoutInner() {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [fontsLoaded, fontError] = useFonts(MaterialCommunityIcons.font);
   const [db, setDb] = useState<ExpoSQLiteDatabase<typeof schema> | null>(null);
   const [initError, setInitError] = useState<string | null>(null);
@@ -87,6 +100,8 @@ function MigratedLayout({
   db: ExpoSQLiteDatabase<typeof schema>;
   onReset: () => Promise<void>;
 }) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const { success, error } = useMigrations(db, migrations);
   const { isResolved, isLockRequired, unlock } = useAppLockGate();
 
@@ -111,19 +126,26 @@ function MigratedLayout({
     return <LockScreen onUnlock={unlock} onReset={onReset} />;
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <>
+      <DailyJokeModal />
+      <Stack screenOptions={{ headerShown: false }} />
+    </>
+  );
 }
 
-const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: tokens.spacing.lg,
-    backgroundColor: tokens.colors.background,
-  },
-  text: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    centered: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: tokens.spacing.lg,
+      backgroundColor: colors.background,
+    },
+    text: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+    },
+  });
+}
