@@ -4,11 +4,15 @@ import { Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
 import { createDiaryEntry } from '../../../src/features/diary/db/diaryRepository';
 import { DiaryEntryForm } from '../../../src/features/diary/components/DiaryEntryForm';
+import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { NewDiaryEntryInput } from '../../../src/features/diary/types';
+import type { ThemeColors } from '../../../src/theme/types';
 
 export default function NeuerEintragScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [saveError, setSaveError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
 
@@ -48,20 +52,22 @@ export default function NeuerEintragScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tokens.colors.background,
-  },
-  errorBanner: {
-    backgroundColor: tokens.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.danger,
-    padding: tokens.spacing.sm,
-  },
-  errorText: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.sm,
-    textAlign: 'center',
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    errorBanner: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.danger,
+      padding: tokens.spacing.sm,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+      textAlign: 'center',
+    },
+  });
+}

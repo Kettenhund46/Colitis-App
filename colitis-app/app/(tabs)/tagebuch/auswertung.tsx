@@ -5,10 +5,14 @@ import { createEncryptedDb } from '../../../src/db/client';
 import { listDiaryEntries } from '../../../src/features/diary/db/diaryRepository';
 import { computeTriggerPatterns } from '../../../src/features/diary/analysis';
 import { TriggerAnalysisView } from '../../../src/features/diary/components/TriggerAnalysisView';
+import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { TriggerPatternStat } from '../../../src/features/diary/analysis';
+import type { ThemeColors } from '../../../src/theme/types';
 
 export default function AuswertungScreen() {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [patterns, setPatterns] = useState<TriggerPatternStat[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,30 +63,32 @@ export default function AuswertungScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tokens.colors.background,
-  },
-  errorBanner: {
-    backgroundColor: tokens.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.danger,
-    padding: tokens.spacing.sm,
-  },
-  errorText: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.sm,
-    textAlign: 'center',
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: tokens.spacing.lg,
-  },
-  loadingText: {
-    color: tokens.colors.textSecondary,
-    fontSize: tokens.typography.fontSize.md,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    errorBanner: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.danger,
+      padding: tokens.spacing.sm,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+      textAlign: 'center',
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: tokens.spacing.lg,
+    },
+    loadingText: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.md,
+    },
+  });
+}

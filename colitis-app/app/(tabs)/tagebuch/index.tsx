@@ -5,11 +5,15 @@ import { createEncryptedDb } from '../../../src/db/client';
 import { listDiaryEntries, deleteDiaryEntry } from '../../../src/features/diary/db/diaryRepository';
 import { exportDiaryEntriesAsPdf } from '../../../src/features/diary/diaryPdfExport';
 import { DiaryHistoryList } from '../../../src/features/diary/components/DiaryHistoryList';
+import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { DiaryEntryWithTriggers } from '../../../src/features/diary/types';
+import type { ThemeColors } from '../../../src/theme/types';
 
 export default function TagebuchScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [entries, setEntries] = useState<DiaryEntryWithTriggers[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -123,74 +127,76 @@ export default function TagebuchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tokens.colors.background,
-  },
-  errorBanner: {
-    backgroundColor: tokens.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.danger,
-    padding: tokens.spacing.sm,
-  },
-  errorText: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.sm,
-    textAlign: 'center',
-  },
-  analysisLink: {
-    backgroundColor: tokens.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.border,
-    padding: tokens.spacing.md,
-  },
-  analysisLinkText: {
-    color: tokens.colors.primary,
-    fontSize: tokens.typography.fontSize.sm,
-    fontWeight: tokens.typography.fontWeight.medium,
-    textAlign: 'center',
-  },
-  exportLink: {
-    backgroundColor: tokens.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.border,
-    padding: tokens.spacing.md,
-  },
-  exportLinkDisabled: {
-    opacity: 0.5,
-  },
-  exportLinkText: {
-    color: tokens.colors.primary,
-    fontSize: tokens.typography.fontSize.sm,
-    fontWeight: tokens.typography.fontWeight.medium,
-    textAlign: 'center',
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: tokens.spacing.lg,
-  },
-  loadingText: {
-    color: tokens.colors.textSecondary,
-    fontSize: tokens.typography.fontSize.md,
-  },
-  addButton: {
-    position: 'absolute',
-    right: tokens.spacing.lg,
-    bottom: tokens.spacing.lg,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: tokens.colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-  },
-  addButtonText: {
-    color: tokens.colors.surface,
-    fontSize: tokens.typography.fontSize.xl,
-    fontWeight: tokens.typography.fontWeight.bold,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    errorBanner: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.danger,
+      padding: tokens.spacing.sm,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+      textAlign: 'center',
+    },
+    analysisLink: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      padding: tokens.spacing.md,
+    },
+    analysisLinkText: {
+      color: colors.primary,
+      fontSize: tokens.typography.fontSize.sm,
+      fontWeight: tokens.typography.fontWeight.medium,
+      textAlign: 'center',
+    },
+    exportLink: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      padding: tokens.spacing.md,
+    },
+    exportLinkDisabled: {
+      opacity: 0.5,
+    },
+    exportLinkText: {
+      color: colors.primary,
+      fontSize: tokens.typography.fontSize.sm,
+      fontWeight: tokens.typography.fontWeight.medium,
+      textAlign: 'center',
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: tokens.spacing.lg,
+    },
+    loadingText: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.md,
+    },
+    addButton: {
+      position: 'absolute',
+      right: tokens.spacing.lg,
+      bottom: tokens.spacing.lg,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: colors.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+      elevation: 4,
+    },
+    addButtonText: {
+      color: colors.surface,
+      fontSize: tokens.typography.fontSize.xl,
+      fontWeight: tokens.typography.fontWeight.bold,
+    },
+  });
+}

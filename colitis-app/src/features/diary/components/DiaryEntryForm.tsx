@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View, StyleSheet } from 'react-native';
 import { NumberStepper } from '../../../components/ui/NumberStepper';
+import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import { SYMPTOM_OPTIONS, STOOL_CONSISTENCY_OPTIONS, TRIGGER_CATEGORY_OPTIONS } from '../constants';
 import type { StoolConsistency, SymptomKey, TriggerCategory } from '../constants';
@@ -12,12 +13,15 @@ import {
   type DiaryEntryFormState,
 } from '../formLogic';
 import type { NewDiaryEntryInput } from '../types';
+import type { ThemeColors } from '../../../theme/types';
 
 interface DiaryEntryFormProps {
   onSubmit: (input: NewDiaryEntryInput) => void | Promise<void>;
 }
 
 export function DiaryEntryForm({ onSubmit }: DiaryEntryFormProps) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [formState, setFormState] = useState<DiaryEntryFormState>(INITIAL_DIARY_ENTRY_FORM_STATE);
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -148,7 +152,7 @@ export function DiaryEntryForm({ onSubmit }: DiaryEntryFormProps) {
         style={styles.noteInput}
         multiline
         placeholder="Zusätzliche Beobachtungen …"
-        placeholderTextColor={tokens.colors.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         value={formState.note}
         onChangeText={(text) => setFormState({ ...formState, note: text })}
       />
@@ -176,82 +180,84 @@ export function DiaryEntryForm({ onSubmit }: DiaryEntryFormProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tokens.colors.background,
-  },
-  content: {
-    padding: tokens.spacing.lg,
-  },
-  sectionLabel: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.medium,
-    marginBottom: tokens.spacing.xs,
-    marginTop: tokens.spacing.sm,
-  },
-  row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: tokens.spacing.xs,
-    marginBottom: tokens.spacing.md,
-  },
-  choiceButton: {
-    paddingVertical: tokens.spacing.xs,
-    paddingHorizontal: tokens.spacing.md,
-    borderRadius: tokens.radius.pill,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    backgroundColor: tokens.colors.surface,
-  },
-  choiceButtonActive: {
-    backgroundColor: tokens.colors.primary,
-    borderColor: tokens.colors.primary,
-  },
-  choiceButtonDanger: {
-    backgroundColor: tokens.colors.danger,
-    borderColor: tokens.colors.danger,
-  },
-  choiceButtonText: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.sm,
-  },
-  noteInput: {
-    minHeight: 80,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    borderRadius: 8,
-    padding: tokens.spacing.sm,
-    color: tokens.colors.textPrimary,
-    backgroundColor: tokens.colors.surface,
-    textAlignVertical: 'top',
-    marginBottom: tokens.spacing.lg,
-  },
-  errorBox: {
-    backgroundColor: tokens.colors.surface,
-    borderColor: tokens.colors.danger,
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: tokens.spacing.sm,
-    marginBottom: tokens.spacing.md,
-  },
-  errorText: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.sm,
-  },
-  submitButton: {
-    backgroundColor: tokens.colors.accent,
-    borderRadius: 8,
-    paddingVertical: tokens.spacing.md,
-    alignItems: 'center',
-  },
-  submitButtonDisabled: {
-    backgroundColor: tokens.colors.border,
-  },
-  submitButtonText: {
-    color: tokens.colors.surface,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.bold,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: tokens.spacing.lg,
+    },
+    sectionLabel: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.medium,
+      marginBottom: tokens.spacing.xs,
+      marginTop: tokens.spacing.sm,
+    },
+    row: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: tokens.spacing.xs,
+      marginBottom: tokens.spacing.md,
+    },
+    choiceButton: {
+      paddingVertical: tokens.spacing.xs,
+      paddingHorizontal: tokens.spacing.md,
+      borderRadius: tokens.radius.pill,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    choiceButtonActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    choiceButtonDanger: {
+      backgroundColor: colors.danger,
+      borderColor: colors.danger,
+    },
+    choiceButtonText: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.sm,
+    },
+    noteInput: {
+      minHeight: 80,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: tokens.spacing.sm,
+      color: colors.textPrimary,
+      backgroundColor: colors.surface,
+      textAlignVertical: 'top',
+      marginBottom: tokens.spacing.lg,
+    },
+    errorBox: {
+      backgroundColor: colors.surface,
+      borderColor: colors.danger,
+      borderWidth: 1,
+      borderRadius: 8,
+      padding: tokens.spacing.sm,
+      marginBottom: tokens.spacing.md,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+    },
+    submitButton: {
+      backgroundColor: colors.accent,
+      borderRadius: 8,
+      paddingVertical: tokens.spacing.md,
+      alignItems: 'center',
+    },
+    submitButtonDisabled: {
+      backgroundColor: colors.border,
+    },
+    submitButtonText: {
+      color: colors.surface,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.bold,
+    },
+  });
+}

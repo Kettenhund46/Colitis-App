@@ -1,8 +1,10 @@
 import { FlatList, Pressable, Text, View, StyleSheet } from 'react-native';
+import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import { STOOL_CONSISTENCY_OPTIONS, SYMPTOM_OPTIONS, TRIGGER_CATEGORY_OPTIONS, labelFor } from '../constants';
 import { formatOccurredAt } from '../formatting';
 import type { DiaryEntryWithTriggers } from '../types';
+import type { ThemeColors } from '../../../theme/types';
 
 interface DiaryHistoryListProps {
   entries: DiaryEntryWithTriggers[];
@@ -10,6 +12,9 @@ interface DiaryHistoryListProps {
 }
 
 export function DiaryHistoryList({ entries, onDelete }: DiaryHistoryListProps) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
   if (entries.length === 0) {
     return (
       <View style={styles.emptyContainer}>
@@ -59,66 +64,68 @@ export function DiaryHistoryList({ entries, onDelete }: DiaryHistoryListProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  list: {
-    flex: 1,
-    backgroundColor: tokens.colors.background,
-  },
-  listContent: {
-    padding: tokens.spacing.lg,
-  },
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: tokens.spacing.lg,
-    backgroundColor: tokens.colors.background,
-  },
-  emptyText: {
-    color: tokens.colors.textSecondary,
-    fontSize: tokens.typography.fontSize.md,
-    textAlign: 'center',
-  },
-  card: {
-    backgroundColor: tokens.colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    padding: tokens.spacing.md,
-    marginBottom: tokens.spacing.md,
-  },
-  cardDate: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.bold,
-    marginBottom: tokens.spacing.xs,
-  },
-  cardDetail: {
-    color: tokens.colors.textSecondary,
-    fontSize: tokens.typography.fontSize.sm,
-  },
-  cardWarning: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.sm,
-    fontWeight: tokens.typography.fontWeight.medium,
-  },
-  cardNote: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.sm,
-    marginTop: tokens.spacing.xs,
-    fontStyle: 'italic',
-  },
-  deleteButton: {
-    alignSelf: 'flex-start',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: tokens.colors.danger,
-    paddingVertical: tokens.spacing.xs,
-    paddingHorizontal: tokens.spacing.md,
-    marginTop: tokens.spacing.sm,
-  },
-  deleteButtonText: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.sm,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    list: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    listContent: {
+      padding: tokens.spacing.lg,
+    },
+    emptyContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: tokens.spacing.lg,
+      backgroundColor: colors.background,
+    },
+    emptyText: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.md,
+      textAlign: 'center',
+    },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: tokens.spacing.md,
+      marginBottom: tokens.spacing.md,
+    },
+    cardDate: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.bold,
+      marginBottom: tokens.spacing.xs,
+    },
+    cardDetail: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+    },
+    cardWarning: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+      fontWeight: tokens.typography.fontWeight.medium,
+    },
+    cardNote: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.sm,
+      marginTop: tokens.spacing.xs,
+      fontStyle: 'italic',
+    },
+    deleteButton: {
+      alignSelf: 'flex-start',
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.danger,
+      paddingVertical: tokens.spacing.xs,
+      paddingHorizontal: tokens.spacing.md,
+      marginTop: tokens.spacing.sm,
+    },
+    deleteButtonText: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+    },
+  });
+}
