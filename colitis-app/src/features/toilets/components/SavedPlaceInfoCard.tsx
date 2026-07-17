@@ -1,6 +1,8 @@
 import { Pressable, Text, View, StyleSheet } from 'react-native';
+import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import type { SavedPlace } from '../types';
+import type { ThemeColors } from '../../../theme/types';
 
 interface SavedPlaceInfoCardProps {
   place: SavedPlace;
@@ -11,6 +13,8 @@ interface SavedPlaceInfoCardProps {
 }
 
 export function SavedPlaceInfoCard({ place, onNavigate, onEdit, onDelete, onClose }: SavedPlaceInfoCardProps) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   return (
     <View style={styles.card}>
       <Pressable
@@ -49,82 +53,84 @@ export function SavedPlaceInfoCard({ place, onNavigate, onEdit, onDelete, onClos
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    position: 'absolute',
-    left: tokens.spacing.md,
-    right: tokens.spacing.md,
-    bottom: tokens.spacing.md,
-    backgroundColor: tokens.colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    padding: tokens.spacing.md,
-  },
-  closeButton: {
-    position: 'absolute',
-    right: tokens.spacing.sm,
-    top: tokens.spacing.sm,
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  closeButtonText: {
-    fontSize: tokens.typography.fontSize.lg,
-    color: tokens.colors.textSecondary,
-  },
-  name: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.bold,
-    marginBottom: tokens.spacing.xs,
-    paddingRight: tokens.spacing.lg,
-  },
-  detail: {
-    color: tokens.colors.textSecondary,
-    fontSize: tokens.typography.fontSize.sm,
-    marginBottom: tokens.spacing.xs,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: tokens.spacing.sm,
-    marginTop: tokens.spacing.sm,
-  },
-  secondaryButton: {
-    flex: 1,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    paddingVertical: tokens.spacing.sm,
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.sm,
-  },
-  dangerButton: {
-    flex: 1,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: tokens.colors.danger,
-    paddingVertical: tokens.spacing.sm,
-    alignItems: 'center',
-  },
-  dangerButtonText: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.sm,
-  },
-  navigateButton: {
-    backgroundColor: tokens.colors.accent,
-    borderRadius: 8,
-    paddingVertical: tokens.spacing.sm,
-    alignItems: 'center',
-    marginTop: tokens.spacing.sm,
-  },
-  navigateButtonText: {
-    color: tokens.colors.surface,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.bold,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    card: {
+      position: 'absolute',
+      left: tokens.spacing.md,
+      right: tokens.spacing.md,
+      bottom: tokens.spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: tokens.spacing.md,
+    },
+    closeButton: {
+      position: 'absolute',
+      right: tokens.spacing.sm,
+      top: tokens.spacing.sm,
+      width: 28,
+      height: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    closeButtonText: {
+      fontSize: tokens.typography.fontSize.lg,
+      color: colors.textSecondary,
+    },
+    name: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.bold,
+      marginBottom: tokens.spacing.xs,
+      paddingRight: tokens.spacing.lg,
+    },
+    detail: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      marginBottom: tokens.spacing.xs,
+    },
+    actionRow: {
+      flexDirection: 'row',
+      gap: tokens.spacing.sm,
+      marginTop: tokens.spacing.sm,
+    },
+    secondaryButton: {
+      flex: 1,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: tokens.spacing.sm,
+      alignItems: 'center',
+    },
+    secondaryButtonText: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.sm,
+    },
+    dangerButton: {
+      flex: 1,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.danger,
+      paddingVertical: tokens.spacing.sm,
+      alignItems: 'center',
+    },
+    dangerButtonText: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+    },
+    navigateButton: {
+      backgroundColor: colors.accent,
+      borderRadius: 8,
+      paddingVertical: tokens.spacing.sm,
+      alignItems: 'center',
+      marginTop: tokens.spacing.sm,
+    },
+    navigateButtonText: {
+      color: colors.surface,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.bold,
+    },
+  });
+}

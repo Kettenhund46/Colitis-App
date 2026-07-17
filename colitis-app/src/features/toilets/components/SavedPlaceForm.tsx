@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View, StyleSheet } from 'react-native';
+import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import {
   INITIAL_SAVED_PLACE_FORM_STATE,
@@ -9,6 +10,7 @@ import {
   type SavedPlaceFormState,
 } from '../savedPlaceFormLogic';
 import type { Coordinates, SavedPlaceInput } from '../types';
+import type { ThemeColors } from '../../../theme/types';
 
 interface SavedPlaceFormProps {
   coordinates: Coordinates;
@@ -19,6 +21,8 @@ interface SavedPlaceFormProps {
 }
 
 export function SavedPlaceForm({ coordinates, initialState, onSubmit, onCancel, submitLabel }: SavedPlaceFormProps) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [formState, setFormState] = useState<SavedPlaceFormState>(initialState ?? INITIAL_SAVED_PLACE_FORM_STATE);
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,7 +51,7 @@ export function SavedPlaceForm({ coordinates, initialState, onSubmit, onCancel, 
         <TextInput
           style={styles.textInput}
           placeholder="z. B. Büro"
-          placeholderTextColor={tokens.colors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           value={formState.name}
           onChangeText={(text) => setFormState({ ...formState, name: text })}
         />
@@ -71,7 +75,7 @@ export function SavedPlaceForm({ coordinates, initialState, onSubmit, onCancel, 
         <TextInput
           style={styles.textInput}
           placeholder="Eigene Kategorie"
-          placeholderTextColor={tokens.colors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           value={formState.category}
           onChangeText={(text) => setFormState({ ...formState, category: text })}
         />
@@ -80,7 +84,7 @@ export function SavedPlaceForm({ coordinates, initialState, onSubmit, onCancel, 
         <TextInput
           style={[styles.textInput, styles.noteInput]}
           placeholder="z. B. Toilette im 2. Stock"
-          placeholderTextColor={tokens.colors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           value={formState.note}
           onChangeText={(text) => setFormState({ ...formState, note: text })}
           multiline
@@ -115,117 +119,119 @@ export function SavedPlaceForm({ coordinates, initialState, onSubmit, onCancel, 
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: tokens.colors.overlay,
-    justifyContent: 'flex-end',
-  },
-  card: {
-    maxHeight: '80%',
-    backgroundColor: tokens.colors.surface,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  content: {
-    padding: tokens.spacing.lg,
-  },
-  title: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.lg,
-    fontWeight: tokens.typography.fontWeight.bold,
-    marginBottom: tokens.spacing.md,
-  },
-  sectionLabel: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.medium,
-    marginBottom: tokens.spacing.xs,
-    marginTop: tokens.spacing.sm,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    borderRadius: 8,
-    padding: tokens.spacing.sm,
-    color: tokens.colors.textPrimary,
-    backgroundColor: tokens.colors.surface,
-    marginBottom: tokens.spacing.md,
-  },
-  noteInput: {
-    minHeight: 72,
-    textAlignVertical: 'top',
-  },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: tokens.spacing.xs,
-    marginBottom: tokens.spacing.sm,
-  },
-  chip: {
-    paddingVertical: tokens.spacing.xs,
-    paddingHorizontal: tokens.spacing.md,
-    borderRadius: tokens.radius.pill,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-  },
-  chipSelected: {
-    backgroundColor: tokens.colors.primary,
-    borderColor: tokens.colors.primary,
-  },
-  chipText: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.sm,
-  },
-  chipTextSelected: {
-    color: tokens.colors.surface,
-  },
-  errorBox: {
-    backgroundColor: tokens.colors.surface,
-    borderColor: tokens.colors.danger,
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: tokens.spacing.sm,
-    marginBottom: tokens.spacing.md,
-  },
-  errorText: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.sm,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: tokens.spacing.sm,
-    marginTop: tokens.spacing.md,
-  },
-  cancelButton: {
-    flex: 1,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    paddingVertical: tokens.spacing.md,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-  },
-  submitButton: {
-    flex: 1,
-    backgroundColor: tokens.colors.accent,
-    borderRadius: 8,
-    paddingVertical: tokens.spacing.md,
-    alignItems: 'center',
-  },
-  submitButtonDisabled: {
-    backgroundColor: tokens.colors.border,
-  },
-  submitButtonText: {
-    color: tokens.colors.surface,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.bold,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    overlay: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
+      backgroundColor: colors.overlay,
+      justifyContent: 'flex-end',
+    },
+    card: {
+      maxHeight: '80%',
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+    },
+    content: {
+      padding: tokens.spacing.lg,
+    },
+    title: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.lg,
+      fontWeight: tokens.typography.fontWeight.bold,
+      marginBottom: tokens.spacing.md,
+    },
+    sectionLabel: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.medium,
+      marginBottom: tokens.spacing.xs,
+      marginTop: tokens.spacing.sm,
+    },
+    textInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: tokens.spacing.sm,
+      color: colors.textPrimary,
+      backgroundColor: colors.surface,
+      marginBottom: tokens.spacing.md,
+    },
+    noteInput: {
+      minHeight: 72,
+      textAlignVertical: 'top',
+    },
+    chipRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: tokens.spacing.xs,
+      marginBottom: tokens.spacing.sm,
+    },
+    chip: {
+      paddingVertical: tokens.spacing.xs,
+      paddingHorizontal: tokens.spacing.md,
+      borderRadius: tokens.radius.pill,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    chipSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    chipText: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.sm,
+    },
+    chipTextSelected: {
+      color: colors.surface,
+    },
+    errorBox: {
+      backgroundColor: colors.surface,
+      borderColor: colors.danger,
+      borderWidth: 1,
+      borderRadius: 8,
+      padding: tokens.spacing.sm,
+      marginBottom: tokens.spacing.md,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      gap: tokens.spacing.sm,
+      marginTop: tokens.spacing.md,
+    },
+    cancelButton: {
+      flex: 1,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: tokens.spacing.md,
+      alignItems: 'center',
+    },
+    cancelButtonText: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+    },
+    submitButton: {
+      flex: 1,
+      backgroundColor: colors.accent,
+      borderRadius: 8,
+      paddingVertical: tokens.spacing.md,
+      alignItems: 'center',
+    },
+    submitButtonDisabled: {
+      backgroundColor: colors.border,
+    },
+    submitButtonText: {
+      color: colors.surface,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.bold,
+    },
+  });
+}

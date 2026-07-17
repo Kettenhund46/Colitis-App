@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { MAP_HTML } from '../mapHtml.generated';
+import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import type { Coordinates, SavedPlace, Toilet, WebViewToNativeMessage } from '../types';
+import type { ThemeColors } from '../../../theme/types';
 
 interface ToiletMapViewProps {
   center: Coordinates;
@@ -22,6 +24,8 @@ export function ToiletMapView({
   onMarkerTap,
   onLongPress,
 }: ToiletMapViewProps) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const webViewRef = useRef<WebView>(null);
   const [isReady, setIsReady] = useState(false);
   const [hasLoadError, setHasLoadError] = useState(false);
@@ -97,20 +101,22 @@ export function ToiletMapView({
   );
 }
 
-const styles = StyleSheet.create({
-  webview: {
-    flex: 1,
-  },
-  errorContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: tokens.spacing.lg,
-    backgroundColor: tokens.colors.background,
-  },
-  errorText: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.md,
-    textAlign: 'center',
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    webview: {
+      flex: 1,
+    },
+    errorContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: tokens.spacing.lg,
+      backgroundColor: colors.background,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.md,
+      textAlign: 'center',
+    },
+  });
+}

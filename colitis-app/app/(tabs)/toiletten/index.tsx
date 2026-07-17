@@ -25,9 +25,11 @@ import {
   deleteSavedPlace,
 } from '../../../src/features/toilets/db/savedPlacesRepository';
 import { replaceCachedToilets, listCachedToilets } from '../../../src/features/toilets/db/cachedToiletsRepository';
+import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { Coordinates, SavedPlace, SavedPlaceInput, Toilet } from '../../../src/features/toilets/types';
 import type { SavedPlaceFormState } from '../../../src/features/toilets/savedPlaceFormLogic';
+import type { ThemeColors } from '../../../src/theme/types';
 
 const DEFAULT_CENTER: Coordinates = { latitude: 51.1657, longitude: 10.4515 };
 
@@ -35,6 +37,8 @@ type SelectedMarker = { id: string; kind: 'toilet' | 'place' };
 type FormMode = { mode: 'create'; coordinates: Coordinates } | { mode: 'edit'; place: SavedPlace } | null;
 
 export default function ToilettenScreen() {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [mapCenter, setMapCenter] = useState<Coordinates>(DEFAULT_CENTER);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [lastSearchedCenter, setLastSearchedCenter] = useState<Coordinates | null>(null);
@@ -314,31 +318,33 @@ export default function ToilettenScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tokens.colors.background,
-  },
-  errorBanner: {
-    backgroundColor: tokens.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.danger,
-    padding: tokens.spacing.sm,
-  },
-  errorText: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.sm,
-    textAlign: 'center',
-  },
-  offlineBanner: {
-    backgroundColor: tokens.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.border,
-    padding: tokens.spacing.sm,
-  },
-  offlineText: {
-    color: tokens.colors.textSecondary,
-    fontSize: tokens.typography.fontSize.sm,
-    textAlign: 'center',
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    errorBanner: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.danger,
+      padding: tokens.spacing.sm,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+      textAlign: 'center',
+    },
+    offlineBanner: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      padding: tokens.spacing.sm,
+    },
+    offlineText: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      textAlign: 'center',
+    },
+  });
+}
