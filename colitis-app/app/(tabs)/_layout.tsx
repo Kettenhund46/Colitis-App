@@ -1,14 +1,16 @@
 import { Tabs } from 'expo-router';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { tokens } from '../../src/styles/tokens';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function TabsLayout() {
+  const { colors } = useTheme();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: tokens.colors.primary,
-        tabBarInactiveTintColor: tokens.colors.textSecondary,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
       }}
     >
       <Tabs.Screen name="index" options={{ href: null }} />

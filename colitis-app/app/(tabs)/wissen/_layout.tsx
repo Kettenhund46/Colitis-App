@@ -1,12 +1,14 @@
 import { Stack } from 'expo-router';
-import { tokens } from '../../../src/styles/tokens';
+import { useTheme } from '../../../src/theme/ThemeContext';
 
 export default function WissenLayout() {
+  const { colors } = useTheme();
+
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: tokens.colors.background },
-        headerTintColor: tokens.colors.textPrimary,
+        headerStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.textPrimary,
         headerShadowVisible: false,
       }}
     >
