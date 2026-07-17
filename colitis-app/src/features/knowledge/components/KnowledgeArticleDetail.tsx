@@ -1,12 +1,16 @@
 import { Linking, Pressable, ScrollView, Text, View, StyleSheet } from 'react-native';
+import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import type { KnowledgeArticle } from '../types';
+import type { ThemeColors } from '../../../theme/types';
 
 interface KnowledgeArticleDetailProps {
   article: KnowledgeArticle;
 }
 
 export function KnowledgeArticleDetail({ article }: KnowledgeArticleDetailProps) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const paragraphs = article.body.split('\n\n');
 
   return (
@@ -34,41 +38,43 @@ export function KnowledgeArticleDetail({ article }: KnowledgeArticleDetailProps)
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tokens.colors.background,
-  },
-  content: {
-    padding: tokens.spacing.lg,
-  },
-  title: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.xl,
-    fontWeight: tokens.typography.fontWeight.bold,
-    marginBottom: tokens.spacing.md,
-  },
-  paragraph: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-    marginBottom: tokens.spacing.md,
-    lineHeight: 24,
-  },
-  sourcesSection: {
-    marginTop: tokens.spacing.lg,
-    paddingTop: tokens.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: tokens.colors.border,
-  },
-  sourcesHeading: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.bold,
-    marginBottom: tokens.spacing.sm,
-  },
-  sourceLink: {
-    color: tokens.colors.primary,
-    fontSize: tokens.typography.fontSize.sm,
-    marginBottom: tokens.spacing.sm,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: tokens.spacing.lg,
+    },
+    title: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.xl,
+      fontWeight: tokens.typography.fontWeight.bold,
+      marginBottom: tokens.spacing.md,
+    },
+    paragraph: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+      marginBottom: tokens.spacing.md,
+      lineHeight: 24,
+    },
+    sourcesSection: {
+      marginTop: tokens.spacing.lg,
+      paddingTop: tokens.spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    sourcesHeading: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.bold,
+      marginBottom: tokens.spacing.sm,
+    },
+    sourceLink: {
+      color: colors.primary,
+      fontSize: tokens.typography.fontSize.sm,
+      marginBottom: tokens.spacing.sm,
+    },
+  });
+}

@@ -4,10 +4,14 @@ import { Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
 import { getKnowledgeArticleBySlug } from '../../../src/features/knowledge/db/knowledgeRepository';
 import { KnowledgeArticleDetail } from '../../../src/features/knowledge/components/KnowledgeArticleDetail';
+import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { KnowledgeArticle } from '../../../src/features/knowledge/types';
+import type { ThemeColors } from '../../../src/theme/types';
 
 export default function ArtikelScreen() {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const [article, setArticle] = useState<KnowledgeArticle | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -56,21 +60,23 @@ export default function ArtikelScreen() {
   return <KnowledgeArticleDetail article={article} />;
 }
 
-const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: tokens.spacing.lg,
-    backgroundColor: tokens.colors.background,
-  },
-  errorText: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.md,
-    textAlign: 'center',
-  },
-  loadingText: {
-    color: tokens.colors.textSecondary,
-    fontSize: tokens.typography.fontSize.md,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    centered: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: tokens.spacing.lg,
+      backgroundColor: colors.background,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.md,
+      textAlign: 'center',
+    },
+    loadingText: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.md,
+    },
+  });
+}

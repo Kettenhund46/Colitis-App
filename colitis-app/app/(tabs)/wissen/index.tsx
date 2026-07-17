@@ -5,11 +5,15 @@ import { createEncryptedDb } from '../../../src/db/client';
 import { seedKnowledgeArticles, listKnowledgeArticles } from '../../../src/features/knowledge/db/knowledgeRepository';
 import { filterKnowledgeArticles } from '../../../src/features/knowledge/search';
 import { KnowledgeArticleList } from '../../../src/features/knowledge/components/KnowledgeArticleList';
+import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { KnowledgeArticle } from '../../../src/features/knowledge/types';
+import type { ThemeColors } from '../../../src/theme/types';
 
 export default function WissenScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [articles, setArticles] = useState<KnowledgeArticle[]>([]);
   const [query, setQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +70,7 @@ export default function WissenScreen() {
       <TextInput
         style={styles.searchInput}
         placeholder="Artikel durchsuchen …"
-        placeholderTextColor={tokens.colors.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         value={query}
         onChangeText={setQuery}
         accessibilityLabel="Wissensartikel durchsuchen"
@@ -85,52 +89,54 @@ export default function WissenScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tokens.colors.background,
-  },
-  errorBanner: {
-    backgroundColor: tokens.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.danger,
-    padding: tokens.spacing.sm,
-  },
-  errorText: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.sm,
-    textAlign: 'center',
-  },
-  newsLink: {
-    backgroundColor: tokens.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.border,
-    padding: tokens.spacing.md,
-  },
-  newsLinkText: {
-    color: tokens.colors.primary,
-    fontSize: tokens.typography.fontSize.sm,
-    fontWeight: tokens.typography.fontWeight.medium,
-    textAlign: 'center',
-  },
-  searchInput: {
-    backgroundColor: tokens.colors.surface,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    borderRadius: 8,
-    margin: tokens.spacing.md,
-    padding: tokens.spacing.sm,
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: tokens.spacing.lg,
-  },
-  loadingText: {
-    color: tokens.colors.textSecondary,
-    fontSize: tokens.typography.fontSize.md,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    errorBanner: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.danger,
+      padding: tokens.spacing.sm,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+      textAlign: 'center',
+    },
+    newsLink: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      padding: tokens.spacing.md,
+    },
+    newsLinkText: {
+      color: colors.primary,
+      fontSize: tokens.typography.fontSize.sm,
+      fontWeight: tokens.typography.fontWeight.medium,
+      textAlign: 'center',
+    },
+    searchInput: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      margin: tokens.spacing.md,
+      padding: tokens.spacing.sm,
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: tokens.spacing.lg,
+    },
+    loadingText: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.md,
+    },
+  });
+}

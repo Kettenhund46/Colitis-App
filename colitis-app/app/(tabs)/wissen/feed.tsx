@@ -9,10 +9,14 @@ import {
   markFeedItemAsRead,
 } from '../../../src/features/newsFeed/db/feedItemsRepository';
 import { NewsFeedList } from '../../../src/features/newsFeed/components/NewsFeedList';
+import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { FeedItem } from '../../../src/features/newsFeed/types';
+import type { ThemeColors } from '../../../src/theme/types';
 
 export default function NewsFeedScreen() {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [items, setItems] = useState<FeedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -119,41 +123,43 @@ export default function NewsFeedScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tokens.colors.background,
-  },
-  errorBanner: {
-    backgroundColor: tokens.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.danger,
-    padding: tokens.spacing.sm,
-  },
-  errorText: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.sm,
-    textAlign: 'center',
-  },
-  offlineBanner: {
-    backgroundColor: tokens.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.border,
-    padding: tokens.spacing.sm,
-  },
-  offlineText: {
-    color: tokens.colors.textSecondary,
-    fontSize: tokens.typography.fontSize.sm,
-    textAlign: 'center',
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: tokens.spacing.lg,
-  },
-  loadingText: {
-    color: tokens.colors.textSecondary,
-    fontSize: tokens.typography.fontSize.md,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    errorBanner: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.danger,
+      padding: tokens.spacing.sm,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+      textAlign: 'center',
+    },
+    offlineBanner: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      padding: tokens.spacing.sm,
+    },
+    offlineText: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      textAlign: 'center',
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: tokens.spacing.lg,
+    },
+    loadingText: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.md,
+    },
+  });
+}
