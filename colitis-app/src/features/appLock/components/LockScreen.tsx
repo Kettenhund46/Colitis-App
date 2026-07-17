@@ -29,7 +29,7 @@ export function LockScreen({ onUnlock, onReset }: LockScreenProps) {
         setBiometricsAvailable(available);
         if (available) {
           try {
-            const success = await authenticateWithBiometrics('Colitis-App entsperren');
+            const success = await authenticateWithBiometrics('Colitis2Go entsperren');
             if (success && isActive) {
               onUnlock();
             }
@@ -51,7 +51,7 @@ export function LockScreen({ onUnlock, onReset }: LockScreenProps) {
 
   async function handleBiometricsRetry() {
     try {
-      const success = await authenticateWithBiometrics('Colitis-App entsperren');
+      const success = await authenticateWithBiometrics('Colitis2Go entsperren');
       if (success) {
         onUnlock();
       }
