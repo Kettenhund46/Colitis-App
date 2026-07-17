@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
+import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import { isValidCalendarDate } from '../dateValidation';
 import type { ScreeningReminder, NewScreeningReminderInput } from '../types';
+import type { ThemeColors } from '../../../theme/types';
 
 interface ScreeningReminderCardProps {
   reminder: ScreeningReminder | null;
@@ -10,6 +12,8 @@ interface ScreeningReminderCardProps {
 }
 
 export function ScreeningReminderCard({ reminder, onSave }: ScreeningReminderCardProps) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [intervalMonths, setIntervalMonths] = useState(reminder ? String(reminder.intervalMonths) : '');
   const [nextDueDate, setNextDueDate] = useState(reminder?.nextDueDate ?? '');
   const [note, setNote] = useState(reminder?.note ?? '');
@@ -53,7 +57,7 @@ export function ScreeningReminderCard({ reminder, onSave }: ScreeningReminderCar
         style={styles.textInput}
         keyboardType="number-pad"
         placeholder="z. B. 12"
-        placeholderTextColor={tokens.colors.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         value={intervalMonths}
         onChangeText={setIntervalMonths}
       />
@@ -61,7 +65,7 @@ export function ScreeningReminderCard({ reminder, onSave }: ScreeningReminderCar
       <TextInput
         style={styles.textInput}
         placeholder="2027-01-15"
-        placeholderTextColor={tokens.colors.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         value={nextDueDate}
         onChangeText={setNextDueDate}
       />
@@ -69,7 +73,7 @@ export function ScreeningReminderCard({ reminder, onSave }: ScreeningReminderCar
       <TextInput
         style={styles.textInput}
         placeholder="z. B. Rücksprache mit Dr. …"
-        placeholderTextColor={tokens.colors.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         value={note}
         onChangeText={setNote}
       />
@@ -87,48 +91,50 @@ export function ScreeningReminderCard({ reminder, onSave }: ScreeningReminderCar
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: tokens.colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    padding: tokens.spacing.md,
-    margin: tokens.spacing.lg,
-    marginBottom: 0,
-  },
-  title: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.bold,
-    marginBottom: tokens.spacing.xs,
-  },
-  hintText: {
-    color: tokens.colors.textSecondary,
-    fontSize: tokens.typography.fontSize.sm,
-    marginBottom: tokens.spacing.sm,
-  },
-  label: { color: tokens.colors.textPrimary, fontSize: tokens.typography.fontSize.sm, marginBottom: tokens.spacing.xs },
-  textInput: {
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    borderRadius: 8,
-    padding: tokens.spacing.sm,
-    color: tokens.colors.textPrimary,
-    backgroundColor: tokens.colors.background,
-    marginBottom: tokens.spacing.sm,
-  },
-  errorText: { color: tokens.colors.danger, fontSize: tokens.typography.fontSize.sm, marginBottom: tokens.spacing.sm },
-  saveButton: {
-    backgroundColor: tokens.colors.accent,
-    borderRadius: 8,
-    paddingVertical: tokens.spacing.sm,
-    alignItems: 'center',
-  },
-  saveButtonDisabled: { backgroundColor: tokens.colors.border },
-  saveButtonText: {
-    color: tokens.colors.surface,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.bold,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: tokens.spacing.md,
+      margin: tokens.spacing.lg,
+      marginBottom: 0,
+    },
+    title: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.bold,
+      marginBottom: tokens.spacing.xs,
+    },
+    hintText: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      marginBottom: tokens.spacing.sm,
+    },
+    label: { color: colors.textPrimary, fontSize: tokens.typography.fontSize.sm, marginBottom: tokens.spacing.xs },
+    textInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: tokens.spacing.sm,
+      color: colors.textPrimary,
+      backgroundColor: colors.background,
+      marginBottom: tokens.spacing.sm,
+    },
+    errorText: { color: colors.danger, fontSize: tokens.typography.fontSize.sm, marginBottom: tokens.spacing.sm },
+    saveButton: {
+      backgroundColor: colors.accent,
+      borderRadius: 8,
+      paddingVertical: tokens.spacing.sm,
+      alignItems: 'center',
+    },
+    saveButtonDisabled: { backgroundColor: colors.border },
+    saveButtonText: {
+      color: colors.surface,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.bold,
+    },
+  });
+}

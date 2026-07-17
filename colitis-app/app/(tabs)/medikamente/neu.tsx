@@ -12,11 +12,15 @@ import {
 } from '../../../src/features/medications/notifications/notificationService';
 import { buildMedicationReminderContent } from '../../../src/features/medications/notifications/reminderContent';
 import { MedicationForm } from '../../../src/features/medications/components/MedicationForm';
+import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { MedicationInput } from '../../../src/features/medications/types';
+import type { ThemeColors } from '../../../src/theme/types';
 
 export default function NeuesMedikamentScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   async function handleSubmit(input: MedicationInput) {
@@ -64,13 +68,15 @@ export default function NeuesMedikamentScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: tokens.colors.background },
-  errorBanner: {
-    backgroundColor: tokens.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.danger,
-    padding: tokens.spacing.sm,
-  },
-  errorText: { color: tokens.colors.danger, fontSize: tokens.typography.fontSize.sm, textAlign: 'center' },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    errorBanner: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.danger,
+      padding: tokens.spacing.sm,
+    },
+    errorText: { color: colors.danger, fontSize: tokens.typography.fontSize.sm, textAlign: 'center' },
+  });
+}

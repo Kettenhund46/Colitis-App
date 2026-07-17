@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View, StyleSheet } from 'react-native';
+import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import {
   INITIAL_MEDICATION_FORM_STATE,
@@ -10,6 +11,7 @@ import {
   type MedicationFormState,
 } from '../formLogic';
 import type { MedicationInput } from '../types';
+import type { ThemeColors } from '../../../theme/types';
 
 interface MedicationFormProps {
   initialState?: MedicationFormState;
@@ -18,6 +20,8 @@ interface MedicationFormProps {
 }
 
 export function MedicationForm({ initialState, onSubmit, submitLabel }: MedicationFormProps) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [formState, setFormState] = useState<MedicationFormState>(initialState ?? INITIAL_MEDICATION_FORM_STATE);
   const [newReminderTime, setNewReminderTime] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
@@ -53,7 +57,7 @@ export function MedicationForm({ initialState, onSubmit, submitLabel }: Medicati
       <TextInput
         style={styles.textInput}
         placeholder="z. B. Salofalk"
-        placeholderTextColor={tokens.colors.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         value={formState.name}
         onChangeText={(text) => setFormState({ ...formState, name: text })}
       />
@@ -62,7 +66,7 @@ export function MedicationForm({ initialState, onSubmit, submitLabel }: Medicati
       <TextInput
         style={styles.textInput}
         placeholder="z. B. 500mg"
-        placeholderTextColor={tokens.colors.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         value={formState.dose}
         onChangeText={(text) => setFormState({ ...formState, dose: text })}
       />
@@ -71,7 +75,7 @@ export function MedicationForm({ initialState, onSubmit, submitLabel }: Medicati
       <TextInput
         style={styles.textInput}
         placeholder="z. B. 1x täglich morgens"
-        placeholderTextColor={tokens.colors.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         value={formState.schedule}
         onChangeText={(text) => setFormState({ ...formState, schedule: text })}
       />
@@ -80,7 +84,7 @@ export function MedicationForm({ initialState, onSubmit, submitLabel }: Medicati
       <TextInput
         style={styles.textInput}
         placeholder="2026-07-12"
-        placeholderTextColor={tokens.colors.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         value={formState.startDate}
         onChangeText={(text) => setFormState({ ...formState, startDate: text })}
       />
@@ -89,7 +93,7 @@ export function MedicationForm({ initialState, onSubmit, submitLabel }: Medicati
       <TextInput
         style={styles.textInput}
         placeholder="Leer lassen, falls noch aktiv"
-        placeholderTextColor={tokens.colors.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         value={formState.endDate}
         onChangeText={(text) => setFormState({ ...formState, endDate: text })}
       />
@@ -118,7 +122,7 @@ export function MedicationForm({ initialState, onSubmit, submitLabel }: Medicati
         <TextInput
           style={[styles.textInput, styles.reminderInput]}
           placeholder="HH:mm, z. B. 08:00"
-          placeholderTextColor={tokens.colors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           value={newReminderTime}
           onChangeText={setNewReminderTime}
         />
@@ -155,80 +159,82 @@ export function MedicationForm({ initialState, onSubmit, submitLabel }: Medicati
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: tokens.colors.background },
-  content: { padding: tokens.spacing.lg },
-  sectionLabel: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.medium,
-    marginBottom: tokens.spacing.xs,
-    marginTop: tokens.spacing.sm,
-  },
-  hintText: {
-    color: tokens.colors.textSecondary,
-    fontSize: tokens.typography.fontSize.sm,
-    marginBottom: tokens.spacing.sm,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    borderRadius: 8,
-    padding: tokens.spacing.sm,
-    color: tokens.colors.textPrimary,
-    backgroundColor: tokens.colors.surface,
-    marginBottom: tokens.spacing.md,
-  },
-  reminderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.spacing.sm,
-    marginBottom: tokens.spacing.sm,
-  },
-  reminderTimeText: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-    flex: 1,
-  },
-  reminderInput: {
-    flex: 1,
-    marginBottom: 0,
-  },
-  removeButton: {
-    paddingVertical: tokens.spacing.xs,
-    paddingHorizontal: tokens.spacing.md,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: tokens.colors.danger,
-  },
-  removeButtonText: { color: tokens.colors.danger, fontSize: tokens.typography.fontSize.sm },
-  addTimeButton: {
-    paddingVertical: tokens.spacing.xs,
-    paddingHorizontal: tokens.spacing.md,
-    borderRadius: 8,
-    backgroundColor: tokens.colors.primary,
-  },
-  addTimeButtonText: { color: tokens.colors.surface, fontSize: tokens.typography.fontSize.sm },
-  errorBox: {
-    backgroundColor: tokens.colors.surface,
-    borderColor: tokens.colors.danger,
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: tokens.spacing.sm,
-    marginBottom: tokens.spacing.md,
-  },
-  errorText: { color: tokens.colors.danger, fontSize: tokens.typography.fontSize.sm },
-  submitButton: {
-    backgroundColor: tokens.colors.accent,
-    borderRadius: 8,
-    paddingVertical: tokens.spacing.md,
-    alignItems: 'center',
-    marginTop: tokens.spacing.md,
-  },
-  submitButtonDisabled: { backgroundColor: tokens.colors.border },
-  submitButtonText: {
-    color: tokens.colors.surface,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.bold,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    content: { padding: tokens.spacing.lg },
+    sectionLabel: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.medium,
+      marginBottom: tokens.spacing.xs,
+      marginTop: tokens.spacing.sm,
+    },
+    hintText: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      marginBottom: tokens.spacing.sm,
+    },
+    textInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: tokens.spacing.sm,
+      color: colors.textPrimary,
+      backgroundColor: colors.surface,
+      marginBottom: tokens.spacing.md,
+    },
+    reminderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: tokens.spacing.sm,
+      marginBottom: tokens.spacing.sm,
+    },
+    reminderTimeText: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+      flex: 1,
+    },
+    reminderInput: {
+      flex: 1,
+      marginBottom: 0,
+    },
+    removeButton: {
+      paddingVertical: tokens.spacing.xs,
+      paddingHorizontal: tokens.spacing.md,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.danger,
+    },
+    removeButtonText: { color: colors.danger, fontSize: tokens.typography.fontSize.sm },
+    addTimeButton: {
+      paddingVertical: tokens.spacing.xs,
+      paddingHorizontal: tokens.spacing.md,
+      borderRadius: 8,
+      backgroundColor: colors.primary,
+    },
+    addTimeButtonText: { color: colors.surface, fontSize: tokens.typography.fontSize.sm },
+    errorBox: {
+      backgroundColor: colors.surface,
+      borderColor: colors.danger,
+      borderWidth: 1,
+      borderRadius: 8,
+      padding: tokens.spacing.sm,
+      marginBottom: tokens.spacing.md,
+    },
+    errorText: { color: colors.danger, fontSize: tokens.typography.fontSize.sm },
+    submitButton: {
+      backgroundColor: colors.accent,
+      borderRadius: 8,
+      paddingVertical: tokens.spacing.md,
+      alignItems: 'center',
+      marginTop: tokens.spacing.md,
+    },
+    submitButtonDisabled: { backgroundColor: colors.border },
+    submitButtonText: {
+      color: colors.surface,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.bold,
+    },
+  });
+}

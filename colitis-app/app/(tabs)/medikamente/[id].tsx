@@ -14,11 +14,15 @@ import {
 } from '../../../src/features/medications/notifications/notificationService';
 import { buildMedicationReminderContent } from '../../../src/features/medications/notifications/reminderContent';
 import { MedicationForm } from '../../../src/features/medications/components/MedicationForm';
+import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { Medication, MedicationInput } from '../../../src/features/medications/types';
+import type { ThemeColors } from '../../../src/theme/types';
 
 export default function MedikamentBearbeitenScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const { id } = useLocalSearchParams<{ id: string }>();
   const medicationId = Number(id);
   const [medication, setMedication] = useState<Medication | null>(null);
@@ -121,14 +125,16 @@ export default function MedikamentBearbeitenScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: tokens.colors.background, padding: tokens.spacing.lg },
-  errorBanner: {
-    backgroundColor: tokens.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: tokens.colors.danger,
-    padding: tokens.spacing.sm,
-  },
-  errorText: { color: tokens.colors.danger, fontSize: tokens.typography.fontSize.sm, textAlign: 'center' },
-  loadingText: { color: tokens.colors.textSecondary, fontSize: tokens.typography.fontSize.md, textAlign: 'center' },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background, padding: tokens.spacing.lg },
+    errorBanner: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.danger,
+      padding: tokens.spacing.sm,
+    },
+    errorText: { color: colors.danger, fontSize: tokens.typography.fontSize.sm, textAlign: 'center' },
+    loadingText: { color: colors.textSecondary, fontSize: tokens.typography.fontSize.md, textAlign: 'center' },
+  });
+}

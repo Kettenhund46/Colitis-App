@@ -1,7 +1,9 @@
 import { FlatList, Pressable, Text, View, StyleSheet } from 'react-native';
+import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import { isMedicationActive } from '../medicationStatus';
 import type { Medication } from '../types';
+import type { ThemeColors } from '../../../theme/types';
 
 interface MedicationListProps {
   medications: Medication[];
@@ -13,6 +15,9 @@ interface MedicationListProps {
 }
 
 export function MedicationList({ medications, today, takenTodayIds, onTakenToday, onEnd, onEdit }: MedicationListProps) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
   if (medications.length === 0) {
     return (
       <View style={styles.emptyContainer}>
@@ -90,74 +95,76 @@ export function MedicationList({ medications, today, takenTodayIds, onTakenToday
   );
 }
 
-const styles = StyleSheet.create({
-  list: { flex: 1, backgroundColor: tokens.colors.background },
-  listContent: { padding: tokens.spacing.lg },
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: tokens.spacing.lg,
-    backgroundColor: tokens.colors.background,
-  },
-  emptyText: { color: tokens.colors.textSecondary, fontSize: tokens.typography.fontSize.md, textAlign: 'center' },
-  card: {
-    backgroundColor: tokens.colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    padding: tokens.spacing.md,
-    marginBottom: tokens.spacing.md,
-  },
-  cardEnded: { opacity: 0.6 },
-  cardName: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.bold,
-    marginBottom: tokens.spacing.xs,
-  },
-  cardDetail: { color: tokens.colors.textSecondary, fontSize: tokens.typography.fontSize.sm },
-  cardEndedLabel: {
-    color: tokens.colors.textSecondary,
-    fontSize: tokens.typography.fontSize.sm,
-    fontStyle: 'italic',
-    marginTop: tokens.spacing.xs,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: tokens.spacing.xs,
-    marginTop: tokens.spacing.sm,
-  },
-  takenButton: {
-    backgroundColor: tokens.colors.primary,
-    borderRadius: 8,
-    paddingVertical: tokens.spacing.xs,
-    paddingHorizontal: tokens.spacing.md,
-  },
-  takenButtonText: { color: tokens.colors.surface, fontSize: tokens.typography.fontSize.sm },
-  notTakenButton: {
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: tokens.colors.primary,
-    paddingVertical: tokens.spacing.xs,
-    paddingHorizontal: tokens.spacing.md,
-  },
-  notTakenButtonText: { color: tokens.colors.primary, fontSize: tokens.typography.fontSize.sm },
-  editButton: {
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    paddingVertical: tokens.spacing.xs,
-    paddingHorizontal: tokens.spacing.md,
-  },
-  editButtonText: { color: tokens.colors.textPrimary, fontSize: tokens.typography.fontSize.sm },
-  endButton: {
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: tokens.colors.danger,
-    paddingVertical: tokens.spacing.xs,
-    paddingHorizontal: tokens.spacing.md,
-  },
-  endButtonText: { color: tokens.colors.danger, fontSize: tokens.typography.fontSize.sm },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    list: { flex: 1, backgroundColor: colors.background },
+    listContent: { padding: tokens.spacing.lg },
+    emptyContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: tokens.spacing.lg,
+      backgroundColor: colors.background,
+    },
+    emptyText: { color: colors.textSecondary, fontSize: tokens.typography.fontSize.md, textAlign: 'center' },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: tokens.spacing.md,
+      marginBottom: tokens.spacing.md,
+    },
+    cardEnded: { opacity: 0.6 },
+    cardName: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.bold,
+      marginBottom: tokens.spacing.xs,
+    },
+    cardDetail: { color: colors.textSecondary, fontSize: tokens.typography.fontSize.sm },
+    cardEndedLabel: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      fontStyle: 'italic',
+      marginTop: tokens.spacing.xs,
+    },
+    actionsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: tokens.spacing.xs,
+      marginTop: tokens.spacing.sm,
+    },
+    takenButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      paddingVertical: tokens.spacing.xs,
+      paddingHorizontal: tokens.spacing.md,
+    },
+    takenButtonText: { color: colors.surface, fontSize: tokens.typography.fontSize.sm },
+    notTakenButton: {
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      paddingVertical: tokens.spacing.xs,
+      paddingHorizontal: tokens.spacing.md,
+    },
+    notTakenButtonText: { color: colors.primary, fontSize: tokens.typography.fontSize.sm },
+    editButton: {
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: tokens.spacing.xs,
+      paddingHorizontal: tokens.spacing.md,
+    },
+    editButtonText: { color: colors.textPrimary, fontSize: tokens.typography.fontSize.sm },
+    endButton: {
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.danger,
+      paddingVertical: tokens.spacing.xs,
+      paddingHorizontal: tokens.spacing.md,
+    },
+    endButtonText: { color: colors.danger, fontSize: tokens.typography.fontSize.sm },
+  });
+}
