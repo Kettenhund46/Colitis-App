@@ -64,14 +64,18 @@ Neue Komponente `src/components/SliderToggle.tsx`, ersetzt den nativen `<Switch>
 - Track-Farbe an: `colors.primary`, aus: `colors.border`. Knopf: `colors.surface`.
 - Props: `{ value: boolean; onValueChange: (value: boolean) => void; accessibilityLabel: string }` — gleiche Schnittstelle wie `Switch`, damit der Austausch an bestehenden Stellen minimal-invasiv ist.
 - Ersetzt den bestehenden App-Sperre-Switch im Einstellungen-Screen (Konsistenz: alle Toggles sehen einheitlich aus, kein Mix aus nativem OS-Switch und custom Komponente).
-- Wird auch für den neuen "Wortwitze des Tages"-Toggle verwendet.
+- Wird auch für die beiden neuen Wortwitze-Toggles verwendet. Unterstützt zusätzlich einen `disabled`-Zustand (reduzierte Deckkraft, kein `onValueChange`) für den abhängigen "Auch krankheitsbedingte Witze"-Schalter, wenn der Master-Schalter aus ist.
 
 ## 4. Wortwitze des Tages
 
 - `src/features/dailyJoke/jokes.ts`: statische Liste von ca. 60 harmlosen, allgemeinen deutschen Wortwitzen (kein Gesundheits-/Krankheitsbezug — reiner Wortwitz-Humor als kleiner Stimmungsaufheller).
-- `src/features/dailyJoke/pickJokeForDate.ts`: reine Funktion `pickJokeForDate(date: Date, jokes: string[]): string`, wählt deterministisch einen Witz pro Kalendertag (Datums-Hash Modulo Listenlänge) — am selben Tag erscheint bei mehrfachem App-Start immer derselbe Witz.
-- Einstellung "Wortwitze des Tages an/aus" wird ebenfalls über AsyncStorage persistiert (eigener Key, unabhängig vom Theme).
-- In `app/_layout.tsx`: nach den bestehenden Lade-Gates (Font-Preload, DB-Init) wird bei aktivierter Einstellung ein Modal mit dem Tageswitz eingeblendet — bei jedem App-Start (nicht auf "einmal pro Tag" limitiert), zeigt aber wegen der Datums-Deterministik am selben Tag denselben Witz.
+- `src/features/dailyJoke/illnessJokes.ts`: zweite statische Liste (ca. 20-30) mit krankheitsbezogenen Wortwitzen (Colitis/Darm/Krankenhaus-Humor, leicht und nicht abwertend).
+- `src/features/dailyJoke/pickJokeForDate.ts`: reine Funktion `pickJokeForDate(date: Date, jokes: string[]): string`, wählt deterministisch einen Witz pro Kalendertag (Datums-Hash Modulo Listenlänge) — am selben Tag erscheint bei mehrfachem App-Start immer derselbe Witz. Der übergebene Pool entscheidet über das Ergebnis, die Funktion selbst kennt keine Pool-Zusammensetzung.
+- `src/features/dailyJoke/buildJokePool.ts`: reine Funktion `buildJokePool(includeIllnessJokes: boolean): string[]` — liefert `jokes` allein, oder `[...jokes, ...illnessJokes]` wenn krankheitsbezogene Witze aktiviert sind (gemischter Pool, kein Ersetzen). Dadurch bleibt `pickJokeForDate` unverändert testbar.
+- Zwei unabhängige Einstellungen, beide über AsyncStorage persistiert:
+  - "Wortwitze des Tages an/aus" (Master-Schalter, ob das Modal überhaupt erscheint)
+  - "Auch krankheitsbedingte Witze" (nur relevant, wenn der Master-Schalter an ist — UI-seitig ausgegraut/deaktiviert, solange "Wortwitze des Tages" aus ist)
+- In `app/_layout.tsx`: nach den bestehenden Lade-Gates (Font-Preload, DB-Init) wird bei aktiviertem Master-Schalter ein Modal mit dem Tageswitz eingeblendet (Pool via `buildJokePool`, Auswahl via `pickJokeForDate`) — bei jedem App-Start (nicht auf "einmal pro Tag" limitiert), zeigt aber wegen der Datums-Deterministik am selben Tag denselben Witz (sofern sich die Pool-Zusammensetzung durch den zweiten Schalter nicht zwischenzeitlich ändert).
 
 ## 5. Fehlerbehandlung
 
@@ -82,7 +86,7 @@ Neue Komponente `src/components/SliderToggle.tsx`, ersetzt den nativen `<Switch>
 
 Konsistent mit bestehender Projekt-Konvention:
 
-- TDD-getestet (Vitest): `pickJokeForDate` (Determinismus pro Datum, Modulo-Verhalten bei Listenlänge), Palette-Auflösung/`getColorsForTheme(themeId)`-Helper.
+- TDD-getestet (Vitest): `pickJokeForDate` (Determinismus pro Datum, Modulo-Verhalten bei Listenlänge), `buildJokePool` (mit/ohne krankheitsbezogene Witze), Palette-Auflösung/`getColorsForTheme(themeId)`-Helper.
 - Nicht getestet (Projekt-Konvention für UI): `SliderToggle`, Einstellungen-Screen-Sektion, Modal-Komponente, `ThemeContext`/`useTheme`-Hook selbst (reiner State-Wrapper ohne eigene Logik).
 
 ## Scope-Abgrenzung
@@ -90,3 +94,4 @@ Konsistent mit bestehender Projekt-Konvention:
 - Keine Migration bestehender AsyncStorage-freier Daten nötig (neues Feature, keine Altdaten).
 - Keine Server-/Feed-Anbindung für Wortwitze (rein lokal, siehe Brainstorming-Entscheidung).
 - Kein "einmal pro Tag"-Tracking für das Modal — bewusst einfach gehalten (YAGNI), Anzeige bei jedem App-Start ist die vereinbarte Variante.
+- Krankheitsbezogene Witze werden dem allgemeinen Pool hinzugefügt (gemischt), nicht als exklusiver Ersatz-Pool (explizite Nutzerentscheidung).
