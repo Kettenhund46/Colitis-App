@@ -1,16 +1,3 @@
-const colors = {
-  background: '#FBF6EF',
-  surface: '#FFFFFF',
-  textPrimary: '#2E2A26',
-  textSecondary: '#6B6259',
-  primary: '#5B8C7B',
-  accent: '#D98E4A',
-  danger: '#B5533C',
-  success: '#5B8C7B',
-  border: '#E4DACB',
-  overlay: 'rgba(46, 42, 38, 0.4)',
-} as const;
-
 const spacing = {
   xs: 4,
   sm: 8,
@@ -41,4 +28,4 @@ const radius = {
   pill: 20,
 } as const;
 
-export const tokens = { colors, spacing, typography, radius } as const;
+export const tokens = { spacing, typography, radius } as const;
