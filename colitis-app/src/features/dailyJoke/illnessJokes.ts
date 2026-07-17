@@ -1,0 +1,16 @@
+export const illnessJokes: string[] = [
+  'Warum ging der Darm zur Paartherapie? Zu viele Verdauungsprobleme in der Beziehung.',
+  'Was sagt der Gastroenterologe zum Patienten? Wir kommen der Sache jetzt näher.',
+  'Warum nahm der Patient ein Buch mit ins Wartezimmer? Für den Fall einer längeren Sitzung.',
+  'Was ist die Lieblingsmusik vom Verdauungstrakt? Darm-bient.',
+  'Warum hat der Darm so viele Freunde? Er hört immer aufmerksam zu, was drin passiert.',
+  'Was sagt die Kolonoskopie zum Patienten? Ich schau nur kurz vorbei.',
+  'Warum war der Bauch so entspannt? Er hatte gerade eine Verdauungspause eingelegt.',
+  'Was ist das Lieblingsspiel im Wartezimmer? Wer zuerst aufgerufen wird, gewinnt.',
+  'Warum bringt man dem Darm keine schlechten Nachrichten bei? Er nimmt sich ohnehin alles zu Herzen.',
+  'Was sagt der Arzt zum gestressten Darm? Entspann dich, das geht vorbei.',
+  'Warum hat der Toilettengang Vorfahrt? Weil manche Dinge einfach nicht warten können.',
+  'Was ist der Lieblingsort vom Darm im Urlaub? Ganz in der Nähe einer Toilette.',
+  'Warum lacht der Bauch so gern? Weil Humor bekanntlich die beste Medizin ist — neben der echten.',
+  'Was sagt der Patient zur Krankenschwester? Sie nehmen mir wirklich jede Sorge ab.',
+];
