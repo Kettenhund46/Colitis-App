@@ -8,12 +8,16 @@ import { listCachedToilets } from '../src/features/toilets/db/cachedToiletsRepos
 import { findNearestCandidate } from '../src/features/toilets/nearestCandidate';
 import { buildNavigationUrl } from '../src/features/toilets/navigationLink';
 import { tokens } from '../src/styles/tokens';
+import { useTheme } from '../src/theme/ThemeContext';
+import type { ThemeColors } from '../src/theme/types';
 import type { Coordinates } from '../src/features/toilets/types';
 
 type Status = 'loading' | 'no-location' | 'no-candidates' | 'error' | 'done';
 
 export default function SchnellzugriffScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [status, setStatus] = useState<Status>('loading');
 
   useEffect(() => {
@@ -99,29 +103,31 @@ export default function SchnellzugriffScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: tokens.spacing.lg,
-    backgroundColor: tokens.colors.background,
-  },
-  text: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-    textAlign: 'center',
-    marginBottom: tokens.spacing.md,
-  },
-  button: {
-    backgroundColor: tokens.colors.accent,
-    borderRadius: 8,
-    paddingVertical: tokens.spacing.sm,
-    paddingHorizontal: tokens.spacing.lg,
-  },
-  buttonText: {
-    color: tokens.colors.surface,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.bold,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: tokens.spacing.lg,
+      backgroundColor: colors.background,
+    },
+    text: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+      textAlign: 'center',
+      marginBottom: tokens.spacing.md,
+    },
+    button: {
+      backgroundColor: colors.accent,
+      borderRadius: 8,
+      paddingVertical: tokens.spacing.sm,
+      paddingHorizontal: tokens.spacing.lg,
+    },
+    buttonText: {
+      color: colors.surface,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.bold,
+    },
+  });
+}

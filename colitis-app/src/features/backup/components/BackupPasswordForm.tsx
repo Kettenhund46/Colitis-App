@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
 import { tokens } from '../../../styles/tokens';
+import { useTheme } from '../../../theme/ThemeContext';
+import type { ThemeColors } from '../../../theme/types';
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -12,6 +14,8 @@ interface BackupPasswordFormProps {
 }
 
 export function BackupPasswordForm({ requireConfirmation, submitLabel, onSubmit, onCancel }: BackupPasswordFormProps) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +44,7 @@ export function BackupPasswordForm({ requireConfirmation, submitLabel, onSubmit,
       <Text style={styles.label}>Backup-Passwort</Text>
       <TextInput
         style={styles.textInput}
-        placeholderTextColor={tokens.colors.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -50,7 +54,7 @@ export function BackupPasswordForm({ requireConfirmation, submitLabel, onSubmit,
           <Text style={styles.label}>Passwort bestätigen</Text>
           <TextInput
             style={styles.textInput}
-            placeholderTextColor={tokens.colors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
@@ -76,65 +80,67 @@ export function BackupPasswordForm({ requireConfirmation, submitLabel, onSubmit,
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: tokens.spacing.md,
-    backgroundColor: tokens.colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-  },
-  label: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.medium,
-    marginBottom: tokens.spacing.xs,
-    marginTop: tokens.spacing.sm,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    borderRadius: 8,
-    padding: tokens.spacing.sm,
-    color: tokens.colors.textPrimary,
-    backgroundColor: tokens.colors.background,
-    marginBottom: tokens.spacing.sm,
-  },
-  error: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.sm,
-    marginBottom: tokens.spacing.sm,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: tokens.spacing.sm,
-    marginTop: tokens.spacing.sm,
-  },
-  cancelButton: {
-    flex: 1,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    paddingVertical: tokens.spacing.md,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-  },
-  submitButton: {
-    flex: 1,
-    backgroundColor: tokens.colors.accent,
-    borderRadius: 8,
-    paddingVertical: tokens.spacing.md,
-    alignItems: 'center',
-  },
-  submitButtonDisabled: {
-    backgroundColor: tokens.colors.border,
-  },
-  submitButtonText: {
-    color: tokens.colors.surface,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.bold,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      padding: tokens.spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    label: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.medium,
+      marginBottom: tokens.spacing.xs,
+      marginTop: tokens.spacing.sm,
+    },
+    textInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: tokens.spacing.sm,
+      color: colors.textPrimary,
+      backgroundColor: colors.background,
+      marginBottom: tokens.spacing.sm,
+    },
+    error: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+      marginBottom: tokens.spacing.sm,
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      gap: tokens.spacing.sm,
+      marginTop: tokens.spacing.sm,
+    },
+    cancelButton: {
+      flex: 1,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: tokens.spacing.md,
+      alignItems: 'center',
+    },
+    cancelButtonText: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+    },
+    submitButton: {
+      flex: 1,
+      backgroundColor: colors.accent,
+      borderRadius: 8,
+      paddingVertical: tokens.spacing.md,
+      alignItems: 'center',
+    },
+    submitButtonDisabled: {
+      backgroundColor: colors.border,
+    },
+    submitButtonText: {
+      color: colors.surface,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.bold,
+    },
+  });
+}

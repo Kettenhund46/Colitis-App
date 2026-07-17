@@ -4,6 +4,8 @@ import { verifyPin } from '../pinAuth';
 import { isBiometricsAvailable, authenticateWithBiometrics } from '../biometrics';
 import { PIN_LENGTH, RESET_CONFIRMATION_PHRASE, isResetConfirmationValid } from '../pinFormLogic';
 import { tokens } from '../../../styles/tokens';
+import { useTheme } from '../../../theme/ThemeContext';
+import type { ThemeColors } from '../../../theme/types';
 
 interface LockScreenProps {
   onUnlock: () => void;
@@ -11,6 +13,8 @@ interface LockScreenProps {
 }
 
 export function LockScreen({ onUnlock, onReset }: LockScreenProps) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [biometricsAvailable, setBiometricsAvailable] = useState(false);
@@ -108,7 +112,7 @@ export function LockScreen({ onUnlock, onReset }: LockScreenProps) {
         <Text style={styles.label}>Tippe zur Bestätigung „{RESET_CONFIRMATION_PHRASE}“ ein:</Text>
         <TextInput
           style={styles.textInput}
-          placeholderTextColor={tokens.colors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           value={resetConfirmation}
           onChangeText={setResetConfirmation}
           autoCapitalize="characters"
@@ -144,7 +148,7 @@ export function LockScreen({ onUnlock, onReset }: LockScreenProps) {
       <Text style={styles.label}>PIN eingeben</Text>
       <TextInput
         style={styles.pinInput}
-        placeholderTextColor={tokens.colors.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         value={pin}
         onChangeText={handlePinChange}
         keyboardType="number-pad"
@@ -175,103 +179,105 @@ export function LockScreen({ onUnlock, onReset }: LockScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: tokens.spacing.lg,
-    backgroundColor: tokens.colors.background,
-  },
-  title: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.xl,
-    fontWeight: tokens.typography.fontWeight.bold,
-    marginBottom: tokens.spacing.lg,
-  },
-  label: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-    marginBottom: tokens.spacing.sm,
-    textAlign: 'center',
-  },
-  warning: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.sm,
-    textAlign: 'center',
-    marginBottom: tokens.spacing.lg,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    borderRadius: 8,
-    padding: tokens.spacing.sm,
-    color: tokens.colors.textPrimary,
-    backgroundColor: tokens.colors.surface,
-    marginBottom: tokens.spacing.md,
-    width: '100%',
-    textAlign: 'center',
-  },
-  pinInput: {
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    borderRadius: 8,
-    padding: tokens.spacing.md,
-    color: tokens.colors.textPrimary,
-    backgroundColor: tokens.colors.surface,
-    marginBottom: tokens.spacing.md,
-    fontSize: tokens.typography.fontSize.xl,
-    letterSpacing: 8,
-    textAlign: 'center',
-    width: '60%',
-  },
-  error: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.sm,
-    marginBottom: tokens.spacing.md,
-  },
-  biometricsButton: {
-    paddingVertical: tokens.spacing.sm,
-    paddingHorizontal: tokens.spacing.lg,
-    borderRadius: 8,
-    backgroundColor: tokens.colors.primary,
-    marginBottom: tokens.spacing.md,
-  },
-  biometricsButtonText: {
-    color: tokens.colors.surface,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.bold,
-  },
-  forgotButton: {
-    marginTop: tokens.spacing.lg,
-  },
-  forgotButtonText: {
-    color: tokens.colors.textSecondary,
-    fontSize: tokens.typography.fontSize.sm,
-    textDecorationLine: 'underline',
-  },
-  dangerButton: {
-    backgroundColor: tokens.colors.danger,
-    borderRadius: 8,
-    paddingVertical: tokens.spacing.md,
-    paddingHorizontal: tokens.spacing.lg,
-    marginBottom: tokens.spacing.md,
-    width: '100%',
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  dangerButtonText: {
-    color: tokens.colors.surface,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.bold,
-  },
-  cancelButton: {
-    paddingVertical: tokens.spacing.sm,
-  },
-  cancelButtonText: {
-    color: tokens.colors.textSecondary,
-    fontSize: tokens.typography.fontSize.md,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: tokens.spacing.lg,
+      backgroundColor: colors.background,
+    },
+    title: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.xl,
+      fontWeight: tokens.typography.fontWeight.bold,
+      marginBottom: tokens.spacing.lg,
+    },
+    label: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+      marginBottom: tokens.spacing.sm,
+      textAlign: 'center',
+    },
+    warning: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+      textAlign: 'center',
+      marginBottom: tokens.spacing.lg,
+    },
+    textInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: tokens.spacing.sm,
+      color: colors.textPrimary,
+      backgroundColor: colors.surface,
+      marginBottom: tokens.spacing.md,
+      width: '100%',
+      textAlign: 'center',
+    },
+    pinInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: tokens.spacing.md,
+      color: colors.textPrimary,
+      backgroundColor: colors.surface,
+      marginBottom: tokens.spacing.md,
+      fontSize: tokens.typography.fontSize.xl,
+      letterSpacing: 8,
+      textAlign: 'center',
+      width: '60%',
+    },
+    error: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+      marginBottom: tokens.spacing.md,
+    },
+    biometricsButton: {
+      paddingVertical: tokens.spacing.sm,
+      paddingHorizontal: tokens.spacing.lg,
+      borderRadius: 8,
+      backgroundColor: colors.primary,
+      marginBottom: tokens.spacing.md,
+    },
+    biometricsButtonText: {
+      color: colors.surface,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.bold,
+    },
+    forgotButton: {
+      marginTop: tokens.spacing.lg,
+    },
+    forgotButtonText: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      textDecorationLine: 'underline',
+    },
+    dangerButton: {
+      backgroundColor: colors.danger,
+      borderRadius: 8,
+      paddingVertical: tokens.spacing.md,
+      paddingHorizontal: tokens.spacing.lg,
+      marginBottom: tokens.spacing.md,
+      width: '100%',
+      alignItems: 'center',
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    dangerButtonText: {
+      color: colors.surface,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.bold,
+    },
+    cancelButton: {
+      paddingVertical: tokens.spacing.sm,
+    },
+    cancelButtonText: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.md,
+    },
+  });
+}
