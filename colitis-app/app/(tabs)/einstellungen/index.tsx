@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { Alert, Pressable, ScrollView, Switch, Text, TextInput, View, StyleSheet } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, TextInput, View, StyleSheet } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { createEncryptedDb } from '../../../src/db/client';
 import { isAppLockEnabled, setPin, disableAppLock } from '../../../src/features/appLock/pinAuth';
@@ -20,9 +20,24 @@ import { writeAndShareBackup, pickBackupFileContent } from '../../../src/feature
 import { BackupPasswordForm } from '../../../src/features/backup/components/BackupPasswordForm';
 import { rescheduleAllReminders } from '../../../src/features/backup/rescheduleReminders';
 import { BACKUP_FORMAT_VERSION, type BackupData, type BackupEnvelope } from '../../../src/features/backup/types';
+import { useTheme } from '../../../src/theme/ThemeContext';
+import { SliderToggle } from '../../../src/components/SliderToggle';
+import {
+  getDailyJokeEnabled,
+  setDailyJokeEnabled,
+  getIncludeIllnessJokes,
+  setIncludeIllnessJokes,
+} from '../../../src/features/settings/settingsStorage';
 import { tokens } from '../../../src/styles/tokens';
+import type { ThemeId, ThemeColors } from '../../../src/theme/types';
 
 type BackupFormMode = 'export' | 'import' | null;
+
+const THEME_OPTIONS: { id: ThemeId; label: string }[] = [
+  { id: 'light', label: 'Hell' },
+  { id: 'dark', label: 'Dunkel' },
+  { id: 'light-blue', label: 'Hell (Blau-Weiß)' },
+];
 
 function isBackupEnvelopeShape(value: unknown): value is BackupEnvelope {
   if (typeof value !== 'object' || value === null) {
@@ -38,6 +53,8 @@ function isBackupEnvelopeShape(value: unknown): value is BackupEnvelope {
 }
 
 export default function EinstellungenScreen() {
+  const { themeId, colors, setThemeId } = useTheme();
+  const styles = makeStyles(colors);
   const [isLockEnabled, setIsLockEnabled] = useState(false);
   const [isSettingPin, setIsSettingPin] = useState(false);
   const [newPin, setNewPin] = useState('');
@@ -47,6 +64,8 @@ export default function EinstellungenScreen() {
   const [backupFormMode, setBackupFormMode] = useState<BackupFormMode>(null);
   const [backupMessage, setBackupMessage] = useState<string | null>(null);
   const [pendingImportContent, setPendingImportContent] = useState<string | null>(null);
+  const [dailyJokeEnabled, setDailyJokeEnabledState] = useState(false);
+  const [includeIllnessJokes, setIncludeIllnessJokesState] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -59,6 +78,16 @@ export default function EinstellungenScreen() {
         })
         .catch((error: unknown) => {
           console.error('[Einstellungen] Sperrstatus konnte nicht gelesen werden:', error);
+        });
+      Promise.all([getDailyJokeEnabled(), getIncludeIllnessJokes()])
+        .then(([jokeEnabled, illnessJokes]) => {
+          if (isActive) {
+            setDailyJokeEnabledState(jokeEnabled);
+            setIncludeIllnessJokesState(illnessJokes);
+          }
+        })
+        .catch((error: unknown) => {
+          console.error('[Einstellungen] Wortwitz-Einstellungen konnten nicht gelesen werden:', error);
         });
       return () => {
         isActive = false;
@@ -213,12 +242,52 @@ export default function EinstellungenScreen() {
     ]);
   }
 
+  async function handleToggleDailyJoke(value: boolean) {
+    setDailyJokeEnabledState(value);
+    try {
+      await setDailyJokeEnabled(value);
+    } catch (error: unknown) {
+      console.error('[Einstellungen] Wortwitz-Einstellung konnte nicht gespeichert werden:', error);
+    }
+  }
+
+  async function handleToggleIllnessJokes(value: boolean) {
+    setIncludeIllnessJokesState(value);
+    try {
+      await setIncludeIllnessJokes(value);
+    } catch (error: unknown) {
+      console.error('[Einstellungen] Wortwitz-Einstellung konnte nicht gespeichert werden:', error);
+    }
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.sectionTitle}>Darstellung</Text>
+      <View style={styles.themeRow}>
+        {THEME_OPTIONS.map((option) => (
+          <Pressable
+            key={option.id}
+            accessibilityRole="button"
+            accessibilityLabel={`Theme ${option.label} auswählen`}
+            accessibilityState={{ selected: themeId === option.id }}
+            style={[styles.themeCard, themeId === option.id && styles.themeCardActive]}
+            onPress={() => setThemeId(option.id)}
+          >
+            <Text style={[styles.themeCardText, themeId === option.id && styles.themeCardTextActive]}>
+              {option.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
       <Text style={styles.sectionTitle}>App-Sperre</Text>
       <View style={styles.row}>
         <Text style={styles.rowLabel}>PIN-/Biometrie-Sperre aktivieren</Text>
-        <Switch value={isLockEnabled} onValueChange={handleToggleLock} />
+        <SliderToggle
+          value={isLockEnabled}
+          onValueChange={handleToggleLock}
+          accessibilityLabel="PIN-/Biometrie-Sperre aktivieren"
+        />
       </View>
       {lockActionError && <Text style={styles.error}>{lockActionError}</Text>}
 
@@ -227,7 +296,7 @@ export default function EinstellungenScreen() {
           <Text style={styles.label}>Neuer PIN ({PIN_LENGTH} Ziffern)</Text>
           <TextInput
             style={styles.textInput}
-            placeholderTextColor={tokens.colors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             value={newPin}
             onChangeText={(text) => setNewPin(text.replace(/[^0-9]/g, '').slice(0, PIN_LENGTH))}
             keyboardType="number-pad"
@@ -237,7 +306,7 @@ export default function EinstellungenScreen() {
           <Text style={styles.label}>PIN bestätigen</Text>
           <TextInput
             style={styles.textInput}
-            placeholderTextColor={tokens.colors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             value={confirmPin}
             onChangeText={(text) => setConfirmPin(text.replace(/[^0-9]/g, '').slice(0, PIN_LENGTH))}
             keyboardType="number-pad"
@@ -270,6 +339,25 @@ export default function EinstellungenScreen() {
           </View>
         </View>
       )}
+
+      <Text style={styles.sectionTitle}>Wortwitze</Text>
+      <View style={styles.row}>
+        <Text style={styles.rowLabel}>Wortwitze des Tages</Text>
+        <SliderToggle
+          value={dailyJokeEnabled}
+          onValueChange={handleToggleDailyJoke}
+          accessibilityLabel="Wortwitze des Tages aktivieren"
+        />
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.rowLabel}>Auch krankheitsbedingte Witze</Text>
+        <SliderToggle
+          value={includeIllnessJokes}
+          onValueChange={handleToggleIllnessJokes}
+          accessibilityLabel="Auch krankheitsbedingte Witze anzeigen"
+          disabled={!dailyJokeEnabled}
+        />
+      </View>
 
       <Text style={styles.sectionTitle}>Backup</Text>
       {backupMessage && <Text style={styles.backupMessage}>{backupMessage}</Text>}
@@ -322,92 +410,119 @@ export default function EinstellungenScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tokens.colors.background,
-  },
-  content: {
-    padding: tokens.spacing.lg,
-  },
-  sectionTitle: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.lg,
-    fontWeight: tokens.typography.fontWeight.bold,
-    marginTop: tokens.spacing.lg,
-    marginBottom: tokens.spacing.sm,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: tokens.spacing.sm,
-  },
-  rowLabel: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-  },
-  card: {
-    padding: tokens.spacing.md,
-    backgroundColor: tokens.colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    marginTop: tokens.spacing.sm,
-  },
-  label: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.medium,
-    marginBottom: tokens.spacing.xs,
-    marginTop: tokens.spacing.sm,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    borderRadius: 8,
-    padding: tokens.spacing.sm,
-    color: tokens.colors.textPrimary,
-    backgroundColor: tokens.colors.background,
-    marginBottom: tokens.spacing.sm,
-  },
-  error: {
-    color: tokens.colors.danger,
-    fontSize: tokens.typography.fontSize.sm,
-    marginBottom: tokens.spacing.sm,
-  },
-  backupMessage: {
-    color: tokens.colors.textSecondary,
-    fontSize: tokens.typography.fontSize.sm,
-    marginBottom: tokens.spacing.sm,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: tokens.spacing.sm,
-    marginTop: tokens.spacing.sm,
-  },
-  cancelButton: {
-    flex: 1,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: tokens.colors.border,
-    paddingVertical: tokens.spacing.md,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: tokens.colors.textPrimary,
-    fontSize: tokens.typography.fontSize.md,
-  },
-  submitButton: {
-    flex: 1,
-    backgroundColor: tokens.colors.accent,
-    borderRadius: 8,
-    paddingVertical: tokens.spacing.md,
-    alignItems: 'center',
-  },
-  submitButtonText: {
-    color: tokens.colors.surface,
-    fontSize: tokens.typography.fontSize.md,
-    fontWeight: tokens.typography.fontWeight.bold,
-  },
-});
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: tokens.spacing.lg,
+    },
+    sectionTitle: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.lg,
+      fontWeight: tokens.typography.fontWeight.bold,
+      marginTop: tokens.spacing.lg,
+      marginBottom: tokens.spacing.sm,
+    },
+    themeRow: {
+      flexDirection: 'row',
+      gap: tokens.spacing.sm,
+    },
+    themeCard: {
+      flex: 1,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: tokens.spacing.md,
+      alignItems: 'center',
+    },
+    themeCardActive: {
+      borderColor: colors.primary,
+      backgroundColor: colors.surface,
+    },
+    themeCardText: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      fontWeight: tokens.typography.fontWeight.medium,
+      textAlign: 'center',
+    },
+    themeCardTextActive: {
+      color: colors.primary,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: tokens.spacing.sm,
+    },
+    rowLabel: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+    },
+    card: {
+      padding: tokens.spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginTop: tokens.spacing.sm,
+    },
+    label: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.medium,
+      marginBottom: tokens.spacing.xs,
+      marginTop: tokens.spacing.sm,
+    },
+    textInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: tokens.spacing.sm,
+      color: colors.textPrimary,
+      backgroundColor: colors.background,
+      marginBottom: tokens.spacing.sm,
+    },
+    error: {
+      color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+      marginBottom: tokens.spacing.sm,
+    },
+    backupMessage: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      marginBottom: tokens.spacing.sm,
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      gap: tokens.spacing.sm,
+      marginTop: tokens.spacing.sm,
+    },
+    cancelButton: {
+      flex: 1,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: tokens.spacing.md,
+      alignItems: 'center',
+    },
+    cancelButtonText: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+    },
+    submitButton: {
+      flex: 1,
+      backgroundColor: colors.accent,
+      borderRadius: 8,
+      paddingVertical: tokens.spacing.md,
+      alignItems: 'center',
+    },
+    submitButtonText: {
+      color: colors.surface,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.bold,
+    },
+  });
+}
