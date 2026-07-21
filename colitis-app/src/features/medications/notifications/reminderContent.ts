@@ -1,4 +1,4 @@
-import type { ReminderContent } from './notificationService';
+import type { ReminderContent } from '../../../lib/notifications/notificationService';
 
 export function buildMedicationReminderContent(medication: { name: string; dose?: string | null }): ReminderContent {
   return {

@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { buildDailyReminderTrigger, buildScreeningReminderTrigger } from '../reminderScheduling';
+import { buildDailyReminderTrigger, buildScreeningReminderTrigger } from '../../features/medications/reminderScheduling';
 
 export interface ReminderContent {
   title: string;
@@ -42,6 +42,13 @@ export async function scheduleScreeningReminder(
   return Notifications.scheduleNotificationAsync({
     content,
     trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: trigger.date },
+  });
+}
+
+export async function scheduleDateReminder(date: Date, content: ReminderContent): Promise<string> {
+  return Notifications.scheduleNotificationAsync({
+    content,
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date },
   });
 }
 

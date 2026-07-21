@@ -18,6 +18,7 @@ import {
   requestNotificationPermission,
   scheduleDailyReminder,
   scheduleScreeningReminder,
+  scheduleDateReminder,
   cancelScheduledReminder,
 } from './notificationService';
 
@@ -86,6 +87,19 @@ describe('scheduleScreeningReminder', () => {
 
     expect(id).toBeNull();
     expect(scheduleNotificationAsync).not.toHaveBeenCalled();
+  });
+});
+
+describe('scheduleDateReminder', () => {
+  it('schedules a date trigger for the given date and returns the identifier', async () => {
+    const date = new Date(2026, 7, 20, 9, 0, 0, 0);
+    const id = await scheduleDateReminder(date, { title: 'Backup-Erinnerung', body: 'Zeit für ein neues Backup' });
+
+    expect(id).toBe('notif-id-123');
+    expect(scheduleNotificationAsync).toHaveBeenCalledWith({
+      content: { title: 'Backup-Erinnerung', body: 'Zeit für ein neues Backup' },
+      trigger: { type: 'date', date },
+    });
   });
 });
 

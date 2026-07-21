@@ -21,7 +21,7 @@ import {
   requestNotificationPermission,
   cancelScheduledReminder,
   scheduleScreeningReminder,
-} from '../../../src/features/medications/notifications/notificationService';
+} from '../../../src/lib/notifications/notificationService';
 import { buildScreeningReminderContent } from '../../../src/features/medications/notifications/reminderContent';
 import { MedicationList } from '../../../src/features/medications/components/MedicationList';
 import { ScreeningReminderCard } from '../../../src/features/medications/components/ScreeningReminderCard';

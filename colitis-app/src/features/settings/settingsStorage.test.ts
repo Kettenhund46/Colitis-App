@@ -9,6 +9,10 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
       storeMock.set(key, value);
       return Promise.resolve();
     }),
+    removeItem: vi.fn((key: string) => {
+      storeMock.delete(key);
+      return Promise.resolve();
+    }),
   },
 }));
 
@@ -19,6 +23,14 @@ import {
   setDailyJokeEnabled,
   getIncludeIllnessJokes,
   setIncludeIllnessJokes,
+  getBackupReminderEnabledRaw,
+  setBackupReminderEnabled,
+  getBackupReminderIntervalDays,
+  setBackupReminderIntervalDays,
+  getLastBackupAt,
+  setLastBackupAt,
+  getBackupReminderNotificationId,
+  setBackupReminderNotificationId,
 } from './settingsStorage';
 
 beforeEach(() => {
@@ -61,5 +73,47 @@ describe('daily joke settings', () => {
     await setIncludeIllnessJokes(true);
     expect(await getDailyJokeEnabled()).toBe(true);
     expect(await getIncludeIllnessJokes()).toBe(true);
+  });
+});
+
+describe('backup reminder settings', () => {
+  it('returns null for backupReminderEnabledRaw when never set', async () => {
+    expect(await getBackupReminderEnabledRaw()).toBeNull();
+  });
+
+  it('persists an explicit backupReminderEnabled value', async () => {
+    await setBackupReminderEnabled(false);
+    expect(await getBackupReminderEnabledRaw()).toBe(false);
+    await setBackupReminderEnabled(true);
+    expect(await getBackupReminderEnabledRaw()).toBe(true);
+  });
+
+  it('defaults backupReminderIntervalDays to 30', async () => {
+    expect(await getBackupReminderIntervalDays()).toBe(30);
+  });
+
+  it('persists backupReminderIntervalDays', async () => {
+    await setBackupReminderIntervalDays(60);
+    expect(await getBackupReminderIntervalDays()).toBe(60);
+  });
+
+  it('defaults lastBackupAt to null', async () => {
+    expect(await getLastBackupAt()).toBeNull();
+  });
+
+  it('persists lastBackupAt', async () => {
+    await setLastBackupAt('2026-07-21T10:00:00.000Z');
+    expect(await getLastBackupAt()).toBe('2026-07-21T10:00:00.000Z');
+  });
+
+  it('defaults backupReminderNotificationId to null', async () => {
+    expect(await getBackupReminderNotificationId()).toBeNull();
+  });
+
+  it('persists and clears backupReminderNotificationId', async () => {
+    await setBackupReminderNotificationId('notif-abc');
+    expect(await getBackupReminderNotificationId()).toBe('notif-abc');
+    await setBackupReminderNotificationId(null);
+    expect(await getBackupReminderNotificationId()).toBeNull();
   });
 });

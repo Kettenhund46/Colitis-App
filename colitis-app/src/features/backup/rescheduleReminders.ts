@@ -4,7 +4,7 @@ import {
   requestNotificationPermission,
   scheduleDailyReminder,
   scheduleScreeningReminder,
-} from '../medications/notifications/notificationService';
+} from '../../lib/notifications/notificationService';
 import {
   buildMedicationReminderContent,
   buildScreeningReminderContent,

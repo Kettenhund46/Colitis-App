@@ -9,7 +9,7 @@ import {
 import {
   requestNotificationPermission,
   scheduleDailyReminder,
-} from '../../../src/features/medications/notifications/notificationService';
+} from '../../../src/lib/notifications/notificationService';
 import { buildMedicationReminderContent } from '../../../src/features/medications/notifications/reminderContent';
 import { MedicationForm } from '../../../src/features/medications/components/MedicationForm';
 import { useTheme } from '../../../src/theme/ThemeContext';

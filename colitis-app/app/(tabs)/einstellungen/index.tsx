@@ -27,7 +27,15 @@ import {
   setDailyJokeEnabled,
   getIncludeIllnessJokes,
   setIncludeIllnessJokes,
+  getBackupReminderEnabledRaw,
+  setBackupReminderEnabled,
+  getBackupReminderIntervalDays,
+  setBackupReminderIntervalDays,
+  getLastBackupAt,
+  setLastBackupAt,
 } from '../../../src/features/settings/settingsStorage';
+import { resolveBackupReminderEnabled } from '../../../src/features/backup/reminderScheduling';
+import { rescheduleBackupReminder } from '../../../src/features/backup/scheduleBackupReminder';
 import { tokens } from '../../../src/styles/tokens';
 import type { ThemeId, ThemeColors } from '../../../src/theme/types';
 
@@ -38,6 +46,8 @@ const THEME_OPTIONS: { id: ThemeId; label: string }[] = [
   { id: 'dark', label: 'Dunkel' },
   { id: 'light-blue', label: 'Hell (Blau-Weiß)' },
 ];
+
+const BACKUP_REMINDER_INTERVAL_OPTIONS = [14, 30, 60, 90] as const;
 
 function isBackupEnvelopeShape(value: unknown): value is BackupEnvelope {
   if (typeof value !== 'object' || value === null) {
@@ -66,6 +76,9 @@ export default function EinstellungenScreen() {
   const [pendingImportContent, setPendingImportContent] = useState<string | null>(null);
   const [dailyJokeEnabled, setDailyJokeEnabledState] = useState(false);
   const [includeIllnessJokes, setIncludeIllnessJokesState] = useState(false);
+  const [backupReminderEnabled, setBackupReminderEnabledState] = useState(false);
+  const [backupReminderIntervalDays, setBackupReminderIntervalDaysState] = useState(30);
+  const [lastBackupAt, setLastBackupAtState] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -88,6 +101,17 @@ export default function EinstellungenScreen() {
         })
         .catch((error: unknown) => {
           console.error('[Einstellungen] Wortwitz-Einstellungen konnten nicht gelesen werden:', error);
+        });
+      Promise.all([getBackupReminderEnabledRaw(), getBackupReminderIntervalDays(), getLastBackupAt()])
+        .then(([rawEnabled, intervalDays, lastBackup]) => {
+          if (isActive) {
+            setBackupReminderEnabledState(resolveBackupReminderEnabled(rawEnabled, lastBackup));
+            setBackupReminderIntervalDaysState(intervalDays);
+            setLastBackupAtState(lastBackup);
+          }
+        })
+        .catch((error: unknown) => {
+          console.error('[Einstellungen] Backup-Erinnerungs-Einstellungen konnten nicht gelesen werden:', error);
         });
       return () => {
         isActive = false;
@@ -148,6 +172,11 @@ export default function EinstellungenScreen() {
         ciphertextHex: bytesToHex(ciphertextBytes),
       };
       await writeAndShareBackup(JSON.stringify(envelope));
+      const nowIso = new Date().toISOString();
+      await setLastBackupAt(nowIso);
+      setLastBackupAtState(nowIso);
+      await rescheduleBackupReminder();
+      setBackupReminderEnabledState(resolveBackupReminderEnabled(await getBackupReminderEnabledRaw(), nowIso));
       setBackupFormMode(null);
       setBackupMessage(null);
     } catch (error: unknown) {
@@ -232,6 +261,7 @@ export default function EinstellungenScreen() {
 
           try {
             await rescheduleAllReminders(db, data);
+            await rescheduleBackupReminder();
             setBackupMessage('Backup erfolgreich wiederhergestellt.');
           } catch (error: unknown) {
             console.error('[Einstellungen] Erinnerungen konnten nicht neu geplant werden:', error);
@@ -257,6 +287,26 @@ export default function EinstellungenScreen() {
       await setIncludeIllnessJokes(value);
     } catch (error: unknown) {
       console.error('[Einstellungen] Wortwitz-Einstellung konnte nicht gespeichert werden:', error);
+    }
+  }
+
+  async function handleToggleBackupReminder(value: boolean) {
+    setBackupReminderEnabledState(value);
+    try {
+      await setBackupReminderEnabled(value);
+      await rescheduleBackupReminder();
+    } catch (error: unknown) {
+      console.error('[Einstellungen] Backup-Erinnerung konnte nicht aktualisiert werden:', error);
+    }
+  }
+
+  async function handleChangeBackupReminderInterval(days: number) {
+    setBackupReminderIntervalDaysState(days);
+    try {
+      await setBackupReminderIntervalDays(days);
+      await rescheduleBackupReminder();
+    } catch (error: unknown) {
+      console.error('[Einstellungen] Backup-Erinnerungsintervall konnte nicht aktualisiert werden:', error);
     }
   }
 
@@ -406,6 +456,37 @@ export default function EinstellungenScreen() {
           </Pressable>
         </View>
       )}
+
+      <Text style={styles.sectionTitle}>Backup-Erinnerung</Text>
+      <View style={styles.row}>
+        <Text style={styles.rowLabel}>Erinnerung aktivieren</Text>
+        <SliderToggle
+          value={backupReminderEnabled}
+          onValueChange={handleToggleBackupReminder}
+          accessibilityLabel="Backup-Erinnerung aktivieren"
+        />
+      </View>
+      <View style={styles.themeRow}>
+        {BACKUP_REMINDER_INTERVAL_OPTIONS.map((days) => (
+          <Pressable
+            key={days}
+            accessibilityRole="button"
+            accessibilityLabel={`Erinnerung alle ${days} Tage`}
+            accessibilityState={{ selected: backupReminderIntervalDays === days }}
+            style={[styles.themeCard, backupReminderIntervalDays === days && styles.themeCardActive]}
+            onPress={() => handleChangeBackupReminderInterval(days)}
+          >
+            <Text style={[styles.themeCardText, backupReminderIntervalDays === days && styles.themeCardTextActive]}>
+              {days} Tage
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      <Text style={styles.backupMessage}>
+        {lastBackupAt
+          ? `Letztes Backup: ${new Date(lastBackupAt).toLocaleDateString('de-DE')}`
+          : 'Noch kein Backup erstellt.'}
+      </Text>
     </ScrollView>
   );
 }
