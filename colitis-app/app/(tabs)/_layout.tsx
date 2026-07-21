@@ -16,21 +16,21 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" options={{ href: null }} />
       <Tabs.Screen
-        name="tagebuch/index"
+        name="tagebuch"
         options={{
           title: 'Tagebuch',
           tabBarIcon: ({ color, size }) => <Ionicons name="journal-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="wissen/index"
+        name="wissen"
         options={{
           title: 'Wissen',
           tabBarIcon: ({ color, size }) => <Ionicons name="book-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="medikamente/index"
+        name="medikamente"
         options={{
           title: 'Medikamente',
           tabBarIcon: ({ color, size }) => <Ionicons name="medical-outline" size={size} color={color} />,
