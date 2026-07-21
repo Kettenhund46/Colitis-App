@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function TabsLayout() {
@@ -18,23 +19,21 @@ export default function TabsLayout() {
         name="tagebuch/index"
         options={{
           title: 'Tagebuch',
-          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="notebook-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="journal-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="wissen/index"
         options={{
           title: 'Wissen',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="book-open-page-variant-outline" size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Ionicons name="book-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="medikamente/index"
         options={{
           title: 'Medikamente',
-          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="pill" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="medical-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen

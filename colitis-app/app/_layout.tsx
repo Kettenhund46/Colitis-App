@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { useFonts } from 'expo-font';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import migrations from '../drizzle/migrations';
@@ -27,7 +28,7 @@ export default function RootLayout() {
 function RootLayoutInner() {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
-  const [fontsLoaded, fontError] = useFonts(MaterialCommunityIcons.font);
+  const [fontsLoaded, fontError] = useFonts({ ...MaterialCommunityIcons.font, ...Ionicons.font });
   const [db, setDb] = useState<ExpoSQLiteDatabase<typeof schema> | null>(null);
   const [initError, setInitError] = useState<string | null>(null);
   const [dbGeneration, setDbGeneration] = useState(0);
