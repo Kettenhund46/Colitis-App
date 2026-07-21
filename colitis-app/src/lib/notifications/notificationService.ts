@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { buildDailyReminderTrigger, buildScreeningReminderTrigger } from '../reminderScheduling';
+import { buildDailyReminderTrigger, buildScreeningReminderTrigger } from '../../features/medications/reminderScheduling';
 
 export interface ReminderContent {
   title: string;
