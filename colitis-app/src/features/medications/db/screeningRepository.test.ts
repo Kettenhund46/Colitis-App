@@ -4,6 +4,7 @@ import {
   getScreeningReminder,
   upsertScreeningReminder,
   setScreeningReminderNotificationId,
+  deleteScreeningReminder,
 } from './screeningRepository';
 
 describe('screening repository', () => {
@@ -67,5 +68,23 @@ describe('screening repository', () => {
 
     const reloaded = await getScreeningReminder(db);
     expect(reloaded?.notificationId).toBe('notif-xyz');
+  });
+
+  it('deletes the screening reminder and returns its previous notification id', async () => {
+    const { current } = await upsertScreeningReminder(db, {
+      intervalMonths: 12,
+      nextDueDate: '2027-01-15',
+      note: null,
+    });
+    await setScreeningReminderNotificationId(db, current.id, 'notif-to-cancel');
+
+    const deleted = await deleteScreeningReminder(db);
+
+    expect(deleted?.notificationId).toBe('notif-to-cancel');
+    expect(await getScreeningReminder(db)).toBeNull();
+  });
+
+  it('returns null when deleting and no screening reminder exists', async () => {
+    expect(await deleteScreeningReminder(db)).toBeNull();
   });
 });

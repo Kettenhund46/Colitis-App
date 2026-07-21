@@ -69,6 +69,15 @@ export async function upsertScreeningReminder(
   };
 }
 
+export async function deleteScreeningReminder(db: ScreeningDb): Promise<ScreeningReminder | null> {
+  const existing = await getScreeningReminder(db);
+  if (existing === null) {
+    return null;
+  }
+  await db.delete(screeningReminders).where(eq(screeningReminders.id, existing.id));
+  return existing;
+}
+
 export async function setScreeningReminderNotificationId(
   db: ScreeningDb,
   id: number,
