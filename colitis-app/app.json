@@ -44,7 +44,13 @@
       "expo-secure-store",
       "expo-notifications",
       "./plugins/withNearestToiletShortcut",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-font",
+        {
+          "fonts": ["./node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf"]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
