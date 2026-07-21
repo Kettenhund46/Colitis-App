@@ -6,6 +6,7 @@ import {
   listMedications,
   logMedicationTaken,
   listMedicationIdsTakenOn,
+  endMedication,
   deleteMedication,
 } from '../../../src/features/medications/db/medicationsRepository';
 import { formatLocalDate } from '../../../src/features/medications/medicationStatus';
@@ -13,6 +14,7 @@ import {
   getScreeningReminder,
   upsertScreeningReminder,
   setScreeningReminderNotificationId,
+  deleteScreeningReminder,
 } from '../../../src/features/medications/db/screeningRepository';
 import {
   configureNotificationHandling,
@@ -96,7 +98,7 @@ export default function MedikamenteScreen() {
     if (!medication) {
       return;
     }
-    Alert.alert('Medikament beenden?', `„${medication.name}“ wird aus der Liste gelöscht.`, [
+    Alert.alert('Medikament beenden?', `„${medication.name}“ wird als beendet markiert, bleibt aber in der Liste.`, [
       { text: 'Abbrechen', style: 'cancel' },
       {
         text: 'Beenden',
@@ -109,7 +111,7 @@ export default function MedikamenteScreen() {
   async function confirmEnd(medicationId: number) {
     try {
       const db = await createEncryptedDb();
-      const reminderTimes = await deleteMedication(db, medicationId);
+      const reminderTimes = await endMedication(db, medicationId, formatLocalDate(new Date()));
       for (const reminderTime of reminderTimes) {
         if (reminderTime.notificationId) {
           await cancelScheduledReminder(reminderTime.notificationId);
@@ -120,6 +122,38 @@ export default function MedikamenteScreen() {
     } catch (endError: unknown) {
       console.error('[Medikamente] Beenden fehlgeschlagen:', endError);
       setError('Medikament konnte nicht beendet werden.');
+    }
+  }
+
+  function handleDelete(medicationId: number) {
+    const medication = medications.find((entry) => entry.id === medicationId);
+    if (!medication) {
+      return;
+    }
+    Alert.alert('Medikament löschen?', `„${medication.name}“ wird endgültig gelöscht.`, [
+      { text: 'Abbrechen', style: 'cancel' },
+      {
+        text: 'Löschen',
+        style: 'destructive',
+        onPress: () => void confirmDelete(medicationId),
+      },
+    ]);
+  }
+
+  async function confirmDelete(medicationId: number) {
+    try {
+      const db = await createEncryptedDb();
+      const reminderTimes = await deleteMedication(db, medicationId);
+      for (const reminderTime of reminderTimes) {
+        if (reminderTime.notificationId) {
+          await cancelScheduledReminder(reminderTime.notificationId);
+        }
+      }
+      setMedications(await listMedications(db));
+      setError(null);
+    } catch (deleteError: unknown) {
+      console.error('[Medikamente] Löschen fehlgeschlagen:', deleteError);
+      setError('Medikament konnte nicht gelöscht werden.');
     }
   }
 
@@ -147,6 +181,21 @@ export default function MedikamenteScreen() {
     }
   }
 
+  async function handleDeleteScreeningReminder() {
+    try {
+      const db = await createEncryptedDb();
+      const deleted = await deleteScreeningReminder(db);
+      if (deleted?.notificationId) {
+        await cancelScheduledReminder(deleted.notificationId);
+      }
+      setScreeningReminder(null);
+      setError(null);
+    } catch (deleteError: unknown) {
+      console.error('[Medikamente] Vorsorge-Erinnerung löschen fehlgeschlagen:', deleteError);
+      setError('Vorsorge-Erinnerung konnte nicht gelöscht werden.');
+    }
+  }
+
   return (
     <View style={styles.container}>
       {error && (
@@ -154,7 +203,11 @@ export default function MedikamenteScreen() {
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
-      <ScreeningReminderCard reminder={screeningReminder} onSave={handleSaveScreeningReminder} />
+      <ScreeningReminderCard
+        reminder={screeningReminder}
+        onSave={handleSaveScreeningReminder}
+        onDelete={handleDeleteScreeningReminder}
+      />
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Medikamente werden geladen …</Text>
@@ -167,6 +220,7 @@ export default function MedikamenteScreen() {
           onTakenToday={handleTakenToday}
           onEnd={handleEnd}
           onEdit={(medicationId) => router.push(`/medikamente/${medicationId}`)}
+          onDelete={handleDelete}
         />
       )}
       <Pressable

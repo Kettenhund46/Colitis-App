@@ -12,9 +12,18 @@ interface MedicationListProps {
   onTakenToday: (medicationId: number) => void;
   onEnd: (medicationId: number) => void;
   onEdit: (medicationId: number) => void;
+  onDelete: (medicationId: number) => void;
 }
 
-export function MedicationList({ medications, today, takenTodayIds, onTakenToday, onEnd, onEdit }: MedicationListProps) {
+export function MedicationList({
+  medications,
+  today,
+  takenTodayIds,
+  onTakenToday,
+  onEnd,
+  onEdit,
+  onDelete,
+}: MedicationListProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
@@ -87,6 +96,14 @@ export function MedicationList({ medications, today, takenTodayIds, onTakenToday
                   <Text style={styles.endButtonText}>Beenden</Text>
                 </Pressable>
               )}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${item.name} löschen`}
+                style={styles.deleteButton}
+                onPress={() => onDelete(item.id)}
+              >
+                <Text style={styles.deleteButtonText}>Löschen</Text>
+              </Pressable>
             </View>
           </View>
         );
@@ -166,5 +183,12 @@ function makeStyles(colors: ThemeColors) {
       paddingHorizontal: tokens.spacing.md,
     },
     endButtonText: { color: colors.danger, fontSize: tokens.typography.fontSize.sm },
+    deleteButton: {
+      backgroundColor: colors.danger,
+      borderRadius: 8,
+      paddingVertical: tokens.spacing.xs,
+      paddingHorizontal: tokens.spacing.md,
+    },
+    deleteButtonText: { color: colors.surface, fontSize: tokens.typography.fontSize.sm },
   });
 }
