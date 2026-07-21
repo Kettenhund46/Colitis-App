@@ -25,4 +25,9 @@ describe('theme palettes', () => {
       expect(keys).toEqual(firstKeys);
     });
   });
+
+  it('does not reuse the same accent color across different themes', () => {
+    const accentColors = Object.values(palettes).map((colors) => colors.accent.toUpperCase());
+    expect(new Set(accentColors).size).toBe(accentColors.length);
+  });
 });

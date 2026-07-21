@@ -32,7 +32,7 @@ export const lightBlueColors: ThemeColors = {
   textPrimary: '#1D2B36',
   textSecondary: '#5B6B78',
   primary: '#3E7CB1',
-  accent: '#D98E4A',
+  accent: '#6BA3C9',
   danger: '#C1443A',
   success: '#3E7CB1',
   border: '#D7E3ED',
