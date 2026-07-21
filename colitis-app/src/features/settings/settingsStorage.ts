@@ -37,3 +37,52 @@ export async function getIncludeIllnessJokes(): Promise<boolean> {
 export async function setIncludeIllnessJokes(enabled: boolean): Promise<void> {
   await AsyncStorage.setItem(INCLUDE_ILLNESS_JOKES_KEY, enabled ? 'true' : 'false');
 }
+
+const BACKUP_REMINDER_ENABLED_KEY = 'colitis2go.settings.backupReminderEnabled';
+const BACKUP_REMINDER_INTERVAL_DAYS_KEY = 'colitis2go.settings.backupReminderIntervalDays';
+const LAST_BACKUP_AT_KEY = 'colitis2go.settings.lastBackupAt';
+const BACKUP_REMINDER_NOTIFICATION_ID_KEY = 'colitis2go.settings.backupReminderNotificationId';
+
+const DEFAULT_BACKUP_REMINDER_INTERVAL_DAYS = 30;
+
+export async function getBackupReminderEnabledRaw(): Promise<boolean | null> {
+  const stored = await AsyncStorage.getItem(BACKUP_REMINDER_ENABLED_KEY);
+  if (stored === null) {
+    return null;
+  }
+  return stored === 'true';
+}
+
+export async function setBackupReminderEnabled(enabled: boolean): Promise<void> {
+  await AsyncStorage.setItem(BACKUP_REMINDER_ENABLED_KEY, enabled ? 'true' : 'false');
+}
+
+export async function getBackupReminderIntervalDays(): Promise<number> {
+  const stored = await AsyncStorage.getItem(BACKUP_REMINDER_INTERVAL_DAYS_KEY);
+  const parsed = stored === null ? NaN : Number(stored);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : DEFAULT_BACKUP_REMINDER_INTERVAL_DAYS;
+}
+
+export async function setBackupReminderIntervalDays(days: number): Promise<void> {
+  await AsyncStorage.setItem(BACKUP_REMINDER_INTERVAL_DAYS_KEY, String(days));
+}
+
+export async function getLastBackupAt(): Promise<string | null> {
+  return AsyncStorage.getItem(LAST_BACKUP_AT_KEY);
+}
+
+export async function setLastBackupAt(isoDate: string): Promise<void> {
+  await AsyncStorage.setItem(LAST_BACKUP_AT_KEY, isoDate);
+}
+
+export async function getBackupReminderNotificationId(): Promise<string | null> {
+  return AsyncStorage.getItem(BACKUP_REMINDER_NOTIFICATION_ID_KEY);
+}
+
+export async function setBackupReminderNotificationId(notificationId: string | null): Promise<void> {
+  if (notificationId === null) {
+    await AsyncStorage.removeItem(BACKUP_REMINDER_NOTIFICATION_ID_KEY);
+    return;
+  }
+  await AsyncStorage.setItem(BACKUP_REMINDER_NOTIFICATION_ID_KEY, notificationId);
+}
