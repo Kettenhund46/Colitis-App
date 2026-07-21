@@ -45,6 +45,13 @@ export async function scheduleScreeningReminder(
   });
 }
 
+export async function scheduleDateReminder(date: Date, content: ReminderContent): Promise<string> {
+  return Notifications.scheduleNotificationAsync({
+    content,
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date },
+  });
+}
+
 export async function cancelScheduledReminder(notificationId: string): Promise<void> {
   try {
     await Notifications.cancelScheduledNotificationAsync(notificationId);
