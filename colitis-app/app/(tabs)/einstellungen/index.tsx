@@ -261,6 +261,7 @@ export default function EinstellungenScreen() {
 
           try {
             await rescheduleAllReminders(db, data);
+            await rescheduleBackupReminder();
             setBackupMessage('Backup erfolgreich wiederhergestellt.');
           } catch (error: unknown) {
             console.error('[Einstellungen] Erinnerungen konnten nicht neu geplant werden:', error);
