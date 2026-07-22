@@ -1,9 +1,0 @@
-﻿
- RUN  v4.1.10 D:/Claude/.claude/worktrees/medikamente-nebenwirkungen/colitis-app
-
-
- Test Files  51 passed (51)
-      Tests  354 passed (354)
-   Start at  14:10:36
-   Duration  5.38s (transform 2.03s, setup 0ms, import 18.75s, tests 4.32s, environment 7ms)
-
