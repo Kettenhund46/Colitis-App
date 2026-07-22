@@ -144,6 +144,14 @@ export default function TagebuchScreen() {
       </Pressable>
       <Pressable
         accessibilityRole="button"
+        accessibilityLabel="Arztbesuche verwalten"
+        style={styles.analysisLink}
+        onPress={() => router.push('/tagebuch/arztbesuche')}
+      >
+        <Text style={styles.analysisLinkText}>Arztbesuche verwalten →</Text>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
         accessibilityState={{ disabled: isExporting || entries.length === 0 }}
         accessibilityLabel="Tagebuch als PDF exportieren"
         disabled={isExporting || entries.length === 0}

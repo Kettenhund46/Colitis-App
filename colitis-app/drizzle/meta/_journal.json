@@ -43,6 +43,13 @@
       "when": 1784721381802,
       "tag": "0005_curious_diamondback",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1784730597755,
+      "tag": "0006_milky_vance_astro",
+      "breakpoints": true
     }
   ]
 }

@@ -10,7 +10,7 @@ describe('backup repository', () => {
     db = createTestDb();
   });
 
-  it('exports an empty structure with all eight table keys when nothing exists yet', async () => {
+  it('exports an empty structure with all nine table keys when nothing exists yet', async () => {
     const data = await exportBackupData(db);
     expect(data.version).toBe(1);
     expect(data.tables).toEqual({
@@ -22,6 +22,7 @@ describe('backup repository', () => {
       savedPlaces: [],
       screeningReminders: [],
       knowledgeFavorites: [],
+      doctorVisits: [],
     });
   });
 
@@ -77,6 +78,7 @@ describe('backup repository', () => {
         savedPlaces: [],
         screeningReminders: [],
         knowledgeFavorites: [],
+        doctorVisits: [],
       },
     };
 
@@ -120,6 +122,7 @@ describe('backup repository', () => {
         savedPlaces: [],
         screeningReminders: [],
         knowledgeFavorites: [],
+        doctorVisits: [],
       },
     };
 
@@ -154,6 +157,7 @@ describe('backup repository', () => {
         savedPlaces: [],
         screeningReminders: [],
         knowledgeFavorites: [],
+        doctorVisits: [],
       },
     });
 
@@ -228,6 +232,7 @@ describe('backup repository', () => {
         savedPlaces: [],
         screeningReminders: [],
         knowledgeFavorites: [],
+        doctorVisits: [],
       },
     };
 
@@ -253,6 +258,7 @@ describe('backup repository', () => {
         savedPlaces: [],
         screeningReminders: [],
         knowledgeFavorites: [{ id: 3, articleSlug: 'ueberblick' }],
+        doctorVisits: [],
       },
     };
 
@@ -260,5 +266,37 @@ describe('backup repository', () => {
 
     const data = await exportBackupData(db);
     expect(data.tables.knowledgeFavorites).toEqual(importedData.tables.knowledgeFavorites);
+  });
+
+  it('exports and re-imports doctor visits, preserving original ids', async () => {
+    const importedData = {
+      version: 1 as const,
+      exportedAt: '2026-07-22T09:00:00.000Z',
+      tables: {
+        diaryEntries: [],
+        triggers: [],
+        medications: [],
+        medicationLog: [],
+        medicationReminderTimes: [],
+        savedPlaces: [],
+        screeningReminders: [],
+        knowledgeFavorites: [],
+        doctorVisits: [
+          {
+            id: 5,
+            visitDate: '2026-07-20',
+            doctorName: 'Dr. Müller',
+            reason: 'Kontrolle',
+            note: null,
+            nextAppointmentDate: null,
+          },
+        ],
+      },
+    };
+
+    await importBackupData(db, importedData);
+
+    const data = await exportBackupData(db);
+    expect(data.tables.doctorVisits).toEqual(importedData.tables.doctorVisits);
   });
 });
