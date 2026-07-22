@@ -13,6 +13,7 @@ const sampleData: BackupData = {
     medicationReminderTimes: [],
     savedPlaces: [],
     screeningReminders: [],
+    knowledgeFavorites: [],
   },
 };
 
@@ -45,5 +46,11 @@ describe('serializeBackupData / parseBackupData', () => {
 
   it('throws a German error when the root is not an object', () => {
     expect(() => parseBackupData('42')).toThrow('Sicherungsdatei ist kein gültiges Format.');
+  });
+
+  it('throws a German error when the knowledgeFavorites table key is missing', () => {
+    const broken = JSON.parse(serializeBackupData(sampleData));
+    delete broken.tables.knowledgeFavorites;
+    expect(() => parseBackupData(JSON.stringify(broken))).toThrow('Sicherungsdatei ist kein gültiges Format.');
   });
 });
