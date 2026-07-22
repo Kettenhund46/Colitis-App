@@ -1,4 +1,4 @@
-const { withDangerousMod } = require('expo/config-plugins');
+const { withAndroidManifest, withDangerousMod } = require('expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
@@ -149,8 +149,47 @@ class ${WIDGET_PROVIDER_CLASS_NAME} : AppWidgetProvider() {
   ]);
 }
 
+function withNewDiaryEntryWidgetManifest(config) {
+  return withAndroidManifest(config, (config) => {
+    const androidManifest = config.modResults;
+    const application = androidManifest.manifest.application[0];
+
+    application.receiver = application.receiver || [];
+
+    const alreadyPresent = application.receiver.some(
+      (receiver) => receiver.$ && receiver.$['android:name'] === `.${WIDGET_PROVIDER_CLASS_NAME}`
+    );
+
+    if (!alreadyPresent) {
+      application.receiver.push({
+        $: {
+          'android:name': `.${WIDGET_PROVIDER_CLASS_NAME}`,
+          'android:exported': 'true',
+          'android:label': '@string/widget_new_diary_entry_label',
+        },
+        'intent-filter': [
+          {
+            action: [{ $: { 'android:name': 'android.appwidget.action.APPWIDGET_UPDATE' } }],
+          },
+        ],
+        'meta-data': [
+          {
+            $: {
+              'android:name': 'android.appwidget.provider',
+              'android:resource': '@xml/new_diary_entry_widget_info',
+            },
+          },
+        ],
+      });
+    }
+
+    return config;
+  });
+}
+
 module.exports = function withNewDiaryEntryWidget(config) {
   config = withNewDiaryEntryWidgetResources(config);
+  config = withNewDiaryEntryWidgetManifest(config);
   return config;
 };
 
