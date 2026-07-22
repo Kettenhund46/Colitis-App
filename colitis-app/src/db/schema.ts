@@ -29,6 +29,7 @@ export const medications = sqliteTable('medications', {
   schedule: text('schedule').notNull(),
   startDate: text('start_date').notNull(),
   endDate: text('end_date'),
+  sideEffectsNote: text('side_effects_note'),
 });
 
 export const medicationLog = sqliteTable('medication_log', {

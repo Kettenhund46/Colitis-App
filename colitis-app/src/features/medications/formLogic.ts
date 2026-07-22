@@ -7,6 +7,7 @@ export interface MedicationFormState {
   schedule: string;
   startDate: string;
   endDate: string;
+  sideEffectsNote: string;
   reminderTimes: string[];
 }
 
@@ -16,6 +17,7 @@ export const INITIAL_MEDICATION_FORM_STATE: MedicationFormState = {
   schedule: '',
   startDate: new Date().toISOString().slice(0, 10),
   endDate: '',
+  sideEffectsNote: '',
   reminderTimes: [],
 };
 
@@ -57,12 +59,14 @@ export function validateMedicationForm(state: MedicationFormState): string[] {
 }
 
 export function buildMedicationInput(state: MedicationFormState): MedicationInput {
+  const trimmedSideEffectsNote = state.sideEffectsNote.trim();
   return {
     name: state.name.trim(),
     dose: state.dose.trim(),
     schedule: state.schedule.trim(),
     startDate: state.startDate,
     endDate: state.endDate.length > 0 ? state.endDate : null,
+    sideEffectsNote: trimmedSideEffectsNote.length > 0 ? trimmedSideEffectsNote : null,
     reminderTimes: state.reminderTimes,
   };
 }

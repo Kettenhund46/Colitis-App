@@ -15,6 +15,7 @@ export async function createMedication(db: MedicationsDb, input: MedicationInput
       schedule: input.schedule,
       startDate: input.startDate,
       endDate: input.endDate,
+      sideEffectsNote: input.sideEffectsNote,
     })
     .returning({ id: medications.id });
 
@@ -27,6 +28,7 @@ export async function createMedication(db: MedicationsDb, input: MedicationInput
     schedule: input.schedule,
     startDate: input.startDate,
     endDate: input.endDate,
+    sideEffectsNote: input.sideEffectsNote,
     reminderTimes,
   };
 }
@@ -74,6 +76,7 @@ export async function listMedications(db: MedicationsDb): Promise<Medication[]> 
       schedule: medication.schedule,
       startDate: medication.startDate,
       endDate: medication.endDate,
+      sideEffectsNote: medication.sideEffectsNote,
       reminderTimes: await loadReminderTimes(db, medication.id),
     });
   }
@@ -93,6 +96,7 @@ export async function getMedicationById(db: MedicationsDb, medicationId: number)
     schedule: medication.schedule,
     startDate: medication.startDate,
     endDate: medication.endDate,
+    sideEffectsNote: medication.sideEffectsNote,
     reminderTimes: await loadReminderTimes(db, medication.id),
   };
 }
@@ -117,6 +121,7 @@ export async function updateMedication(
       schedule: input.schedule,
       startDate: input.startDate,
       endDate: input.endDate,
+      sideEffectsNote: input.sideEffectsNote,
     })
     .where(eq(medications.id, medicationId));
 

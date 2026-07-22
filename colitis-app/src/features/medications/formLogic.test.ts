@@ -88,6 +88,7 @@ describe('buildMedicationInput', () => {
       schedule: '1x täglich',
       startDate: '2026-07-12',
       endDate: null,
+      sideEffectsNote: null,
       reminderTimes: ['08:00'],
     });
   });
@@ -101,6 +102,28 @@ describe('buildMedicationInput', () => {
       endDate: '2026-08-01',
     });
     expect(input.endDate).toBe('2026-08-01');
+  });
+
+  it('trims a side effects note and converts an empty string to null', () => {
+    const input = buildMedicationInput({
+      ...INITIAL_MEDICATION_FORM_STATE,
+      name: 'Salofalk',
+      dose: '500mg',
+      schedule: '1x täglich',
+      sideEffectsNote: '  Übelkeit  ',
+    });
+    expect(input.sideEffectsNote).toBe('Übelkeit');
+  });
+
+  it('converts an empty side effects note to null', () => {
+    const input = buildMedicationInput({
+      ...INITIAL_MEDICATION_FORM_STATE,
+      name: 'Salofalk',
+      dose: '500mg',
+      schedule: '1x täglich',
+      sideEffectsNote: '   ',
+    });
+    expect(input.sideEffectsNote).toBeNull();
   });
 });
 

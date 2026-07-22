@@ -136,6 +136,16 @@ export function MedicationForm({ initialState, onSubmit, submitLabel }: Medicati
         </Pressable>
       </View>
 
+      <Text style={styles.sectionLabel}>Nebenwirkungen (optional)</Text>
+      <TextInput
+        style={[styles.textInput, styles.noteInput]}
+        placeholder="z. B. Verursacht gelegentlich Übelkeit"
+        placeholderTextColor={colors.textSecondary}
+        value={formState.sideEffectsNote}
+        onChangeText={(text) => setFormState({ ...formState, sideEffectsNote: text })}
+        multiline
+      />
+
       {errors.length > 0 && (
         <View style={styles.errorBox}>
           {errors.map((error) => (
@@ -198,6 +208,10 @@ function makeStyles(colors: ThemeColors) {
     reminderInput: {
       flex: 1,
       marginBottom: 0,
+    },
+    noteInput: {
+      minHeight: 72,
+      textAlignVertical: 'top',
     },
     removeButton: {
       paddingVertical: tokens.spacing.xs,

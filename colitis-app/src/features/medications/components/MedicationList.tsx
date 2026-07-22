@@ -60,6 +60,7 @@ export function MedicationList({
                 Erinnerungen: {item.reminderTimes.map((reminderTime) => reminderTime.time).join(', ')}
               </Text>
             )}
+            {item.sideEffectsNote && <Text style={styles.cardSideEffects}>Nebenwirkungen: {item.sideEffectsNote}</Text>}
             {!isActive && item.endDate && <Text style={styles.cardEndedLabel}>Beendet am {item.endDate}</Text>}
             <View style={styles.actionsRow}>
               {isActive && (
@@ -140,6 +141,11 @@ function makeStyles(colors: ThemeColors) {
       marginBottom: tokens.spacing.xs,
     },
     cardDetail: { color: colors.textSecondary, fontSize: tokens.typography.fontSize.sm },
+    cardSideEffects: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      marginTop: tokens.spacing.xs,
+    },
     cardEndedLabel: {
       color: colors.textSecondary,
       fontSize: tokens.typography.fontSize.sm,

@@ -11,6 +11,7 @@ export interface Medication {
   schedule: string;
   startDate: string;
   endDate: string | null;
+  sideEffectsNote: string | null;
   reminderTimes: MedicationReminderTime[];
 }
 
@@ -20,6 +21,7 @@ export interface MedicationInput {
   schedule: string;
   startDate: string;
   endDate: string | null;
+  sideEffectsNote: string | null;
   reminderTimes: string[];
 }
 
