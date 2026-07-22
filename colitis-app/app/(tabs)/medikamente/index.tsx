@@ -23,6 +23,7 @@ import {
   scheduleScreeningReminder,
 } from '../../../src/lib/notifications/notificationService';
 import { buildScreeningReminderContent } from '../../../src/features/medications/notifications/reminderContent';
+import { exportMedicationPass } from '../../../src/features/medications/medicationPassExport';
 import { MedicationList } from '../../../src/features/medications/components/MedicationList';
 import { ScreeningReminderCard } from '../../../src/features/medications/components/ScreeningReminderCard';
 import { useTheme } from '../../../src/theme/ThemeContext';
@@ -43,6 +44,7 @@ export default function MedikamenteScreen() {
   const [screeningReminder, setScreeningReminder] = useState<ScreeningReminder | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     configureNotificationHandling();
@@ -196,6 +198,19 @@ export default function MedikamenteScreen() {
     }
   }
 
+  async function handleExportPass() {
+    setIsExporting(true);
+    try {
+      await exportMedicationPass(medications);
+      setError(null);
+    } catch (exportError: unknown) {
+      console.error('[Medikamente] Medikamenten-Pass-Export fehlgeschlagen:', exportError);
+      setError('Medikamenten-Pass konnte nicht exportiert werden.');
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <View style={styles.container}>
       {error && (
@@ -208,6 +223,18 @@ export default function MedikamenteScreen() {
         onSave={handleSaveScreeningReminder}
         onDelete={handleDeleteScreeningReminder}
       />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: isExporting || medications.length === 0 }}
+        accessibilityLabel="Medikamenten-Pass als PDF exportieren"
+        disabled={isExporting || medications.length === 0}
+        style={[styles.exportLink, (isExporting || medications.length === 0) && styles.exportLinkDisabled]}
+        onPress={handleExportPass}
+      >
+        <Text style={styles.exportLinkText}>
+          {isExporting ? 'PDF wird erstellt …' : 'Medikamenten-Pass als PDF exportieren'}
+        </Text>
+      </Pressable>
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Medikamente werden geladen …</Text>
@@ -245,6 +272,21 @@ function makeStyles(colors: ThemeColors) {
       padding: tokens.spacing.sm,
     },
     errorText: { color: colors.danger, fontSize: tokens.typography.fontSize.sm, textAlign: 'center' },
+    exportLink: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      padding: tokens.spacing.md,
+    },
+    exportLinkDisabled: {
+      opacity: 0.5,
+    },
+    exportLinkText: {
+      color: colors.primary,
+      fontSize: tokens.typography.fontSize.sm,
+      fontWeight: tokens.typography.fontWeight.medium,
+      textAlign: 'center',
+    },
     loadingContainer: {
       flex: 1,
       alignItems: 'center',
