@@ -8,6 +8,7 @@ export interface ThemeColors {
   primary: string;
   accent: string;
   danger: string;
+  warning: string;
   success: string;
   border: string;
   overlay: string;
