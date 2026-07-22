@@ -98,3 +98,12 @@ export const cachedFeedItems = sqliteTable('cached_feed_items', {
   url: text('url').notNull(),
   isRead: integer('is_read', { mode: 'boolean' }).notNull().default(false),
 });
+
+export const doctorVisits = sqliteTable('doctor_visits', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  visitDate: text('visit_date').notNull(),
+  doctorName: text('doctor_name'),
+  reason: text('reason'),
+  note: text('note'),
+  nextAppointmentDate: text('next_appointment_date'),
+});

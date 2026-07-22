@@ -7,6 +7,7 @@ import m0002 from './0002_chubby_speed_demon.sql';
 import m0003 from './0003_add_cached_feed_items.sql';
 import m0004 from './0004_absurd_quasar.sql';
 import m0005 from './0005_curious_diamondback.sql';
+import m0006 from './0006_milky_vance_astro.sql';
 
   export default {
     journal,
@@ -16,7 +17,8 @@ m0001,
 m0002,
 m0003,
 m0004,
-m0005
+m0005,
+m0006
     }
   }
   
