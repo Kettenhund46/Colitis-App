@@ -3,6 +3,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Alert, Pressable, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../../src/db/client';
 import { listDoctorVisits, deleteDoctorVisit } from '../../../../src/features/doctorVisits/db/doctorVisitsRepository';
+import { exportDoctorVisitPass } from '../../../../src/features/doctorVisits/doctorVisitPassExport';
 import { DoctorVisitList } from '../../../../src/features/doctorVisits/components/DoctorVisitList';
 import { useTheme } from '../../../../src/theme/ThemeContext';
 import { tokens } from '../../../../src/styles/tokens';
@@ -16,6 +17,7 @@ export default function ArztbesucheScreen() {
   const [visits, setVisits] = useState<DoctorVisit[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -68,6 +70,19 @@ export default function ArztbesucheScreen() {
     }
   }
 
+  async function handleExportPass() {
+    setIsExporting(true);
+    try {
+      await exportDoctorVisitPass(visits);
+      setError(null);
+    } catch (exportError: unknown) {
+      console.error('[Arztbesuche] PDF-Export fehlgeschlagen:', exportError);
+      setError('Arztbesuch-Übersicht konnte nicht exportiert werden.');
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <View style={styles.container}>
       {error && (
@@ -75,6 +90,18 @@ export default function ArztbesucheScreen() {
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: isExporting || visits.length === 0 }}
+        accessibilityLabel="Arztbesuch-Übersicht als PDF exportieren"
+        disabled={isExporting || visits.length === 0}
+        style={[styles.exportLink, (isExporting || visits.length === 0) && styles.exportLinkDisabled]}
+        onPress={handleExportPass}
+      >
+        <Text style={styles.exportLinkText}>
+          {isExporting ? 'PDF wird erstellt …' : 'Arztbesuch-Übersicht als PDF exportieren'}
+        </Text>
+      </Pressable>
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Arztbesuche werden geladen …</Text>
@@ -108,6 +135,21 @@ function makeStyles(colors: ThemeColors) {
       padding: tokens.spacing.sm,
     },
     errorText: { color: colors.danger, fontSize: tokens.typography.fontSize.sm, textAlign: 'center' },
+    exportLink: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      padding: tokens.spacing.md,
+    },
+    exportLinkDisabled: {
+      opacity: 0.5,
+    },
+    exportLinkText: {
+      color: colors.primary,
+      fontSize: tokens.typography.fontSize.sm,
+      fontWeight: tokens.typography.fontWeight.medium,
+      textAlign: 'center',
+    },
     loadingContainer: {
       flex: 1,
       alignItems: 'center',
