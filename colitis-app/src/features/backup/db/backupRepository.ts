@@ -1,6 +1,7 @@
 import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core';
 import {
   diaryEntries,
+  doctorVisits,
   knowledgeFavorites,
   medicationLog,
   medicationReminderTimes,
@@ -27,6 +28,7 @@ export async function exportBackupData(db: BackupDb): Promise<BackupData> {
       savedPlaces: await db.select().from(savedPlaces),
       screeningReminders: await db.select().from(screeningReminders),
       knowledgeFavorites: await db.select().from(knowledgeFavorites),
+      doctorVisits: await db.select().from(doctorVisits),
     },
   };
 }
@@ -42,6 +44,7 @@ export async function importBackupData(db: BackupDb, data: BackupData): Promise<
     tx.delete(savedPlaces).run();
     tx.delete(screeningReminders).run();
     tx.delete(knowledgeFavorites).run();
+    tx.delete(doctorVisits).run();
 
     // Eltern vor Kindern einfuegen, mit den urspruenglichen IDs aus dem Backup.
     for (const row of data.tables.diaryEntries) {
@@ -58,6 +61,9 @@ export async function importBackupData(db: BackupDb, data: BackupData): Promise<
     }
     for (const row of data.tables.knowledgeFavorites) {
       tx.insert(knowledgeFavorites).values(row).run();
+    }
+    for (const row of data.tables.doctorVisits) {
+      tx.insert(doctorVisits).values(row).run();
     }
     for (const row of data.tables.triggers) {
       tx.insert(triggers).values(row).run();
