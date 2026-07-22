@@ -100,7 +100,7 @@ export default function MedikamenteScreen() {
     if (!medication) {
       return;
     }
-    Alert.alert('Medikament beenden?', `„${medication.name}" wird als beendet markiert, bleibt aber in der Liste.`, [
+    Alert.alert('Medikament beenden?', `„${medication.name}“ wird als beendet markiert, bleibt aber in der Liste.`, [
       { text: 'Abbrechen', style: 'cancel' },
       {
         text: 'Beenden',
@@ -132,7 +132,7 @@ export default function MedikamenteScreen() {
     if (!medication) {
       return;
     }
-    Alert.alert('Medikament löschen?', `„${medication.name}" wird endgültig gelöscht.`, [
+    Alert.alert('Medikament löschen?', `„${medication.name}“ wird endgültig gelöscht.`, [
       { text: 'Abbrechen', style: 'cancel' },
       {
         text: 'Löschen',
