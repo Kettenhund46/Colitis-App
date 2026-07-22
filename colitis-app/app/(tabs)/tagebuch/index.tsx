@@ -4,6 +4,7 @@ import { Alert, Pressable, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
 import { listDiaryEntries, deleteDiaryEntry } from '../../../src/features/diary/db/diaryRepository';
 import { exportDiaryEntriesAsPdf } from '../../../src/features/diary/diaryPdfExport';
+import { exportDiaryEntriesAsCsv } from '../../../src/features/diary/diaryCsvExport';
 import { DiaryHistoryList } from '../../../src/features/diary/components/DiaryHistoryList';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
@@ -83,6 +84,19 @@ export default function TagebuchScreen() {
     }
   }
 
+  async function handleExportCsv() {
+    setIsExporting(true);
+    try {
+      await exportDiaryEntriesAsCsv(entries);
+      setError(null);
+    } catch (exportError: unknown) {
+      console.error('[Tagebuch] CSV-Export fehlgeschlagen:', exportError);
+      setError('CSV-Export fehlgeschlagen.');
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <View style={styles.container}>
       {error && (
@@ -107,6 +121,16 @@ export default function TagebuchScreen() {
         onPress={handleExportPdf}
       >
         <Text style={styles.exportLinkText}>{isExporting ? 'PDF wird erstellt …' : 'Als PDF exportieren'}</Text>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: isExporting || entries.length === 0 }}
+        accessibilityLabel="Tagebuch als CSV exportieren"
+        disabled={isExporting || entries.length === 0}
+        style={[styles.exportLink, (isExporting || entries.length === 0) && styles.exportLinkDisabled]}
+        onPress={handleExportCsv}
+      >
+        <Text style={styles.exportLinkText}>{isExporting ? 'CSV wird erstellt …' : 'Als CSV exportieren'}</Text>
       </Pressable>
       {isLoading ? (
         <View style={styles.loadingContainer}>
