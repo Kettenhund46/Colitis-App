@@ -1,7 +1,7 @@
 import { FlatList, Pressable, Text, View, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
-import { STOOL_CONSISTENCY_OPTIONS, SYMPTOM_OPTIONS, TRIGGER_CATEGORY_OPTIONS, labelFor } from '../constants';
+import { STOOL_CONSISTENCY_OPTIONS, SYMPTOM_OPTIONS, labelFor, buildTriggerLabels } from '../constants';
 import { formatOccurredAt } from '../formatting';
 import type { DiaryEntryWithTriggers } from '../types';
 import type { ThemeColors } from '../../../theme/types';
@@ -41,7 +41,7 @@ export function DiaryHistoryList({ entries, onDelete }: DiaryHistoryListProps) {
           {item.hasBlood && <Text style={styles.cardWarning}>Blut im Stuhl</Text>}
           {item.triggerCategories.length > 0 && (
             <Text style={styles.cardDetail}>
-              Auslöser: {item.triggerCategories.map((category) => labelFor(TRIGGER_CATEGORY_OPTIONS, category)).join(', ')}
+              Auslöser: {buildTriggerLabels(item.triggerCategories, item.foodTriggerNote).join(', ')}
             </Text>
           )}
           {item.symptoms.length > 0 && (

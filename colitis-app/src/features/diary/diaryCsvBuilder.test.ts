@@ -98,4 +98,10 @@ describe('buildDiaryCsv', () => {
     expect(lines[1]).toContain('08.07.2026');
     expect(lines[2]).toContain('06.07.2026');
   });
+
+  it('shows the food trigger note in parentheses next to Ernährung', () => {
+    const csv = buildDiaryCsv([makeEntry({ triggerCategories: ['ernaehrung'], foodTriggerNote: 'Kaffee' })]);
+    const row = csv.slice(1).split('\r\n')[1];
+    expect(row).toContain('Ernährung (Kaffee)');
+  });
 });

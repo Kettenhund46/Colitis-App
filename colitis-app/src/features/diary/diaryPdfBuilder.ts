@@ -1,4 +1,4 @@
-import { STOOL_CONSISTENCY_OPTIONS, SYMPTOM_OPTIONS, TRIGGER_CATEGORY_OPTIONS, labelFor } from './constants';
+import { STOOL_CONSISTENCY_OPTIONS, SYMPTOM_OPTIONS, labelFor, buildTriggerLabels } from './constants';
 import { formatOccurredAt } from './formatting';
 import type { DiaryEntryWithTriggers } from './types';
 
@@ -12,7 +12,7 @@ function escapeHtml(value: string): string {
 
 function buildEntrySection(entry: DiaryEntryWithTriggers): string {
   const consistencyLabel = labelFor(STOOL_CONSISTENCY_OPTIONS, entry.stoolConsistency);
-  const triggerLabels = entry.triggerCategories.map((category) => labelFor(TRIGGER_CATEGORY_OPTIONS, category));
+  const triggerLabels = buildTriggerLabels(entry.triggerCategories, entry.foodTriggerNote);
   const symptomLabels = entry.symptoms.map((symptom) => labelFor(SYMPTOM_OPTIONS, symptom));
 
   return `
