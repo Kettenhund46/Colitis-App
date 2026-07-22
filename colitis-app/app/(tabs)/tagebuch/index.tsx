@@ -6,6 +6,7 @@ import { listDiaryEntries, deleteDiaryEntry } from '../../../src/features/diary/
 import { exportDiaryEntriesAsPdf } from '../../../src/features/diary/diaryPdfExport';
 import { exportDiaryEntriesAsCsv } from '../../../src/features/diary/diaryCsvExport';
 import { DiaryHistoryList } from '../../../src/features/diary/components/DiaryHistoryList';
+import { DiaryCalendarView } from '../../../src/features/diary/components/DiaryCalendarView';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { DiaryEntryWithTriggers } from '../../../src/features/diary/types';
@@ -19,6 +20,7 @@ export default function TagebuchScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
 
   useFocusEffect(
     useCallback(() => {
@@ -104,6 +106,28 @@ export default function TagebuchScreen() {
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
+      <View style={styles.viewToggleRow}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ selected: viewMode === 'list' }}
+          style={[styles.viewToggleButton, viewMode === 'list' && styles.viewToggleButtonActive]}
+          onPress={() => setViewMode('list')}
+        >
+          <Text style={[styles.viewToggleButtonText, viewMode === 'list' && styles.viewToggleButtonTextActive]}>
+            Liste
+          </Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ selected: viewMode === 'calendar' }}
+          style={[styles.viewToggleButton, viewMode === 'calendar' && styles.viewToggleButtonActive]}
+          onPress={() => setViewMode('calendar')}
+        >
+          <Text style={[styles.viewToggleButtonText, viewMode === 'calendar' && styles.viewToggleButtonTextActive]}>
+            Kalender
+          </Text>
+        </Pressable>
+      </View>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Muster-Auswertung ansehen"
@@ -136,8 +160,10 @@ export default function TagebuchScreen() {
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Einträge werden geladen …</Text>
         </View>
-      ) : (
+      ) : viewMode === 'list' ? (
         <DiaryHistoryList entries={entries} onDelete={handleDelete} />
+      ) : (
+        <DiaryCalendarView entries={entries} onDeleteEntry={handleDelete} />
       )}
       <Pressable
         accessibilityRole="button"
@@ -167,6 +193,29 @@ function makeStyles(colors: ThemeColors) {
       color: colors.danger,
       fontSize: tokens.typography.fontSize.sm,
       textAlign: 'center',
+    },
+    viewToggleRow: {
+      flexDirection: 'row',
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    viewToggleButton: {
+      flex: 1,
+      paddingVertical: tokens.spacing.md,
+      alignItems: 'center',
+    },
+    viewToggleButtonActive: {
+      borderBottomWidth: 2,
+      borderBottomColor: colors.primary,
+    },
+    viewToggleButtonText: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      fontWeight: tokens.typography.fontWeight.medium,
+    },
+    viewToggleButtonTextActive: {
+      color: colors.primary,
     },
     analysisLink: {
       backgroundColor: colors.surface,
