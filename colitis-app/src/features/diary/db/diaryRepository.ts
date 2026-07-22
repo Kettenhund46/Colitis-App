@@ -26,7 +26,7 @@ export async function createDiaryEntry(db: DiaryDb, input: NewDiaryEntryInput): 
     await db.insert(triggers).values({
       diaryEntryId: entryId,
       category: triggerCategory,
-      note: null,
+      note: triggerCategory === 'ernaehrung' ? input.foodTriggerNote : null,
     });
   }
 
@@ -44,6 +44,7 @@ export async function listDiaryEntries(db: DiaryDb): Promise<DiaryEntryWithTrigg
   const result: DiaryEntryWithTriggers[] = [];
   for (const entry of entries) {
     const entryTriggers = await db.select().from(triggers).where(eq(triggers.diaryEntryId, entry.id));
+    const foodTrigger = entryTriggers.find((trigger) => trigger.category === 'ernaehrung');
 
     result.push({
       id: entry.id,
@@ -55,6 +56,7 @@ export async function listDiaryEntries(db: DiaryDb): Promise<DiaryEntryWithTrigg
       symptoms: entry.symptoms.length > 0 ? entry.symptoms.split(',') : [],
       note: entry.note,
       triggerCategories: entryTriggers.map((trigger) => trigger.category),
+      foodTriggerNote: foodTrigger?.note ?? null,
     });
   }
 

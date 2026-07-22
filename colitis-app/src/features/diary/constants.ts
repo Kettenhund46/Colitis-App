@@ -46,3 +46,15 @@ export const SYMPTOM_OPTIONS: SelectOption<SymptomKey>[] = [
 export function labelFor(options: SelectOption<string>[], key: string): string {
   return options.find((option) => option.key === key)?.label ?? key;
 }
+
+export function buildTriggerLabels(categories: string[], foodTriggerNote: string | null): string[] {
+  return categories.map((category) => {
+    const label = labelFor(TRIGGER_CATEGORY_OPTIONS, category);
+    if (category === 'ernaehrung' && foodTriggerNote) {
+      return `${label} (${foodTriggerNote})`;
+    }
+    return label;
+  });
+}
+
+export const FOOD_TRIGGER_SUGGESTIONS: string[] = ['Kaffee', 'Milchprodukte', 'Gluten', 'Scharfes', 'Alkohol', 'Zucker'];

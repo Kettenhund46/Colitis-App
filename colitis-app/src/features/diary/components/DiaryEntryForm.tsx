@@ -3,12 +3,13 @@ import { Pressable, ScrollView, Text, TextInput, View, StyleSheet } from 'react-
 import { NumberStepper } from '../../../components/ui/NumberStepper';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
-import { SYMPTOM_OPTIONS, STOOL_CONSISTENCY_OPTIONS, TRIGGER_CATEGORY_OPTIONS } from '../constants';
+import { SYMPTOM_OPTIONS, STOOL_CONSISTENCY_OPTIONS, TRIGGER_CATEGORY_OPTIONS, FOOD_TRIGGER_SUGGESTIONS } from '../constants';
 import type { StoolConsistency, SymptomKey, TriggerCategory } from '../constants';
 import {
   INITIAL_DIARY_ENTRY_FORM_STATE,
   buildDiaryEntryInput,
   toggleListValue,
+  appendFoodSuggestion,
   validateDiaryEntryForm,
   type DiaryEntryFormState,
 } from '../formLogic';
@@ -146,6 +147,37 @@ export function DiaryEntryForm({ onSubmit }: DiaryEntryFormProps) {
           );
         })}
       </View>
+
+      {formState.triggerCategories.includes('ernaehrung') && (
+        <>
+          <Text style={styles.sectionLabel}>Welches Lebensmittel? (optional)</Text>
+          <View style={styles.row}>
+            {FOOD_TRIGGER_SUGGESTIONS.map((suggestion) => (
+              <Pressable
+                key={suggestion}
+                accessibilityRole="button"
+                accessibilityLabel={`${suggestion} hinzufügen`}
+                onPress={() =>
+                  setFormState({
+                    ...formState,
+                    foodTriggerNote: appendFoodSuggestion(formState.foodTriggerNote, suggestion),
+                  })
+                }
+                style={styles.choiceButton}
+              >
+                <Text style={styles.choiceButtonText}>{suggestion}</Text>
+              </Pressable>
+            ))}
+          </View>
+          <TextInput
+            style={styles.noteInput}
+            placeholder="z. B. Kaffee, Milchprodukte …"
+            placeholderTextColor={colors.textSecondary}
+            value={formState.foodTriggerNote}
+            onChangeText={(text) => setFormState({ ...formState, foodTriggerNote: text })}
+          />
+        </>
+      )}
 
       <Text style={styles.sectionLabel}>Notiz</Text>
       <TextInput

@@ -13,6 +13,7 @@ function makeEntry(overrides: Partial<DiaryEntryWithTriggers> = {}): DiaryEntryW
     symptoms: [],
     note: null,
     triggerCategories: [],
+    foodTriggerNote: null,
     ...overrides,
   };
 }
@@ -74,5 +75,10 @@ describe('buildDiaryPdfHtml', () => {
     const secondIndex = html.indexOf('06.07.2026');
     expect(firstIndex).toBeGreaterThanOrEqual(0);
     expect(secondIndex).toBeGreaterThan(firstIndex);
+  });
+
+  it('shows the food trigger note in parentheses next to Ernährung', () => {
+    const html = buildDiaryPdfHtml([makeEntry({ triggerCategories: ['ernaehrung'], foodTriggerNote: 'Kaffee' })]);
+    expect(html).toContain('Ernährung (Kaffee)');
   });
 });

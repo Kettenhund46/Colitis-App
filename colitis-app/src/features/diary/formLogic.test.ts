@@ -4,6 +4,7 @@ import {
   buildDiaryEntryInput,
   toggleListValue,
   validateDiaryEntryForm,
+  appendFoodSuggestion,
 } from './formLogic';
 
 describe('validateDiaryEntryForm', () => {
@@ -53,6 +54,7 @@ describe('buildDiaryEntryInput', () => {
         symptoms: ['fieber'],
         note: '  Starke Schmerzen nach dem Essen  ',
         triggerCategories: ['ernaehrung'],
+        foodTriggerNote: 'Kaffee',
       },
       '2026-07-08T10:00:00.000Z'
     );
@@ -66,7 +68,47 @@ describe('buildDiaryEntryInput', () => {
       symptoms: ['fieber'],
       note: 'Starke Schmerzen nach dem Essen',
       triggerCategories: ['ernaehrung'],
+      foodTriggerNote: 'Kaffee',
     });
+  });
+
+  it('includes the food trigger note when ernaehrung is selected and text is present', () => {
+    const input = buildDiaryEntryInput(
+      {
+        ...INITIAL_DIARY_ENTRY_FORM_STATE,
+        stoolConsistency: 'normal',
+        triggerCategories: ['ernaehrung'],
+        foodTriggerNote: '  Kaffee, Milchprodukte  ',
+      },
+      '2026-07-08T10:00:00.000Z'
+    );
+    expect(input.foodTriggerNote).toBe('Kaffee, Milchprodukte');
+  });
+
+  it('discards the food trigger note when ernaehrung is not selected', () => {
+    const input = buildDiaryEntryInput(
+      {
+        ...INITIAL_DIARY_ENTRY_FORM_STATE,
+        stoolConsistency: 'normal',
+        triggerCategories: ['stress'],
+        foodTriggerNote: 'Kaffee',
+      },
+      '2026-07-08T10:00:00.000Z'
+    );
+    expect(input.foodTriggerNote).toBeNull();
+  });
+
+  it('sets a null food trigger note when ernaehrung is selected but no text was entered', () => {
+    const input = buildDiaryEntryInput(
+      {
+        ...INITIAL_DIARY_ENTRY_FORM_STATE,
+        stoolConsistency: 'normal',
+        triggerCategories: ['ernaehrung'],
+        foodTriggerNote: '   ',
+      },
+      '2026-07-08T10:00:00.000Z'
+    );
+    expect(input.foodTriggerNote).toBeNull();
   });
 });
 
@@ -83,5 +125,31 @@ describe('toggleListValue', () => {
     const original = ['a'];
     toggleListValue(original, 'b');
     expect(original).toEqual(['a']);
+  });
+});
+
+describe('appendFoodSuggestion', () => {
+  it('sets the suggestion directly when the field is empty', () => {
+    expect(appendFoodSuggestion('', 'Kaffee')).toBe('Kaffee');
+  });
+
+  it('sets the suggestion directly when the field is only whitespace', () => {
+    expect(appendFoodSuggestion('   ', 'Kaffee')).toBe('Kaffee');
+  });
+
+  it('appends a second suggestion with a comma', () => {
+    expect(appendFoodSuggestion('Kaffee', 'Milchprodukte')).toBe('Kaffee, Milchprodukte');
+  });
+
+  it('does not add a duplicate suggestion', () => {
+    expect(appendFoodSuggestion('Kaffee, Milchprodukte', 'Kaffee')).toBe('Kaffee, Milchprodukte');
+  });
+
+  it('is robust to extra whitespace around existing entries', () => {
+    expect(appendFoodSuggestion('Kaffee ,  Milchprodukte', 'Milchprodukte')).toBe('Kaffee ,  Milchprodukte');
+  });
+
+  it('preserves free-text additions alongside chip suggestions', () => {
+    expect(appendFoodSuggestion('Schokolade', 'Kaffee')).toBe('Schokolade, Kaffee');
   });
 });

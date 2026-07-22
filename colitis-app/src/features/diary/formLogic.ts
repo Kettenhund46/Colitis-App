@@ -9,6 +9,7 @@ export interface DiaryEntryFormState {
   symptoms: SymptomKey[];
   note: string;
   triggerCategories: TriggerCategory[];
+  foodTriggerNote: string;
 }
 
 export const INITIAL_DIARY_ENTRY_FORM_STATE: DiaryEntryFormState = {
@@ -19,6 +20,7 @@ export const INITIAL_DIARY_ENTRY_FORM_STATE: DiaryEntryFormState = {
   symptoms: [],
   note: '',
   triggerCategories: [],
+  foodTriggerNote: '',
 };
 
 export function validateDiaryEntryForm(state: DiaryEntryFormState): string[] {
@@ -43,6 +45,8 @@ export function buildDiaryEntryInput(state: DiaryEntryFormState, occurredAt: str
   }
 
   const trimmedNote = state.note.trim();
+  const trimmedFoodTriggerNote = state.foodTriggerNote.trim();
+  const hasFoodTrigger = state.triggerCategories.includes('ernaehrung') && trimmedFoodTriggerNote.length > 0;
 
   return {
     occurredAt,
@@ -53,9 +57,22 @@ export function buildDiaryEntryInput(state: DiaryEntryFormState, occurredAt: str
     symptoms: state.symptoms,
     note: trimmedNote.length > 0 ? trimmedNote : null,
     triggerCategories: state.triggerCategories,
+    foodTriggerNote: hasFoodTrigger ? trimmedFoodTriggerNote : null,
   };
 }
 
 export function toggleListValue<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
+}
+
+export function appendFoodSuggestion(current: string, suggestion: string): string {
+  const trimmed = current.trim();
+  if (trimmed.length === 0) {
+    return suggestion;
+  }
+  const parts = trimmed.split(',').map((part) => part.trim());
+  if (parts.includes(suggestion)) {
+    return trimmed;
+  }
+  return `${trimmed}, ${suggestion}`;
 }

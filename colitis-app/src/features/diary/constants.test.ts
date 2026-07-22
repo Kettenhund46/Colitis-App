@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SYMPTOM_OPTIONS, STOOL_CONSISTENCY_OPTIONS, TRIGGER_CATEGORY_OPTIONS, labelFor } from './constants';
+import { SYMPTOM_OPTIONS, STOOL_CONSISTENCY_OPTIONS, TRIGGER_CATEGORY_OPTIONS, labelFor, buildTriggerLabels } from './constants';
 
 describe('diary constants', () => {
   it('has no duplicate symptom keys', () => {
@@ -31,6 +31,36 @@ describe('diary constants', () => {
 
     it('returns the raw key when no matching option exists', () => {
       expect(labelFor(SYMPTOM_OPTIONS, 'unbekannt')).toBe('unbekannt');
+    });
+  });
+
+  describe('buildTriggerLabels', () => {
+    it('returns the plain label for ernaehrung without a food note', () => {
+      expect(buildTriggerLabels(['ernaehrung'], null)).toEqual(['Ernährung']);
+    });
+
+    it('appends the food note in parentheses for ernaehrung', () => {
+      expect(buildTriggerLabels(['ernaehrung'], 'Kaffee')).toEqual(['Ernährung (Kaffee)']);
+    });
+
+    it('appends a multi-item food note unchanged', () => {
+      expect(buildTriggerLabels(['ernaehrung'], 'Kaffee, Milchprodukte')).toEqual(['Ernährung (Kaffee, Milchprodukte)']);
+    });
+
+    it('leaves other categories unaffected by a food note', () => {
+      expect(buildTriggerLabels(['stress'], 'Kaffee')).toEqual(['Stress']);
+    });
+
+    it('only appends the note to the ernaehrung entry among mixed categories, preserving order', () => {
+      expect(buildTriggerLabels(['stress', 'ernaehrung', 'schlaf'], 'Kaffee')).toEqual([
+        'Stress',
+        'Ernährung (Kaffee)',
+        'Schlaf',
+      ]);
+    });
+
+    it('returns an empty array for no categories', () => {
+      expect(buildTriggerLabels([], 'Kaffee')).toEqual([]);
     });
   });
 });
