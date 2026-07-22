@@ -8,7 +8,7 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
-function formatGermanDate(isoDate: string): string {
+export function formatGermanDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-');
   return `${day}.${month}.${year}`;
 }

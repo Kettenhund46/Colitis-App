@@ -1,6 +1,7 @@
 import { FlatList, Pressable, Text, View, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
+import { formatGermanDate } from '../doctorVisitPassBuilder';
 import type { DoctorVisit } from '../types';
 import type { ThemeColors } from '../../../theme/types';
 
@@ -31,20 +32,22 @@ export function DoctorVisitList({ visits, onEdit, onDelete }: DoctorVisitListPro
       renderItem={({ item }) => (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Arztbesuch vom ${item.visitDate} bearbeiten`}
+          accessibilityLabel={`Arztbesuch vom ${formatGermanDate(item.visitDate)} bearbeiten`}
           style={styles.card}
           onPress={() => onEdit(item.id)}
         >
-          <Text style={styles.cardDate}>{item.visitDate}</Text>
+          <Text style={styles.cardDate}>{formatGermanDate(item.visitDate)}</Text>
           {item.doctorName && <Text style={styles.cardDetail}>{item.doctorName}</Text>}
           {item.reason && <Text style={styles.cardDetail}>{item.reason}</Text>}
           {item.nextAppointmentDate && (
-            <Text style={styles.cardNextAppointment}>Nächster Termin: {item.nextAppointmentDate}</Text>
+            <Text style={styles.cardNextAppointment}>
+              Nächster Termin: {formatGermanDate(item.nextAppointmentDate)}
+            </Text>
           )}
           <View style={styles.actionsRow}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Arztbesuch vom ${item.visitDate} löschen`}
+              accessibilityLabel={`Arztbesuch vom ${formatGermanDate(item.visitDate)} löschen`}
               style={styles.deleteButton}
               onPress={() => onDelete(item.id)}
             >
