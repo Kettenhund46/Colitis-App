@@ -5,8 +5,10 @@ import { createEncryptedDb } from '../../../src/db/client';
 import { listDiaryEntries, deleteDiaryEntry } from '../../../src/features/diary/db/diaryRepository';
 import { exportDiaryEntriesAsPdf } from '../../../src/features/diary/diaryPdfExport';
 import { exportDiaryEntriesAsCsv } from '../../../src/features/diary/diaryCsvExport';
+import { shouldShowFlareWarning } from '../../../src/features/diary/flareWarning';
 import { DiaryHistoryList } from '../../../src/features/diary/components/DiaryHistoryList';
 import { DiaryCalendarView } from '../../../src/features/diary/components/DiaryCalendarView';
+import { FlareWarningBanner } from '../../../src/features/diary/components/FlareWarningBanner';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { DiaryEntryWithTriggers } from '../../../src/features/diary/types';
@@ -21,6 +23,7 @@ export default function TagebuchScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [isFlareWarningDismissed, setIsFlareWarningDismissed] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -99,8 +102,11 @@ export default function TagebuchScreen() {
     }
   }
 
+  const showFlareWarning = !isFlareWarningDismissed && shouldShowFlareWarning(entries, new Date());
+
   return (
     <View style={styles.container}>
+      {showFlareWarning && <FlareWarningBanner onDismiss={() => setIsFlareWarningDismissed(true)} />}
       {error && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>{error}</Text>
