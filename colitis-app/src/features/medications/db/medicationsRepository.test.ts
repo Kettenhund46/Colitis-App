@@ -27,6 +27,7 @@ describe('medications repository', () => {
       schedule: '1x täglich morgens',
       startDate: '2026-07-12',
       endDate: null,
+      sideEffectsNote: null,
       reminderTimes: ['08:00'],
     });
 
@@ -44,6 +45,7 @@ describe('medications repository', () => {
       schedule: 'alle 8 Wochen',
       startDate: '2026-01-01',
       endDate: null,
+      sideEffectsNote: null,
       reminderTimes: [],
     });
     await createMedication(db, {
@@ -52,6 +54,7 @@ describe('medications repository', () => {
       schedule: '1x täglich abends',
       startDate: '2026-01-01',
       endDate: null,
+      sideEffectsNote: null,
       reminderTimes: ['21:00'],
     });
 
@@ -68,6 +71,7 @@ describe('medications repository', () => {
       schedule: '1x täglich',
       startDate: '2026-07-12',
       endDate: null,
+      sideEffectsNote: null,
       reminderTimes: [],
     });
 
@@ -85,6 +89,7 @@ describe('medications repository', () => {
       schedule: '1x täglich',
       startDate: '2026-07-12',
       endDate: null,
+      sideEffectsNote: null,
       reminderTimes: ['08:00'],
     });
 
@@ -94,6 +99,7 @@ describe('medications repository', () => {
       schedule: '2x täglich',
       startDate: '2026-07-12',
       endDate: null,
+      sideEffectsNote: null,
       reminderTimes: ['08:00', '20:00'],
     });
 
@@ -113,6 +119,7 @@ describe('medications repository', () => {
       schedule: '1x täglich',
       startDate: '2026-07-12',
       endDate: null,
+      sideEffectsNote: null,
       reminderTimes: ['08:00'],
     });
 
@@ -130,6 +137,7 @@ describe('medications repository', () => {
       schedule: '1x täglich',
       startDate: '2026-07-12',
       endDate: null,
+      sideEffectsNote: null,
       reminderTimes: ['08:00'],
     });
 
@@ -146,6 +154,7 @@ describe('medications repository', () => {
       schedule: '1x täglich',
       startDate: '2026-07-12',
       endDate: null,
+      sideEffectsNote: null,
       reminderTimes: [],
     });
 
@@ -165,6 +174,7 @@ describe('medications repository', () => {
         schedule: '1x täglich',
         startDate: '2026-07-12',
         endDate: null,
+        sideEffectsNote: null,
         reminderTimes: [],
       })
     ).rejects.toThrow('Medikament mit ID 999999 wurde nicht gefunden.');
@@ -189,6 +199,7 @@ describe('medications repository', () => {
       schedule: '1x täglich',
       startDate: '2026-07-12',
       endDate: null,
+      sideEffectsNote: null,
       reminderTimes: [],
     });
     const takenYesterday = await createMedication(db, {
@@ -197,6 +208,7 @@ describe('medications repository', () => {
       schedule: 'alle 8 Wochen',
       startDate: '2026-07-12',
       endDate: null,
+      sideEffectsNote: null,
       reminderTimes: [],
     });
     const neverTaken = await createMedication(db, {
@@ -205,6 +217,7 @@ describe('medications repository', () => {
       schedule: '1x täglich',
       startDate: '2026-07-12',
       endDate: null,
+      sideEffectsNote: null,
       reminderTimes: [],
     });
 
@@ -225,6 +238,7 @@ describe('medications repository', () => {
       schedule: '2x täglich',
       startDate: '2026-07-12',
       endDate: null,
+      sideEffectsNote: null,
       reminderTimes: [],
     });
 
@@ -243,6 +257,7 @@ describe('medications repository', () => {
       schedule: '1x täglich',
       startDate: '2026-07-12',
       endDate: null,
+      sideEffectsNote: null,
       reminderTimes: ['08:00', '20:00'],
     });
     await logMedicationTaken(db, created.id, '2026-07-16T08:05:00.000Z');
@@ -257,5 +272,47 @@ describe('medications repository', () => {
 
   it('throws when deleting a medication that does not exist', async () => {
     await expect(deleteMedication(db, 999999)).rejects.toThrow('Medikament mit ID 999999 wurde nicht gefunden.');
+  });
+
+  it('persists and returns a side effects note', async () => {
+    const created = await createMedication(db, {
+      name: 'Salofalk',
+      dose: '500mg',
+      schedule: '1x täglich',
+      startDate: '2026-07-12',
+      endDate: null,
+      sideEffectsNote: 'Verursacht gelegentlich Übelkeit',
+      reminderTimes: [],
+    });
+
+    expect(created.sideEffectsNote).toBe('Verursacht gelegentlich Übelkeit');
+
+    const found = await getMedicationById(db, created.id);
+    expect(found?.sideEffectsNote).toBe('Verursacht gelegentlich Übelkeit');
+  });
+
+  it('updates a side effects note back to null', async () => {
+    const created = await createMedication(db, {
+      name: 'Salofalk',
+      dose: '500mg',
+      schedule: '1x täglich',
+      startDate: '2026-07-12',
+      endDate: null,
+      sideEffectsNote: 'Übelkeit',
+      reminderTimes: [],
+    });
+
+    await updateMedication(db, created.id, {
+      name: 'Salofalk',
+      dose: '500mg',
+      schedule: '1x täglich',
+      startDate: '2026-07-12',
+      endDate: null,
+      sideEffectsNote: null,
+      reminderTimes: [],
+    });
+
+    const updated = await getMedicationById(db, created.id);
+    expect(updated?.sideEffectsNote).toBeNull();
   });
 });

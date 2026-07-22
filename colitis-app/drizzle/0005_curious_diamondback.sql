@@ -1,0 +1,1 @@
+ALTER TABLE `medications` ADD `side_effects_note` text;
