@@ -3,6 +3,7 @@ import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
 import { getKnowledgeArticleBySlug } from '../../../src/features/knowledge/db/knowledgeRepository';
+import { listFavoriteSlugs, addFavorite, removeFavorite } from '../../../src/features/knowledge/db/knowledgeFavoritesRepository';
 import { KnowledgeArticleDetail } from '../../../src/features/knowledge/components/KnowledgeArticleDetail';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
@@ -14,6 +15,7 @@ export default function ArtikelScreen() {
   const styles = makeStyles(colors);
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const [article, setArticle] = useState<KnowledgeArticle | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useFocusEffect(
@@ -21,10 +23,17 @@ export default function ArtikelScreen() {
       let isActive = true;
 
       createEncryptedDb()
-        .then((db) => getKnowledgeArticleBySlug(db, slug))
-        .then((loadedArticle) => {
+        .then(async (db) => {
+          const [loadedArticle, favoriteSlugs] = await Promise.all([
+            getKnowledgeArticleBySlug(db, slug),
+            listFavoriteSlugs(db),
+          ]);
+          return { loadedArticle, favoriteSlugs };
+        })
+        .then(({ loadedArticle, favoriteSlugs }) => {
           if (isActive) {
             setArticle(loadedArticle);
+            setIsFavorite(favoriteSlugs.includes(slug));
             setError(loadedArticle ? null : 'Artikel wurde nicht gefunden.');
           }
         })
@@ -40,6 +49,17 @@ export default function ArtikelScreen() {
       };
     }, [slug])
   );
+
+  async function handleToggleFavorite() {
+    const db = await createEncryptedDb();
+    if (isFavorite) {
+      await removeFavorite(db, slug);
+      setIsFavorite(false);
+    } else {
+      await addFavorite(db, slug);
+      setIsFavorite(true);
+    }
+  }
 
   if (error) {
     return (
@@ -57,7 +77,7 @@ export default function ArtikelScreen() {
     );
   }
 
-  return <KnowledgeArticleDetail article={article} />;
+  return <KnowledgeArticleDetail article={article} isFavorite={isFavorite} onToggleFavorite={handleToggleFavorite} />;
 }
 
 function makeStyles(colors: ThemeColors) {
