@@ -19,6 +19,7 @@ const RANGE_OPTIONS: { value: TrendRangeDays; label: string }[] = [
 
 const BAR_WIDTH = 8;
 const BAR_GAP = 3;
+const BAR_RADIUS = 2;
 const CHART_HEIGHT = 80;
 const MIN_STOOL_FREQUENCY_SCALE = 5;
 const PAIN_LEVEL_SCALE = 10;
@@ -62,7 +63,7 @@ const barRowStyles = StyleSheet.create({
   },
   bar: {
     width: BAR_WIDTH,
-    borderRadius: 2,
+    borderRadius: BAR_RADIUS,
   },
 });
 

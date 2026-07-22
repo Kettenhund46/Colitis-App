@@ -61,7 +61,7 @@ export default function AuswertungScreen() {
           <Text style={styles.loadingText}>Auswertung wird geladen …</Text>
         </View>
       ) : (
-        <ScrollView>
+        <ScrollView style={styles.scroll}>
           <DiaryTrendChart entries={entries} />
           <TriggerAnalysisView patterns={patterns} />
         </ScrollView>
@@ -75,6 +75,9 @@ function makeStyles(colors: ThemeColors) {
     container: {
       flex: 1,
       backgroundColor: colors.background,
+    },
+    scroll: {
+      flex: 1,
     },
     errorBanner: {
       backgroundColor: colors.surface,
