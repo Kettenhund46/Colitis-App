@@ -13,3 +13,7 @@ export function filterKnowledgeArticles(articles: KnowledgeArticle[], query: str
       article.body.toLowerCase().includes(normalizedQuery)
   );
 }
+
+export function filterFavoriteArticles(articles: KnowledgeArticle[], favoriteSlugs: Set<string>): KnowledgeArticle[] {
+  return articles.filter((article) => favoriteSlugs.has(article.slug));
+}
