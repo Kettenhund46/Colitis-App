@@ -59,3 +59,15 @@ export function buildDiaryEntryInput(state: DiaryEntryFormState, occurredAt: str
 export function toggleListValue<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 }
+
+export function appendFoodSuggestion(current: string, suggestion: string): string {
+  const trimmed = current.trim();
+  if (trimmed.length === 0) {
+    return suggestion;
+  }
+  const parts = trimmed.split(',').map((part) => part.trim());
+  if (parts.includes(suggestion)) {
+    return trimmed;
+  }
+  return `${trimmed}, ${suggestion}`;
+}
