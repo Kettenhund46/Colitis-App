@@ -32,7 +32,7 @@ Migration wird mit `npx drizzle-kit generate` erzeugt (rein additiv: `ALTER TABL
 `src/features/medications/db/medicationsRepository.ts`: `createMedication`, `updateMedication`, `listMedications` und `getMedicationById` lesen/schreiben das neue Feld zusätzlich zu den bestehenden Spalten.
 
 **Bestehende Tests, die angepasst werden müssen** (da `MedicationInput`/`Medication` das Feld künftig zwingend erwarten):
-- `src/features/medications/db/medicationsRepository.test.ts`: alle 12 bestehenden `createMedication`/`updateMedication`-Aufrufe bekommen `sideEffectsNote: null,`.
+- `src/features/medications/db/medicationsRepository.test.ts`: alle 15 bestehenden `createMedication`/`updateMedication`-Aufrufe bekommen `sideEffectsNote: null,`.
 - `src/features/medications/formLogic.test.ts`: der eine bestehende `toEqual(...)`-Erwartungswert in `buildMedicationInput`-Tests bekommt `sideEffectsNote: null,`.
 - `src/features/backup/db/backupRepository.test.ts`: die zwei bestehenden `medications: [{...}]`-Objektliterale (in den Tests `'preserves foreign key relationships...'` und `'does not violate foreign key constraints...'`) bekommen `sideEffectsNote: null,`.
 
