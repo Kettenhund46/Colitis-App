@@ -1,18 +1,21 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { Text, View, StyleSheet } from 'react-native';
+import { ScrollView, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
 import { listDiaryEntries } from '../../../src/features/diary/db/diaryRepository';
 import { computeTriggerPatterns } from '../../../src/features/diary/analysis';
 import { TriggerAnalysisView } from '../../../src/features/diary/components/TriggerAnalysisView';
+import { DiaryTrendChart } from '../../../src/features/diary/components/DiaryTrendChart';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { TriggerPatternStat } from '../../../src/features/diary/analysis';
+import type { DiaryEntryWithTriggers } from '../../../src/features/diary/types';
 import type { ThemeColors } from '../../../src/theme/types';
 
 export default function AuswertungScreen() {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
+  const [entries, setEntries] = useState<DiaryEntryWithTriggers[]>([]);
   const [patterns, setPatterns] = useState<TriggerPatternStat[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,9 +27,10 @@ export default function AuswertungScreen() {
 
       createEncryptedDb()
         .then((db) => listDiaryEntries(db))
-        .then((entries) => {
+        .then((loadedEntries) => {
           if (isActive) {
-            setPatterns(computeTriggerPatterns(entries));
+            setEntries(loadedEntries);
+            setPatterns(computeTriggerPatterns(loadedEntries));
             setError(null);
             setIsLoading(false);
           }
@@ -57,7 +61,10 @@ export default function AuswertungScreen() {
           <Text style={styles.loadingText}>Auswertung wird geladen …</Text>
         </View>
       ) : (
-        <TriggerAnalysisView patterns={patterns} />
+        <ScrollView style={styles.scroll}>
+          <DiaryTrendChart entries={entries} />
+          <TriggerAnalysisView patterns={patterns} />
+        </ScrollView>
       )}
     </View>
   );
@@ -68,6 +75,9 @@ function makeStyles(colors: ThemeColors) {
     container: {
       flex: 1,
       backgroundColor: colors.background,
+    },
+    scroll: {
+      flex: 1,
     },
     errorBanner: {
       backgroundColor: colors.surface,
