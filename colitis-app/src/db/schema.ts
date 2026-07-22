@@ -65,6 +65,11 @@ export const knowledgeContent = sqliteTable('knowledge_content', {
   sources: text('sources').notNull(),
 });
 
+export const knowledgeFavorites = sqliteTable('knowledge_favorites', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  articleSlug: text('article_slug').notNull().unique(),
+});
+
 export const screeningReminders = sqliteTable('screening_reminders', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   intervalMonths: integer('interval_months').notNull(),

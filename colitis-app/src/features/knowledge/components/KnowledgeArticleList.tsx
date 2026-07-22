@@ -7,21 +7,24 @@ import type { ThemeColors } from '../../../theme/types';
 interface KnowledgeArticleListProps {
   articles: KnowledgeArticle[];
   onSelect: (slug: string) => void;
+  emptyMessage?: string;
 }
+
+const DEFAULT_EMPTY_MESSAGE = 'Keine Artikel gefunden.';
 
 function teaserFor(body: string): string {
   const trimmed = body.trim();
   return trimmed.length > 100 ? `${trimmed.slice(0, 100)}…` : trimmed;
 }
 
-export function KnowledgeArticleList({ articles, onSelect }: KnowledgeArticleListProps) {
+export function KnowledgeArticleList({ articles, onSelect, emptyMessage = DEFAULT_EMPTY_MESSAGE }: KnowledgeArticleListProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
   if (articles.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Keine Artikel gefunden.</Text>
+        <Text style={styles.emptyText}>{emptyMessage}</Text>
       </View>
     );
   }

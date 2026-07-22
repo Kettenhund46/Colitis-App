@@ -1,4 +1,4 @@
-import type { diaryEntries, medicationLog, medicationReminderTimes, medications, savedPlaces, screeningReminders, triggers } from '../../db/schema';
+import type { diaryEntries, knowledgeFavorites, medicationLog, medicationReminderTimes, medications, savedPlaces, screeningReminders, triggers } from '../../db/schema';
 
 export const BACKUP_FORMAT_VERSION = 1;
 
@@ -13,6 +13,7 @@ export interface BackupData {
     medicationReminderTimes: (typeof medicationReminderTimes.$inferSelect)[];
     savedPlaces: (typeof savedPlaces.$inferSelect)[];
     screeningReminders: (typeof screeningReminders.$inferSelect)[];
+    knowledgeFavorites: (typeof knowledgeFavorites.$inferSelect)[];
   };
 }
 

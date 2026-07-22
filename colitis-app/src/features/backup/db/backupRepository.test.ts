@@ -10,7 +10,7 @@ describe('backup repository', () => {
     db = createTestDb();
   });
 
-  it('exports an empty structure with all seven table keys when nothing exists yet', async () => {
+  it('exports an empty structure with all eight table keys when nothing exists yet', async () => {
     const data = await exportBackupData(db);
     expect(data.version).toBe(1);
     expect(data.tables).toEqual({
@@ -21,6 +21,7 @@ describe('backup repository', () => {
       medicationReminderTimes: [],
       savedPlaces: [],
       screeningReminders: [],
+      knowledgeFavorites: [],
     });
   });
 
@@ -75,6 +76,7 @@ describe('backup repository', () => {
         medicationReminderTimes: [],
         savedPlaces: [],
         screeningReminders: [],
+        knowledgeFavorites: [],
       },
     };
 
@@ -109,6 +111,7 @@ describe('backup repository', () => {
         medicationReminderTimes: [{ id: 2, medicationId: 5, time: '08:00', notificationId: null }],
         savedPlaces: [],
         screeningReminders: [],
+        knowledgeFavorites: [],
       },
     };
 
@@ -142,6 +145,7 @@ describe('backup repository', () => {
         medicationReminderTimes: [],
         savedPlaces: [],
         screeningReminders: [],
+        knowledgeFavorites: [],
       },
     });
 
@@ -214,6 +218,7 @@ describe('backup repository', () => {
         medicationReminderTimes: [],
         savedPlaces: [],
         screeningReminders: [],
+        knowledgeFavorites: [],
       },
     };
 
@@ -224,5 +229,27 @@ describe('backup repository', () => {
     expect(data.tables.triggers).toEqual(importedData.tables.triggers);
     expect(data.tables.medications).toEqual(importedData.tables.medications);
     expect(data.tables.medicationLog).toEqual(importedData.tables.medicationLog);
+  });
+
+  it('exports and re-imports knowledge favorites, preserving original ids', async () => {
+    const importedData = {
+      version: 1 as const,
+      exportedAt: '2026-07-22T09:00:00.000Z',
+      tables: {
+        diaryEntries: [],
+        triggers: [],
+        medications: [],
+        medicationLog: [],
+        medicationReminderTimes: [],
+        savedPlaces: [],
+        screeningReminders: [],
+        knowledgeFavorites: [{ id: 3, articleSlug: 'ueberblick' }],
+      },
+    };
+
+    await importBackupData(db, importedData);
+
+    const data = await exportBackupData(db);
+    expect(data.tables.knowledgeFavorites).toEqual(importedData.tables.knowledgeFavorites);
   });
 });

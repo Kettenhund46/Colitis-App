@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterKnowledgeArticles } from './search';
+import { filterKnowledgeArticles, filterFavoriteArticles } from './search';
 import type { KnowledgeArticle } from './types';
 
 const articles: KnowledgeArticle[] = [
@@ -36,5 +36,23 @@ describe('filterKnowledgeArticles', () => {
 
   it('returns an empty array when nothing matches', () => {
     expect(filterKnowledgeArticles(articles, 'zzzzz')).toEqual([]);
+  });
+});
+
+describe('filterFavoriteArticles', () => {
+  it('returns an empty array when no slugs are favorited', () => {
+    expect(filterFavoriteArticles(articles, new Set())).toEqual([]);
+  });
+
+  it('returns only the favorited article among several', () => {
+    expect(filterFavoriteArticles(articles, new Set(['b']))).toEqual([articles[1]]);
+  });
+
+  it('preserves the original article order', () => {
+    expect(filterFavoriteArticles(articles, new Set(['b', 'a']))).toEqual([articles[0], articles[1]]);
+  });
+
+  it('ignores favorite slugs that do not match any article', () => {
+    expect(filterFavoriteArticles(articles, new Set(['nicht-vorhanden']))).toEqual([]);
   });
 });

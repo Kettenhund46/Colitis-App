@@ -6,15 +6,26 @@ import type { ThemeColors } from '../../../theme/types';
 
 interface KnowledgeArticleDetailProps {
   article: KnowledgeArticle;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
 }
 
-export function KnowledgeArticleDetail({ article }: KnowledgeArticleDetailProps) {
+export function KnowledgeArticleDetail({ article, isFavorite, onToggleFavorite }: KnowledgeArticleDetailProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const paragraphs = article.body.split('\n\n');
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={isFavorite ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+        accessibilityState={{ selected: isFavorite }}
+        style={styles.favoriteButton}
+        onPress={onToggleFavorite}
+      >
+        <Text style={styles.favoriteButtonText}>{isFavorite ? '★ Favorit' : '☆ Favorit'}</Text>
+      </Pressable>
       <Text style={styles.title}>{article.title}</Text>
       {paragraphs.map((paragraph, index) => (
         <Text key={index} style={styles.paragraph}>
@@ -46,6 +57,15 @@ function makeStyles(colors: ThemeColors) {
     },
     content: {
       padding: tokens.spacing.lg,
+    },
+    favoriteButton: {
+      alignSelf: 'flex-start',
+      marginBottom: tokens.spacing.sm,
+    },
+    favoriteButtonText: {
+      color: colors.accent,
+      fontSize: tokens.typography.fontSize.md,
+      fontWeight: tokens.typography.fontWeight.medium,
     },
     title: {
       color: colors.textPrimary,

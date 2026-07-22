@@ -12,6 +12,7 @@ const REQUIRED_TABLE_KEYS = [
   'medicationReminderTimes',
   'savedPlaces',
   'screeningReminders',
+  'knowledgeFavorites',
 ] as const;
 
 export function parseBackupData(json: string): BackupData {
