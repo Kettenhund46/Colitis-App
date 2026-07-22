@@ -54,6 +54,7 @@ describe('buildDiaryEntryInput', () => {
         symptoms: ['fieber'],
         note: '  Starke Schmerzen nach dem Essen  ',
         triggerCategories: ['ernaehrung'],
+        foodTriggerNote: 'Kaffee',
       },
       '2026-07-08T10:00:00.000Z'
     );
@@ -67,7 +68,47 @@ describe('buildDiaryEntryInput', () => {
       symptoms: ['fieber'],
       note: 'Starke Schmerzen nach dem Essen',
       triggerCategories: ['ernaehrung'],
+      foodTriggerNote: 'Kaffee',
     });
+  });
+
+  it('includes the food trigger note when ernaehrung is selected and text is present', () => {
+    const input = buildDiaryEntryInput(
+      {
+        ...INITIAL_DIARY_ENTRY_FORM_STATE,
+        stoolConsistency: 'normal',
+        triggerCategories: ['ernaehrung'],
+        foodTriggerNote: '  Kaffee, Milchprodukte  ',
+      },
+      '2026-07-08T10:00:00.000Z'
+    );
+    expect(input.foodTriggerNote).toBe('Kaffee, Milchprodukte');
+  });
+
+  it('discards the food trigger note when ernaehrung is not selected', () => {
+    const input = buildDiaryEntryInput(
+      {
+        ...INITIAL_DIARY_ENTRY_FORM_STATE,
+        stoolConsistency: 'normal',
+        triggerCategories: ['stress'],
+        foodTriggerNote: 'Kaffee',
+      },
+      '2026-07-08T10:00:00.000Z'
+    );
+    expect(input.foodTriggerNote).toBeNull();
+  });
+
+  it('sets a null food trigger note when ernaehrung is selected but no text was entered', () => {
+    const input = buildDiaryEntryInput(
+      {
+        ...INITIAL_DIARY_ENTRY_FORM_STATE,
+        stoolConsistency: 'normal',
+        triggerCategories: ['ernaehrung'],
+        foodTriggerNote: '   ',
+      },
+      '2026-07-08T10:00:00.000Z'
+    );
+    expect(input.foodTriggerNote).toBeNull();
   });
 });
 

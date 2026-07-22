@@ -13,6 +13,7 @@ function makeEntry(overrides: Partial<DiaryEntryWithTriggers> = {}): DiaryEntryW
     symptoms: [],
     note: null,
     triggerCategories: [],
+    foodTriggerNote: null,
     ...overrides,
   };
 }

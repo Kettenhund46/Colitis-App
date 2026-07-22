@@ -9,6 +9,7 @@ export interface DiaryEntryFormState {
   symptoms: SymptomKey[];
   note: string;
   triggerCategories: TriggerCategory[];
+  foodTriggerNote: string;
 }
 
 export const INITIAL_DIARY_ENTRY_FORM_STATE: DiaryEntryFormState = {
@@ -19,6 +20,7 @@ export const INITIAL_DIARY_ENTRY_FORM_STATE: DiaryEntryFormState = {
   symptoms: [],
   note: '',
   triggerCategories: [],
+  foodTriggerNote: '',
 };
 
 export function validateDiaryEntryForm(state: DiaryEntryFormState): string[] {
@@ -43,6 +45,8 @@ export function buildDiaryEntryInput(state: DiaryEntryFormState, occurredAt: str
   }
 
   const trimmedNote = state.note.trim();
+  const trimmedFoodTriggerNote = state.foodTriggerNote.trim();
+  const hasFoodTrigger = state.triggerCategories.includes('ernaehrung') && trimmedFoodTriggerNote.length > 0;
 
   return {
     occurredAt,
@@ -53,6 +57,7 @@ export function buildDiaryEntryInput(state: DiaryEntryFormState, occurredAt: str
     symptoms: state.symptoms,
     note: trimmedNote.length > 0 ? trimmedNote : null,
     triggerCategories: state.triggerCategories,
+    foodTriggerNote: hasFoodTrigger ? trimmedFoodTriggerNote : null,
   };
 }
 

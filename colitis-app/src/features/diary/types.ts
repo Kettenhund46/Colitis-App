@@ -9,6 +9,7 @@ export interface NewDiaryEntryInput {
   symptoms: string[];
   note: string | null;
   triggerCategories: TriggerCategory[];
+  foodTriggerNote: string | null;
 }
 
 export interface DiaryEntryWithTriggers {
@@ -21,4 +22,5 @@ export interface DiaryEntryWithTriggers {
   symptoms: string[];
   note: string | null;
   triggerCategories: string[];
+  foodTriggerNote: string | null;
 }

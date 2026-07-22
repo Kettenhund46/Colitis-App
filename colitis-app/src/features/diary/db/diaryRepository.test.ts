@@ -39,6 +39,7 @@ describe('diary repository', () => {
       symptoms: ['bauchschmerzen', 'muedigkeit'],
       note: 'Nach dem Frühstück',
       triggerCategories: ['stress'],
+      foodTriggerNote: null,
     });
 
     expect(id).toBeGreaterThan(0);
@@ -54,6 +55,7 @@ describe('diary repository', () => {
       symptoms: [],
       note: null,
       triggerCategories: [],
+      foodTriggerNote: null,
     });
     await createDiaryEntry(db, {
       occurredAt: '2026-07-08T08:00:00.000Z',
@@ -64,6 +66,7 @@ describe('diary repository', () => {
       symptoms: ['fieber'],
       note: null,
       triggerCategories: ['ernaehrung', 'stress'],
+      foodTriggerNote: null,
     });
 
     const entries = await listDiaryEntries(db);
@@ -84,10 +87,45 @@ describe('diary repository', () => {
       symptoms: ['kraempfe', 'gelenkschmerzen'],
       note: null,
       triggerCategories: [],
+      foodTriggerNote: null,
     });
 
     const [entry] = await listDiaryEntries(db);
     expect(entry.symptoms).toEqual(['kraempfe', 'gelenkschmerzen']);
+  });
+
+  it('stores and retrieves a food trigger note only for the ernaehrung category', async () => {
+    await createDiaryEntry(db, {
+      occurredAt: '2026-07-08T10:00:00.000Z',
+      stoolFrequency: 3,
+      hasBlood: false,
+      stoolConsistency: 'weich',
+      painLevel: 4,
+      symptoms: [],
+      note: null,
+      triggerCategories: ['ernaehrung', 'stress'],
+      foodTriggerNote: 'Kaffee, Milchprodukte',
+    });
+
+    const [entry] = await listDiaryEntries(db);
+    expect(entry.foodTriggerNote).toBe('Kaffee, Milchprodukte');
+  });
+
+  it('returns a null food trigger note when ernaehrung was not selected', async () => {
+    await createDiaryEntry(db, {
+      occurredAt: '2026-07-08T10:00:00.000Z',
+      stoolFrequency: 3,
+      hasBlood: false,
+      stoolConsistency: 'weich',
+      painLevel: 4,
+      symptoms: [],
+      note: null,
+      triggerCategories: ['stress'],
+      foodTriggerNote: 'Kaffee',
+    });
+
+    const [entry] = await listDiaryEntries(db);
+    expect(entry.foodTriggerNote).toBeNull();
   });
 
   it('deletes a diary entry along with its triggers', async () => {
@@ -100,6 +138,7 @@ describe('diary repository', () => {
       symptoms: [],
       note: null,
       triggerCategories: ['stress', 'ernaehrung'],
+      foodTriggerNote: null,
     });
 
     await deleteDiaryEntry(db, id);
@@ -118,6 +157,7 @@ describe('diary repository', () => {
       symptoms: [],
       note: null,
       triggerCategories: [],
+      foodTriggerNote: null,
     });
     const deletedId = await createDiaryEntry(db, {
       occurredAt: '2026-07-08T08:00:00.000Z',
@@ -128,6 +168,7 @@ describe('diary repository', () => {
       symptoms: [],
       note: null,
       triggerCategories: [],
+      foodTriggerNote: null,
     });
 
     await deleteDiaryEntry(db, deletedId);
