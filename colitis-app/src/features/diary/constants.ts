@@ -56,3 +56,5 @@ export function buildTriggerLabels(categories: string[], foodTriggerNote: string
     return label;
   });
 }
+
+export const FOOD_TRIGGER_SUGGESTIONS: string[] = ['Kaffee', 'Milchprodukte', 'Gluten', 'Scharfes', 'Alkohol', 'Zucker'];
