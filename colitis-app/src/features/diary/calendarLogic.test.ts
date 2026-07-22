@@ -124,7 +124,8 @@ describe('buildCalendarGrid', () => {
 
   it('starts the grid on a Monday', () => {
     const cells = buildCalendarGrid(2026, 6);
-    const firstCellDate = new Date(cells[0].date);
+    const [year, month, day] = cells[0].date.split('-').map(Number);
+    const firstCellDate = new Date(year, month - 1, day);
     expect(firstCellDate.getDay()).toBe(1); // 1 = Monday
   });
 

@@ -19,14 +19,42 @@ function formatMonthTitle(year: number, month: number): string {
   return new Date(year, month, 1).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
 }
 
-function ratingColor(colors: ThemeColors, rating: DayRating): string {
+const RATING_LABELS: Record<DayRating, string> = {
+  good: 'gut',
+  medium: 'mittel',
+  bad: 'schub-verdächtig',
+};
+
+function ratingIndicatorStyle(colors: ThemeColors, rating: DayRating) {
   if (rating === 'bad') {
-    return colors.danger;
+    return {
+      width: 0,
+      height: 0,
+      marginTop: 2,
+      borderLeftWidth: 4,
+      borderRightWidth: 4,
+      borderBottomWidth: 7,
+      borderLeftColor: 'transparent',
+      borderRightColor: 'transparent',
+      borderBottomColor: colors.danger,
+    } as const;
   }
   if (rating === 'medium') {
-    return colors.warning;
+    return {
+      width: 6,
+      height: 6,
+      marginTop: 2,
+      borderRadius: 1,
+      backgroundColor: colors.warning,
+    } as const;
   }
-  return colors.success;
+  return {
+    width: 6,
+    height: 6,
+    marginTop: 2,
+    borderRadius: 3,
+    backgroundColor: colors.success,
+  } as const;
 }
 
 export function DiaryCalendarView({ entries, onDeleteEntry }: DiaryCalendarViewProps) {
@@ -101,7 +129,7 @@ export function DiaryCalendarView({ entries, onDeleteEntry }: DiaryCalendarViewP
             <Pressable
               key={cell.date}
               accessibilityRole="button"
-              accessibilityLabel={`Tag ${cell.dayOfMonth}${hasEntries ? ', hat Einträge' : ''}`}
+              accessibilityLabel={`Tag ${cell.dayOfMonth}${rating ? `, Bewertung: ${RATING_LABELS[rating]}` : ''}`}
               disabled={!hasEntries}
               onPress={() => handleSelectDay(cell.date)}
               style={[styles.cell, !cell.isCurrentMonth && styles.cellOutsideMonth, isSelected && styles.cellSelected]}
@@ -109,17 +137,20 @@ export function DiaryCalendarView({ entries, onDeleteEntry }: DiaryCalendarViewP
               <Text style={[styles.cellText, !cell.isCurrentMonth && styles.cellTextOutsideMonth]}>
                 {cell.dayOfMonth}
               </Text>
-              {rating && <View style={[styles.dot, { backgroundColor: ratingColor(colors, rating) }]} />}
+              {rating && <View style={ratingIndicatorStyle(colors, rating)} />}
             </Pressable>
           );
         })}
       </View>
 
       <View style={styles.legend}>
-        <Text style={styles.legendText}>🟢 Gut · 🟡 Mittel · 🔴 Schub-verdächtig</Text>
+        <Text style={styles.legendText}>
+          <Text style={{ color: colors.success }}>●</Text> Gut · <Text style={{ color: colors.warning }}>■</Text>{' '}
+          Mittel · <Text style={{ color: colors.danger }}>▲</Text> Schub-verdächtig
+        </Text>
       </View>
 
-      {selectedDate && (
+      {selectedDate && selectedEntries.length > 0 && (
         <View style={styles.selectedDayList}>
           <DiaryHistoryList entries={selectedEntries} onDelete={onDeleteEntry} />
         </View>
@@ -190,12 +221,6 @@ function makeStyles(colors: ThemeColors) {
     },
     cellTextOutsideMonth: {
       color: colors.textSecondary,
-    },
-    dot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      marginTop: 2,
     },
     legend: {
       marginTop: tokens.spacing.sm,
