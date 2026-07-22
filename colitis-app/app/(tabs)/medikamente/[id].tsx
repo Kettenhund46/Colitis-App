@@ -116,6 +116,7 @@ export default function MedikamentBearbeitenScreen() {
           schedule: medication.schedule,
           startDate: medication.startDate,
           endDate: medication.endDate ?? '',
+          sideEffectsNote: medication.sideEffectsNote ?? '',
           reminderTimes: medication.reminderTimes.map((reminderTime) => reminderTime.time),
         }}
         onSubmit={handleSubmit}
