@@ -1,11 +1,16 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
+import { Alert, Linking, Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
 import { seedKnowledgeArticles, listKnowledgeArticles } from '../../../src/features/knowledge/db/knowledgeRepository';
 import { listFavoriteSlugs } from '../../../src/features/knowledge/db/knowledgeFavoritesRepository';
 import { filterKnowledgeArticles, filterFavoriteArticles } from '../../../src/features/knowledge/search';
 import { KnowledgeArticleList } from '../../../src/features/knowledge/components/KnowledgeArticleList';
+import { COMMUNITY_INVITE_URL } from '../../../src/features/community/constants';
+import {
+  getCommunityDisclaimerSeen,
+  setCommunityDisclaimerSeen,
+} from '../../../src/features/settings/settingsStorage';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { KnowledgeArticle } from '../../../src/features/knowledge/types';
@@ -60,6 +65,40 @@ export default function WissenScreen() {
     }, [])
   );
 
+  async function openCommunityLink() {
+    try {
+      await Linking.openURL(COMMUNITY_INVITE_URL);
+      setError(null);
+    } catch (linkError: unknown) {
+      console.error('[Wissen] Community-Link konnte nicht geöffnet werden:', linkError);
+      setError('Community-Link konnte nicht geöffnet werden.');
+    }
+  }
+
+  async function confirmCommunityDisclaimer() {
+    await setCommunityDisclaimerSeen(true);
+    await openCommunityLink();
+  }
+
+  async function handleCommunityPress() {
+    const alreadySeen = await getCommunityDisclaimerSeen();
+    if (alreadySeen) {
+      await openCommunityLink();
+      return;
+    }
+    Alert.alert(
+      'Du verlässt die App',
+      'Der Discord-Server ist eine externe Plattform mit eigenen Datenschutzbestimmungen. Inhalte dort werden nicht von dieser App moderiert.',
+      [
+        { text: 'Abbrechen', style: 'cancel' },
+        {
+          text: 'Verstanden, weiter',
+          onPress: () => void confirmCommunityDisclaimer(),
+        },
+      ]
+    );
+  }
+
   const searchedArticles = filterKnowledgeArticles(articles, query);
   const visibleArticles =
     viewFilter === 'favorites' ? filterFavoriteArticles(searchedArticles, favoriteSlugs) : searchedArticles;
@@ -78,6 +117,14 @@ export default function WissenScreen() {
         onPress={() => router.push('/wissen/feed')}
       >
         <Text style={styles.newsLinkText}>Neuigkeiten ansehen →</Text>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Community beitreten"
+        style={styles.newsLink}
+        onPress={() => void handleCommunityPress()}
+      >
+        <Text style={styles.newsLinkText}>Community beitreten →</Text>
       </Pressable>
       <View style={styles.viewToggleRow}>
         <Pressable

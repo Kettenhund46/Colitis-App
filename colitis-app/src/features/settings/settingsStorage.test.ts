@@ -31,6 +31,8 @@ import {
   setLastBackupAt,
   getBackupReminderNotificationId,
   setBackupReminderNotificationId,
+  getCommunityDisclaimerSeen,
+  setCommunityDisclaimerSeen,
 } from './settingsStorage';
 
 beforeEach(() => {
@@ -115,5 +117,16 @@ describe('backup reminder settings', () => {
     expect(await getBackupReminderNotificationId()).toBe('notif-abc');
     await setBackupReminderNotificationId(null);
     expect(await getBackupReminderNotificationId()).toBeNull();
+  });
+});
+
+describe('community disclaimer setting', () => {
+  it('defaults communityDisclaimerSeen to false', async () => {
+    expect(await getCommunityDisclaimerSeen()).toBe(false);
+  });
+
+  it('persists communityDisclaimerSeen', async () => {
+    await setCommunityDisclaimerSeen(true);
+    expect(await getCommunityDisclaimerSeen()).toBe(true);
   });
 });
