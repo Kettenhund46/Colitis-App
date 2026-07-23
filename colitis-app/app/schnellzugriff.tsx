@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Linking, Pressable, Text, View, StyleSheet } from 'react-native';
 import * as Location from 'expo-location';
+import {
+  beginPendingPermissionRequest,
+  endPendingPermissionRequest,
+} from '../src/features/appLock/pendingPermissionGuard';
 import { createEncryptedDb } from '../src/db/client';
 import { listSavedPlaces } from '../src/features/toilets/db/savedPlacesRepository';
 import { listCachedToilets } from '../src/features/toilets/db/cachedToiletsRepository';
@@ -24,7 +28,13 @@ export default function SchnellzugriffScreen() {
     let isActive = true;
 
     async function run() {
-      const permission = await Location.requestForegroundPermissionsAsync();
+      beginPendingPermissionRequest();
+      let permission: Location.LocationPermissionResponse;
+      try {
+        permission = await Location.requestForegroundPermissionsAsync();
+      } finally {
+        endPendingPermissionRequest();
+      }
       if (permission.status !== 'granted') {
         if (isActive) {
           setStatus('no-location');
