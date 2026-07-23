@@ -2,6 +2,10 @@ import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { Alert, Linking, Text, View, StyleSheet } from 'react-native';
 import * as Location from 'expo-location';
+import {
+  beginPendingPermissionRequest,
+  endPendingPermissionRequest,
+} from '../../../src/features/appLock/pendingPermissionGuard';
 import { ToiletMapView } from '../../../src/features/toilets/components/ToiletMapView';
 import { ToiletInfoCard } from '../../../src/features/toilets/components/ToiletInfoCard';
 import { SavedPlaceInfoCard } from '../../../src/features/toilets/components/SavedPlaceInfoCard';
@@ -69,8 +73,10 @@ export default function ToilettenScreen() {
           console.error('[Toiletten] Sichere Orte konnten nicht geladen werden:', error);
         });
 
+      beginPendingPermissionRequest();
       Location.requestForegroundPermissionsAsync()
         .then(async (permission) => {
+          endPendingPermissionRequest();
           if (!isActive) {
             return;
           }
@@ -109,6 +115,7 @@ export default function ToilettenScreen() {
           }
         })
         .catch((error: unknown) => {
+          endPendingPermissionRequest();
           console.error('[Toiletten] Standortberechtigung konnte nicht abgefragt werden:', error);
           if (isActive) {
             setLocationDenied(true);
