@@ -115,6 +115,7 @@ export default function EinstellungenScreen() {
         });
       return () => {
         isActive = false;
+        setBackupMessage(null);
       };
     }, [])
   );

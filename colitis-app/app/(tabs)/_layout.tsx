@@ -19,6 +19,7 @@ export default function TabsLayout() {
         name="tagebuch"
         options={{
           title: 'Tagebuch',
+          popToTopOnBlur: true,
           tabBarIcon: ({ color, size }) => <Ionicons name="journal-outline" size={size} color={color} />,
         }}
       />
@@ -26,6 +27,7 @@ export default function TabsLayout() {
         name="wissen"
         options={{
           title: 'Wissen',
+          popToTopOnBlur: true,
           tabBarIcon: ({ color, size }) => <Ionicons name="book-outline" size={size} color={color} />,
         }}
       />
@@ -33,6 +35,7 @@ export default function TabsLayout() {
         name="medikamente"
         options={{
           title: 'Medikamente',
+          popToTopOnBlur: true,
           tabBarIcon: ({ color, size }) => <Ionicons name="medical-outline" size={size} color={color} />,
         }}
       />
