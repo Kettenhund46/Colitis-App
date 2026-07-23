@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 import { isAppLockEnabled } from './pinAuth';
+import { isPermissionRequestPending } from './pendingPermissionGuard';
 
 export function useAppLockGate() {
   const [isLockEnabled, setIsLockEnabled] = useState(false);
@@ -37,6 +38,9 @@ export function useAppLockGate() {
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
       if (nextState !== 'active') {
+        return;
+      }
+      if (isPermissionRequestPending()) {
         return;
       }
       isAppLockEnabled()
