@@ -120,12 +120,23 @@ export default function EinstellungenScreen() {
     }, [])
   );
 
-  async function handleToggleLock(value: boolean) {
+  function handleToggleLock(value: boolean) {
     setLockActionError(null);
     if (value) {
       setIsSettingPin(true);
       return;
     }
+    Alert.alert('App-Sperre deaktivieren?', 'Möchtest du die App-Sperre wirklich deaktivieren?', [
+      { text: 'Abbrechen', style: 'cancel' },
+      {
+        text: 'Deaktivieren',
+        style: 'destructive',
+        onPress: () => void confirmDisableLock(),
+      },
+    ]);
+  }
+
+  async function confirmDisableLock() {
     try {
       await disableAppLock();
       setIsLockEnabled(false);
