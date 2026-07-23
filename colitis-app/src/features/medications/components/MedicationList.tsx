@@ -87,16 +87,25 @@ export function MedicationList({
               >
                 <Text style={styles.editButtonText}>Bearbeiten</Text>
               </Pressable>
-              {isActive && (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`${item.name} beenden`}
-                  style={styles.endButton}
-                  onPress={() => onEnd(item.id)}
-                >
-                  <Text style={styles.endButtonText}>Beenden</Text>
-                </Pressable>
-              )}
+              {isActive &&
+                (item.endDate === null ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${item.name} beenden`}
+                    style={styles.endButton}
+                    onPress={() => onEnd(item.id)}
+                  >
+                    <Text style={styles.endButtonText}>Beenden</Text>
+                  </Pressable>
+                ) : (
+                  <View
+                    accessibilityRole="text"
+                    accessibilityLabel={`${item.name} beendet`}
+                    style={styles.endedHintBadge}
+                  >
+                    <Text style={styles.endedHintBadgeText}>Beendet</Text>
+                  </View>
+                ))}
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`${item.name} löschen`}
@@ -189,6 +198,15 @@ function makeStyles(colors: ThemeColors) {
       paddingHorizontal: tokens.spacing.md,
     },
     endButtonText: { color: colors.danger, fontSize: tokens.typography.fontSize.sm },
+    endedHintBadge: {
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.border,
+      paddingVertical: tokens.spacing.xs,
+      paddingHorizontal: tokens.spacing.md,
+    },
+    endedHintBadgeText: { color: colors.textSecondary, fontSize: tokens.typography.fontSize.sm },
     deleteButton: {
       backgroundColor: colors.danger,
       borderRadius: 8,
