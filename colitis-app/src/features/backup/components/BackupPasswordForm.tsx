@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
 import { tokens } from '../../../styles/tokens';
 import { useTheme } from '../../../theme/ThemeContext';
@@ -20,6 +21,12 @@ export function BackupPasswordForm({ requireConfirmation, submitLabel, onSubmit,
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => setError(null);
+    }, [])
+  );
 
   async function handleSubmit() {
     if (password.length < MIN_PASSWORD_LENGTH) {

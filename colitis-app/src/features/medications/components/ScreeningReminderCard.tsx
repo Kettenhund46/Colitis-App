@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { Alert, Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
@@ -21,6 +22,12 @@ export function ScreeningReminderCard({ reminder, onSave, onDelete }: ScreeningR
   const [note, setNote] = useState(reminder?.note ?? '');
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => setError(null);
+    }, [])
+  );
 
   function startEditing() {
     setIntervalMonths(reminder ? String(reminder.intervalMonths) : '');
