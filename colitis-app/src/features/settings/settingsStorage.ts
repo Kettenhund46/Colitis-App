@@ -86,3 +86,14 @@ export async function setBackupReminderNotificationId(notificationId: string | n
   }
   await AsyncStorage.setItem(BACKUP_REMINDER_NOTIFICATION_ID_KEY, notificationId);
 }
+
+const COMMUNITY_DISCLAIMER_SEEN_KEY = 'colitis2go.settings.communityDisclaimerSeen';
+
+export async function getCommunityDisclaimerSeen(): Promise<boolean> {
+  const stored = await AsyncStorage.getItem(COMMUNITY_DISCLAIMER_SEEN_KEY);
+  return stored === 'true';
+}
+
+export async function setCommunityDisclaimerSeen(seen: boolean): Promise<void> {
+  await AsyncStorage.setItem(COMMUNITY_DISCLAIMER_SEEN_KEY, seen ? 'true' : 'false');
+}
