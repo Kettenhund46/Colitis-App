@@ -224,3 +224,35 @@ Punkt 10 ist eine native Änderung und wirkt erst mit einem neuen Build. Das EAS
 ---
 
 *Hinweis: Dieses Vorhaben verändert die Erfassung medizinischer Verlaufsdaten. Die Zusammenführungsregeln in Abschnitt 1 — schlechtere Konsistenz gewinnt, gesetztes Blut bleibt gesetzt — sind bewusst so gewählt, dass eine Verschlechterung im Tagesverlauf nicht verloren geht. Die App stellt keine Diagnose und ersetzt keine ärztliche Beurteilung.*
+
+---
+
+## Nachtrag vom 2026-07-27: Tageswerte werden zusammengerechnet
+
+*Vom Nutzer (Adrian) genehmigt, nachdem die Schlussdurchsicht des Zweigs eine Luecke in dieser Spezifikation gefunden hatte.*
+
+Abschnitt 1 behauptete, dass Bewertungslogik, Kalender, Schub-Fruehwarnung und
+Auswertung durch das Hochzaehl-Modell unveraendert gueltig bleiben. Das galt nur
+unter der stillschweigenden Annahme, dass pro Tag genau ein Eintrag existiert.
+Diese Annahme erzwingt die App nicht: Das ausfuehrliche Formular legt weiterhin
+einen eigenen Eintrag an, und da der Plus-Knopf nun zum Schnell-Eintrag fuehrt,
+ist der geteilte Tag sogar der wahrscheinliche Weg.
+
+Folge: Ein Tag mit fuenf plus vier Stuhlgaengen wurde als "mittel" bewertet statt
+als "schlecht", weil die Bewertung das Maximum der Einzeleintraege nahm und nie
+summierte. Die Schub-Fruehwarnung zaehlte solche Tage nicht mit. Der
+Verlaufschart mittelte. Die Verzerrung ging stets in Richtung beschoenigend.
+
+**Entscheidung:** Ein Tag wird ab sofort anhand seiner zusammengerechneten Werte
+bewertet — Haeufigkeit summiert, Schmerz der hoechste Wert des Tages, Blut sobald
+irgendein Eintrag des Tages es vermerkt. Die Schwellenwerte selbst bleiben
+unveraendert. Der Verlaufschart folgt derselben Regel. Der Zaehler im
+Schnell-Eintrag zeigt den Tageswert ueber alle Eintraege und weist aus, wenn
+mehrere vorliegen.
+
+Damit entfaellt die Aussage aus dem Abschnitt "Explizit nicht Teil dieses
+Schritts", dass calendarLogic.ts und flareWarning.ts unveraendert bleiben:
+calendarLogic.ts wird angefasst, flareWarning.ts profitiert unveraendert davon,
+weil es rateDayEntries aufruft.
+
+Umsetzung: docs/superpowers/plans/2026-07-27-colitis-app-tageswerte-zusammenrechnen.md
