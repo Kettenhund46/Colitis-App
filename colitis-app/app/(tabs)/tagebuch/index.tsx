@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Alert, Pressable, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
 import { listDiaryEntries, deleteDiaryEntry } from '../../../src/features/diary/db/diaryRepository';
@@ -102,10 +103,41 @@ export default function TagebuchScreen() {
     }
   }
 
+  function handleOpenExportMenu() {
+    if (entries.length === 0) {
+      Alert.alert('Tagebuch exportieren', 'Noch keine Einträge zum Exportieren.', [
+        { text: 'Abbrechen', style: 'cancel' },
+      ]);
+      return;
+    }
+
+    Alert.alert('Tagebuch exportieren', undefined, [
+      { text: 'Als PDF exportieren', onPress: () => void handleExportPdf() },
+      { text: 'Als CSV exportieren', onPress: () => void handleExportCsv() },
+      { text: 'Abbrechen', style: 'cancel' },
+    ]);
+  }
+
   const showFlareWarning = !isFlareWarningDismissed && shouldShowFlareWarning(entries, new Date());
 
   return (
     <View style={styles.container}>
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Export-Menü öffnen"
+              accessibilityState={{ disabled: isExporting }}
+              disabled={isExporting}
+              style={[styles.headerButton, isExporting && styles.headerButtonDisabled]}
+              onPress={handleOpenExportMenu}
+            >
+              <Ionicons name="ellipsis-vertical" size={22} color={colors.textPrimary} />
+            </Pressable>
+          ),
+        }}
+      />
       {showFlareWarning && <FlareWarningBanner onDismiss={() => setIsFlareWarningDismissed(true)} />}
       {error && (
         <View style={styles.errorBanner}>
@@ -134,42 +166,24 @@ export default function TagebuchScreen() {
           </Text>
         </Pressable>
       </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Muster-Auswertung ansehen"
-        style={styles.analysisLink}
-        onPress={() => router.push('/tagebuch/auswertung')}
-      >
-        <Text style={styles.analysisLinkText}>Muster-Auswertung ansehen →</Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Arztbesuche verwalten"
-        style={styles.analysisLink}
-        onPress={() => router.push('/tagebuch/arztbesuche')}
-      >
-        <Text style={styles.analysisLinkText}>Arztbesuche verwalten →</Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ disabled: isExporting || entries.length === 0 }}
-        accessibilityLabel="Tagebuch als PDF exportieren"
-        disabled={isExporting || entries.length === 0}
-        style={[styles.exportLink, (isExporting || entries.length === 0) && styles.exportLinkDisabled]}
-        onPress={handleExportPdf}
-      >
-        <Text style={styles.exportLinkText}>{isExporting ? 'PDF wird erstellt …' : 'Als PDF exportieren'}</Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ disabled: isExporting || entries.length === 0 }}
-        accessibilityLabel="Tagebuch als CSV exportieren"
-        disabled={isExporting || entries.length === 0}
-        style={[styles.exportLink, (isExporting || entries.length === 0) && styles.exportLinkDisabled]}
-        onPress={handleExportCsv}
-      >
-        <Text style={styles.exportLinkText}>{isExporting ? 'CSV wird erstellt …' : 'Als CSV exportieren'}</Text>
-      </Pressable>
+      <View style={styles.chipRow}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Muster-Auswertung ansehen"
+          style={styles.chip}
+          onPress={() => router.push('/tagebuch/auswertung')}
+        >
+          <Text style={styles.chipText}>Auswertung</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Arztbesuche verwalten"
+          style={styles.chip}
+          onPress={() => router.push('/tagebuch/arztbesuche')}
+        >
+          <Text style={styles.chipText}>Arztbesuche</Text>
+        </Pressable>
+      </View>
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Einträge werden geladen …</Text>
@@ -183,7 +197,7 @@ export default function TagebuchScreen() {
         accessibilityRole="button"
         accessibilityLabel="Neuen Eintrag anlegen"
         style={styles.addButton}
-        onPress={() => router.push('/tagebuch/neu')}
+        onPress={() => router.push('/tagebuch/schnell')}
       >
         <Text style={styles.addButtonText}>+</Text>
       </Pressable>
@@ -231,32 +245,35 @@ function makeStyles(colors: ThemeColors) {
     viewToggleButtonTextActive: {
       color: colors.primary,
     },
-    analysisLink: {
+    chipRow: {
+      flexDirection: 'row',
+      gap: tokens.spacing.sm,
       backgroundColor: colors.surface,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
-      padding: tokens.spacing.md,
+      paddingHorizontal: tokens.spacing.md,
+      paddingVertical: tokens.spacing.sm,
     },
-    analysisLinkText: {
+    chip: {
+      flex: 1,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: tokens.radius.pill,
+      paddingVertical: tokens.spacing.sm,
+      paddingHorizontal: tokens.spacing.md,
+    },
+    chipText: {
       color: colors.primary,
       fontSize: tokens.typography.fontSize.sm,
       fontWeight: tokens.typography.fontWeight.medium,
-      textAlign: 'center',
     },
-    exportLink: {
-      backgroundColor: colors.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      padding: tokens.spacing.md,
+    headerButton: {
+      paddingHorizontal: tokens.spacing.sm,
+      paddingVertical: tokens.spacing.xs,
     },
-    exportLinkDisabled: {
+    headerButtonDisabled: {
       opacity: 0.5,
-    },
-    exportLinkText: {
-      color: colors.primary,
-      fontSize: tokens.typography.fontSize.sm,
-      fontWeight: tokens.typography.fontWeight.medium,
-      textAlign: 'center',
     },
     loadingContainer: {
       flex: 1,
