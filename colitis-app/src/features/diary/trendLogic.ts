@@ -3,31 +3,19 @@ import type { DiaryEntryWithTriggers } from './types';
 
 export type TrendRangeDays = 7 | 30 | 90;
 
-export interface DailyAverage {
+export interface DailyTrendPoint {
   date: string;
-  averagePainLevel: number | null;
-  averageStoolFrequency: number | null;
+  worstPainLevel: number | null;
+  totalStoolFrequency: number | null;
 }
 
-function roundToOneDecimal(value: number): number {
-  return Math.round(value * 10) / 10;
-}
-
-function averageOf(values: number[]): number | null {
-  if (values.length === 0) {
-    return null;
-  }
-  const sum = values.reduce((total, value) => total + value, 0);
-  return roundToOneDecimal(sum / values.length);
-}
-
-export function buildDailyAverages(
+export function buildDailyTrend(
   entries: DiaryEntryWithTriggers[],
   rangeDays: TrendRangeDays,
   referenceDate: Date = new Date()
-): DailyAverage[] {
+): DailyTrendPoint[] {
   const entriesByDay = groupEntriesByDay(entries);
-  const days: DailyAverage[] = [];
+  const days: DailyTrendPoint[] = [];
 
   for (let offset = rangeDays - 1; offset >= 0; offset--) {
     const day = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate() - offset);
@@ -36,8 +24,14 @@ export function buildDailyAverages(
 
     days.push({
       date: dateKey,
-      averagePainLevel: averageOf(dayEntries.map((entry) => entry.painLevel)),
-      averageStoolFrequency: averageOf(dayEntries.map((entry) => entry.stoolFrequency)),
+      worstPainLevel:
+        dayEntries.length === 0
+          ? null
+          : dayEntries.reduce((worst, entry) => Math.max(worst, entry.painLevel), 0),
+      totalStoolFrequency:
+        dayEntries.length === 0
+          ? null
+          : dayEntries.reduce((total, entry) => total + entry.stoolFrequency, 0),
     });
   }
 

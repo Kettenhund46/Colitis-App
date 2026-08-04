@@ -3,6 +3,7 @@ import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core';
 import { diaryEntries, triggers } from '../../../db/schema';
 import * as schema from '../../../db/schema';
 import type { NewDiaryEntryInput, DiaryEntryWithTriggers } from '../types';
+import type { QuickEntryUpdate } from '../quickEntryLogic';
 
 export type DiaryDb = BaseSQLiteDatabase<'sync', any, typeof schema>;
 
@@ -61,4 +62,19 @@ export async function listDiaryEntries(db: DiaryDb): Promise<DiaryEntryWithTrigg
   }
 
   return result;
+}
+
+export async function updateDiaryEntryQuickFields(
+  db: DiaryDb,
+  entryId: number,
+  update: QuickEntryUpdate
+): Promise<void> {
+  await db
+    .update(diaryEntries)
+    .set({
+      stoolFrequency: update.stoolFrequency,
+      hasBlood: update.hasBlood,
+      stoolConsistency: update.stoolConsistency,
+    })
+    .where(eq(diaryEntries.id, entryId));
 }

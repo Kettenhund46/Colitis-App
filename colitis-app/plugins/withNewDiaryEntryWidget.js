@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const WIDGET_PROVIDER_CLASS_NAME = 'NewDiaryEntryWidgetProvider';
-const DEEP_LINK_URL = 'colitisapp://tagebuch/neu';
+const DEEP_LINK_URL = 'colitisapp://tagebuch/schnell';
 
 function withNewDiaryEntryWidgetResources(config) {
   return withDangerousMod(config, [
@@ -32,8 +32,8 @@ function withNewDiaryEntryWidgetResources(config) {
         path.join(valuesDir, 'widget_strings.xml'),
         `<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="widget_new_diary_entry_label">Neuer Tagebucheintrag</string>
-  <string name="widget_new_diary_entry_description">Neuer Tagebucheintrag</string>
+  <string name="widget_new_diary_entry_label">Schnell-Eintrag</string>
+  <string name="widget_new_diary_entry_description">Schnell-Eintrag</string>
 </resources>
 `,
         'utf-8'

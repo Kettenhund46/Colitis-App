@@ -2,34 +2,43 @@ import type { DiaryEntryWithTriggers } from './types';
 
 export type DayRating = 'good' | 'medium' | 'bad';
 
-const RATING_SEVERITY: Record<DayRating, number> = {
-  good: 0,
-  medium: 1,
-  bad: 2,
-};
+export interface DayTotals {
+  totalStoolFrequency: number;
+  worstPainLevel: number;
+  hasBlood: boolean;
+}
 
-export function rateDiaryEntry(entry: DiaryEntryWithTriggers): DayRating {
-  if (entry.hasBlood) {
+export function sumDayTotals(entries: DiaryEntryWithTriggers[]): DayTotals {
+  return {
+    totalStoolFrequency: entries.reduce((total, entry) => total + entry.stoolFrequency, 0),
+    worstPainLevel: entries.reduce((worst, entry) => Math.max(worst, entry.painLevel), 0),
+    hasBlood: entries.some((entry) => entry.hasBlood),
+  };
+}
+
+export function rateDayTotals(totals: DayTotals): DayRating {
+  if (totals.hasBlood) {
     return 'bad';
   }
-  if (entry.painLevel >= 7 || entry.stoolFrequency >= 8) {
+  if (totals.worstPainLevel >= 7 || totals.totalStoolFrequency >= 8) {
     return 'bad';
   }
-  if (entry.painLevel >= 4 || entry.stoolFrequency >= 5) {
+  if (totals.worstPainLevel >= 4 || totals.totalStoolFrequency >= 5) {
     return 'medium';
   }
   return 'good';
 }
 
+export function rateDiaryEntry(entry: DiaryEntryWithTriggers): DayRating {
+  return rateDayTotals({
+    totalStoolFrequency: entry.stoolFrequency,
+    worstPainLevel: entry.painLevel,
+    hasBlood: entry.hasBlood,
+  });
+}
+
 export function rateDayEntries(entries: DiaryEntryWithTriggers[]): DayRating {
-  let worst: DayRating = 'good';
-  for (const entry of entries) {
-    const rating = rateDiaryEntry(entry);
-    if (RATING_SEVERITY[rating] > RATING_SEVERITY[worst]) {
-      worst = rating;
-    }
-  }
-  return worst;
+  return rateDayTotals(sumDayTotals(entries));
 }
 
 export function formatDateKey(date: Date): string {

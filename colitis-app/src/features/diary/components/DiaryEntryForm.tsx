@@ -45,7 +45,7 @@ export function DiaryEntryForm({ onSubmit }: DiaryEntryFormProps) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <NumberStepper
-        label="Stuhlgang-Häufigkeit heute"
+        label="Stuhlgang-Häufigkeit (dieser Eintrag)"
         value={formState.stoolFrequency}
         onChange={(next) => setFormState({ ...formState, stoolFrequency: next })}
         min={0}
