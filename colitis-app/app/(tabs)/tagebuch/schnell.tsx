@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Pressable, Switch, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
@@ -28,6 +28,16 @@ export default function SchnellEintragScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasBlood, setHasBlood] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isSavingRef = useRef(false);
+  const isMountedRef = useRef(true);
+
+  useEffect(
+    () => () => {
+      isMountedRef.current = false;
+    },
+    []
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -59,11 +69,17 @@ export default function SchnellEintragScreen() {
   );
 
   async function handleSelectConsistency(consistency: StoolConsistency) {
+    if (isSavingRef.current) {
+      return;
+    }
+    isSavingRef.current = true;
     setIsSaving(true);
+
     try {
       const db = await createEncryptedDb();
+      const existing = findTodaysEntry(await listDiaryEntries(db), new Date());
 
-      if (todaysEntry === null) {
+      if (existing === null) {
         await createDiaryEntry(
           db,
           buildQuickEntryInput(consistency, hasBlood, new Date().toISOString())
@@ -71,20 +87,27 @@ export default function SchnellEintragScreen() {
       } else {
         await updateDiaryEntryQuickFields(
           db,
-          todaysEntry.id,
-          buildQuickEntryUpdate(todaysEntry, consistency, hasBlood)
+          existing.id,
+          buildQuickEntryUpdate(existing, consistency, hasBlood)
         );
       }
 
       const entries = await listDiaryEntries(db);
-      setTodaysEntry(findTodaysEntry(entries, new Date()));
-      setHasBlood(false);
-      setError(null);
+      if (isMountedRef.current) {
+        setTodaysEntry(findTodaysEntry(entries, new Date()));
+        setHasBlood(false);
+        setError(null);
+      }
     } catch (saveError: unknown) {
       console.error('[Schnell-Eintrag] Speichern fehlgeschlagen:', saveError);
-      setError('Eintrag konnte nicht gespeichert werden.');
+      if (isMountedRef.current) {
+        setError('Eintrag konnte nicht gespeichert werden.');
+      }
     } finally {
-      setIsSaving(false);
+      isSavingRef.current = false;
+      if (isMountedRef.current) {
+        setIsSaving(false);
+      }
     }
   }
 
