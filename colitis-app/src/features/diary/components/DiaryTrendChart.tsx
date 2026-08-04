@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Text, View, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
-import { buildDailyAverages } from '../trendLogic';
-import type { DailyAverage, TrendRangeDays } from '../trendLogic';
+import { buildDailyTrend } from '../trendLogic';
+import type { DailyTrendPoint, TrendRangeDays } from '../trendLogic';
 import type { DiaryEntryWithTriggers } from '../types';
 import type { ThemeColors } from '../../../theme/types';
 
@@ -36,9 +36,9 @@ function barHeight(value: number | null, maxValue: number): number {
   return Math.max(1, Math.round((value / maxValue) * CHART_HEIGHT));
 }
 
-function resolveStoolFrequencyMax(days: DailyAverage[]): number {
+function resolveStoolFrequencyMax(days: DailyTrendPoint[]): number {
   const values = days
-    .map((day) => day.averageStoolFrequency)
+    .map((day) => day.totalStoolFrequency)
     .filter((value): value is number => value !== null);
   if (values.length === 0) {
     return MIN_STOOL_FREQUENCY_SCALE;
@@ -46,8 +46,8 @@ function resolveStoolFrequencyMax(days: DailyAverage[]): number {
   return Math.max(MIN_STOOL_FREQUENCY_SCALE, ...values);
 }
 
-function hasAnyData(days: DailyAverage[]): boolean {
-  return days.some((day) => day.averagePainLevel !== null || day.averageStoolFrequency !== null);
+function hasAnyData(days: DailyTrendPoint[]): boolean {
+  return days.some((day) => day.worstPainLevel !== null || day.totalStoolFrequency !== null);
 }
 
 const barRowStyles = StyleSheet.create({
@@ -68,8 +68,8 @@ const barRowStyles = StyleSheet.create({
 });
 
 interface BarRowProps {
-  days: DailyAverage[];
-  valueKey: 'averagePainLevel' | 'averageStoolFrequency';
+  days: DailyTrendPoint[];
+  valueKey: 'worstPainLevel' | 'totalStoolFrequency';
   maxValue: number;
   barColor: string;
 }
@@ -93,7 +93,7 @@ export function DiaryTrendChart({ entries }: DiaryTrendChartProps) {
   const styles = makeStyles(colors);
   const [rangeDays, setRangeDays] = useState<TrendRangeDays>(7);
 
-  const days = buildDailyAverages(entries, rangeDays);
+  const days = buildDailyTrend(entries, rangeDays);
   const stoolFrequencyMax = resolveStoolFrequencyMax(days);
 
   return (
@@ -120,10 +120,10 @@ export function DiaryTrendChart({ entries }: DiaryTrendChartProps) {
       {hasAnyData(days) ? (
         <>
           <Text style={styles.chartTitle}>Schmerzlevel</Text>
-          <BarRow days={days} valueKey="averagePainLevel" maxValue={PAIN_LEVEL_SCALE} barColor={colors.danger} />
+          <BarRow days={days} valueKey="worstPainLevel" maxValue={PAIN_LEVEL_SCALE} barColor={colors.danger} />
 
           <Text style={styles.chartTitle}>Stuhlgang-Häufigkeit</Text>
-          <BarRow days={days} valueKey="averageStoolFrequency" maxValue={stoolFrequencyMax} barColor={colors.primary} />
+          <BarRow days={days} valueKey="totalStoolFrequency" maxValue={stoolFrequencyMax} barColor={colors.primary} />
 
           <View style={styles.dateRangeRow}>
             <Text style={styles.dateRangeText}>{formatShortDate(days[0].date)}</Text>
