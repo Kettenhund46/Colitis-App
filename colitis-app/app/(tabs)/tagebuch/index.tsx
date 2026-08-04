@@ -106,7 +106,7 @@ export default function TagebuchScreen() {
   function handleOpenExportMenu() {
     if (entries.length === 0) {
       Alert.alert('Tagebuch exportieren', 'Noch keine Einträge zum Exportieren.', [
-        { text: 'Abbrechen', style: 'cancel' },
+        { text: 'OK', style: 'cancel' },
       ]);
       return;
     }
@@ -142,6 +142,11 @@ export default function TagebuchScreen() {
       {error && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
+      {isExporting && (
+        <View style={styles.statusBanner}>
+          <Text style={styles.statusText}>Export wird erstellt …</Text>
         </View>
       )}
       <View style={styles.viewToggleRow}>
@@ -195,7 +200,7 @@ export default function TagebuchScreen() {
       )}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Neuen Eintrag anlegen"
+        accessibilityLabel="Schnell-Eintrag öffnen"
         style={styles.addButton}
         onPress={() => router.push('/tagebuch/schnell')}
       >
@@ -219,6 +224,17 @@ function makeStyles(colors: ThemeColors) {
     },
     errorText: {
       color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+      textAlign: 'center',
+    },
+    statusBanner: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.primary,
+      padding: tokens.spacing.sm,
+    },
+    statusText: {
+      color: colors.textSecondary,
       fontSize: tokens.typography.fontSize.sm,
       textAlign: 'center',
     },

@@ -5,6 +5,7 @@ import {
   findTodaysEntry,
   buildQuickEntryInput,
   buildQuickEntryUpdate,
+  summarizeToday,
 } from './quickEntryLogic';
 import type { DiaryEntryWithTriggers } from './types';
 
@@ -150,5 +151,50 @@ describe('buildQuickEntryUpdate', () => {
   it('reports only the three quick fields', () => {
     const update = buildQuickEntryUpdate(makeEntry(), 'normal', false);
     expect(Object.keys(update).sort()).toEqual(['hasBlood', 'stoolConsistency', 'stoolFrequency']);
+  });
+});
+
+describe('summarizeToday', () => {
+  const now = new Date(2026, 6, 27, 18, 0, 0);
+
+  it('reports an empty day', () => {
+    expect(summarizeToday([], now)).toEqual({
+      entryCount: 0,
+      totalStoolFrequency: 0,
+      hasBlood: false,
+    });
+  });
+
+  it('adds up the frequencies of every entry from today', () => {
+    const entries = [
+      makeEntry({ id: 1, occurredAt: localIso(2026, 6, 27, 8), stoolFrequency: 5 }),
+      makeEntry({ id: 2, occurredAt: localIso(2026, 6, 27, 20), stoolFrequency: 4 }),
+    ];
+    const summary = summarizeToday(entries, now);
+    expect(summary.entryCount).toBe(2);
+    expect(summary.totalStoolFrequency).toBe(9);
+  });
+
+  it('ignores entries from other days', () => {
+    const entries = [
+      makeEntry({ id: 1, occurredAt: localIso(2026, 6, 26, 8), stoolFrequency: 7 }),
+      makeEntry({ id: 2, occurredAt: localIso(2026, 6, 27, 9), stoolFrequency: 2 }),
+    ];
+    const summary = summarizeToday(entries, now);
+    expect(summary.entryCount).toBe(1);
+    expect(summary.totalStoolFrequency).toBe(2);
+  });
+
+  it('reports blood when any entry of the day recorded it', () => {
+    const entries = [
+      makeEntry({ id: 1, occurredAt: localIso(2026, 6, 27, 8), hasBlood: true }),
+      makeEntry({ id: 2, occurredAt: localIso(2026, 6, 27, 20), hasBlood: false }),
+    ];
+    expect(summarizeToday(entries, now).hasBlood).toBe(true);
+  });
+
+  it('does not report blood when no entry of the day recorded it', () => {
+    const entries = [makeEntry({ id: 1, occurredAt: localIso(2026, 6, 27, 8), hasBlood: false })];
+    expect(summarizeToday(entries, now).hasBlood).toBe(false);
   });
 });

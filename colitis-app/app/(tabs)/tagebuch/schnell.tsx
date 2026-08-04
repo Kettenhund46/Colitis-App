@@ -9,6 +9,7 @@ import {
 } from '../../../src/features/diary/db/diaryRepository';
 import {
   findTodaysEntry,
+  summarizeToday,
   buildQuickEntryInput,
   buildQuickEntryUpdate,
 } from '../../../src/features/diary/quickEntryLogic';
@@ -16,14 +17,18 @@ import { STOOL_CONSISTENCY_OPTIONS } from '../../../src/features/diary/constants
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { StoolConsistency } from '../../../src/features/diary/constants';
-import type { DiaryEntryWithTriggers } from '../../../src/features/diary/types';
+import type { TodaySummary } from '../../../src/features/diary/quickEntryLogic';
 import type { ThemeColors } from '../../../src/theme/types';
 
 export default function SchnellEintragScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
-  const [todaysEntry, setTodaysEntry] = useState<DiaryEntryWithTriggers | null>(null);
+  const [summary, setSummary] = useState<TodaySummary>({
+    entryCount: 0,
+    totalStoolFrequency: 0,
+    hasBlood: false,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [hasBlood, setHasBlood] = useState(false);
@@ -49,7 +54,7 @@ export default function SchnellEintragScreen() {
         .then((db) => listDiaryEntries(db))
         .then((entries) => {
           if (isActive) {
-            setTodaysEntry(findTodaysEntry(entries, new Date()));
+            setSummary(summarizeToday(entries, new Date()));
             setError(null);
             setIsLoading(false);
           }
@@ -73,9 +78,9 @@ export default function SchnellEintragScreen() {
       return;
     }
     isSavingRef.current = true;
-    setIsSaving(true);
 
     try {
+      setIsSaving(true);
       const db = await createEncryptedDb();
       const existing = findTodaysEntry(await listDiaryEntries(db), new Date());
 
@@ -94,7 +99,7 @@ export default function SchnellEintragScreen() {
 
       const entries = await listDiaryEntries(db);
       if (isMountedRef.current) {
-        setTodaysEntry(findTodaysEntry(entries, new Date()));
+        setSummary(summarizeToday(entries, new Date()));
         setHasBlood(false);
         setError(null);
       }
@@ -113,11 +118,11 @@ export default function SchnellEintragScreen() {
 
   const countLabel = isLoading
     ? 'wird geladen …'
-    : todaysEntry === null
+    : summary.entryCount === 0
     ? 'Heute noch nichts erfasst'
-    : `Heute: ${todaysEntry.stoolFrequency} erfasst`;
+    : `Heute: ${summary.totalStoolFrequency} erfasst`;
 
-  const isBloodAlreadyRecorded = todaysEntry !== null && todaysEntry.hasBlood;
+  const isBloodAlreadyRecorded = summary.hasBlood;
   const areButtonsDisabled = isLoading || isSaving;
 
   return (
@@ -129,6 +134,10 @@ export default function SchnellEintragScreen() {
       )}
 
       <Text style={styles.countText}>{countLabel}</Text>
+
+      {!isLoading && summary.entryCount > 1 && (
+        <Text style={styles.splitNote}>verteilt auf {summary.entryCount} Einträge</Text>
+      )}
 
       {isBloodAlreadyRecorded ? (
         <Text style={styles.bloodNote}>Für heute ist Blut vermerkt</Text>
@@ -200,6 +209,12 @@ function makeStyles(colors: ThemeColors) {
       color: colors.textPrimary,
       fontSize: tokens.typography.fontSize.lg,
       fontWeight: tokens.typography.fontWeight.bold,
+      marginBottom: tokens.spacing.lg,
+    },
+    splitNote: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      marginTop: -tokens.spacing.md,
       marginBottom: tokens.spacing.lg,
     },
     bloodRow: {

@@ -73,3 +73,22 @@ export function buildQuickEntryUpdate(
     stoolConsistency: worseConsistency(toKnownConsistency(existing.stoolConsistency), consistency),
   };
 }
+
+export interface TodaySummary {
+  entryCount: number;
+  totalStoolFrequency: number;
+  hasBlood: boolean;
+}
+
+export function summarizeToday(entries: DiaryEntryWithTriggers[], now: Date): TodaySummary {
+  const todayKey = formatDateKey(now);
+  const todaysEntries = entries.filter(
+    (entry) => formatDateKey(new Date(entry.occurredAt)) === todayKey
+  );
+
+  return {
+    entryCount: todaysEntries.length,
+    totalStoolFrequency: todaysEntries.reduce((total, entry) => total + entry.stoolFrequency, 0),
+    hasBlood: todaysEntries.some((entry) => entry.hasBlood),
+  };
+}
