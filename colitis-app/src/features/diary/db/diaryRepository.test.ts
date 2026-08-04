@@ -215,7 +215,7 @@ describe('diary repository', () => {
     expect(entry.foodTriggerNote).toBe('Kaffee');
   });
 
-  it('leaves other entries untouched', async () => {
+  it('updates only the addressed entry and leaves the others untouched', async () => {
     const firstId = await createDiaryEntry(db, {
       occurredAt: '2026-07-26T09:00:00.000Z',
       stoolFrequency: 1,
@@ -227,7 +227,7 @@ describe('diary repository', () => {
       triggerCategories: [],
       foodTriggerNote: null,
     });
-    await createDiaryEntry(db, {
+    const secondId = await createDiaryEntry(db, {
       occurredAt: '2026-07-27T09:00:00.000Z',
       stoolFrequency: 1,
       hasBlood: false,
@@ -239,17 +239,22 @@ describe('diary repository', () => {
       foodTriggerNote: null,
     });
 
-    await updateDiaryEntryQuickFields(db, firstId, {
+    await updateDiaryEntryQuickFields(db, secondId, {
       stoolFrequency: 9,
       hasBlood: true,
       stoolConsistency: 'waessrig',
     });
 
     const entries = await listDiaryEntries(db);
-    const untouched = entries.find((entry) => entry.id !== firstId);
+    const changed = entries.find((entry) => entry.id === secondId);
+    const untouched = entries.find((entry) => entry.id === firstId);
+
+    expect(changed?.stoolFrequency).toBe(9);
+    expect(changed?.hasBlood).toBe(true);
+    expect(changed?.stoolConsistency).toBe('waessrig');
 
     expect(untouched?.stoolFrequency).toBe(1);
     expect(untouched?.hasBlood).toBe(false);
-    expect(untouched?.stoolConsistency).toBe('normal');
+    expect(untouched?.stoolConsistency).toBe('hart');
   });
 });
