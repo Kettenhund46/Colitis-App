@@ -4,7 +4,12 @@ import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as schema from '../../../db/schema';
-import { createDiaryEntry, listDiaryEntries, deleteDiaryEntry } from './diaryRepository';
+import {
+  createDiaryEntry,
+  listDiaryEntries,
+  deleteDiaryEntry,
+  updateDiaryEntryQuickFields,
+} from './diaryRepository';
 import { triggers } from '../../../db/schema';
 
 function createTestDb() {
@@ -175,5 +180,76 @@ describe('diary repository', () => {
 
     const remaining = await listDiaryEntries(db);
     expect(remaining.map((entry) => entry.id)).toEqual([keptId]);
+  });
+
+  it('updates only the quick fields and leaves every other field untouched', async () => {
+    const id = await createDiaryEntry(db, {
+      occurredAt: '2026-07-27T09:00:00.000Z',
+      stoolFrequency: 2,
+      hasBlood: false,
+      stoolConsistency: 'normal',
+      painLevel: 6,
+      symptoms: ['bauchschmerzen', 'muedigkeit'],
+      note: 'Diese Notiz muss erhalten bleiben',
+      triggerCategories: ['ernaehrung'],
+      foodTriggerNote: 'Kaffee',
+    });
+
+    await updateDiaryEntryQuickFields(db, id, {
+      stoolFrequency: 3,
+      hasBlood: true,
+      stoolConsistency: 'waessrig',
+    });
+
+    const [entry] = await listDiaryEntries(db);
+
+    expect(entry.stoolFrequency).toBe(3);
+    expect(entry.hasBlood).toBe(true);
+    expect(entry.stoolConsistency).toBe('waessrig');
+
+    expect(entry.occurredAt).toBe('2026-07-27T09:00:00.000Z');
+    expect(entry.painLevel).toBe(6);
+    expect(entry.symptoms).toEqual(['bauchschmerzen', 'muedigkeit']);
+    expect(entry.note).toBe('Diese Notiz muss erhalten bleiben');
+    expect(entry.triggerCategories).toEqual(['ernaehrung']);
+    expect(entry.foodTriggerNote).toBe('Kaffee');
+  });
+
+  it('leaves other entries untouched', async () => {
+    const firstId = await createDiaryEntry(db, {
+      occurredAt: '2026-07-26T09:00:00.000Z',
+      stoolFrequency: 1,
+      hasBlood: false,
+      stoolConsistency: 'hart',
+      painLevel: 0,
+      symptoms: [],
+      note: null,
+      triggerCategories: [],
+      foodTriggerNote: null,
+    });
+    await createDiaryEntry(db, {
+      occurredAt: '2026-07-27T09:00:00.000Z',
+      stoolFrequency: 1,
+      hasBlood: false,
+      stoolConsistency: 'normal',
+      painLevel: 0,
+      symptoms: [],
+      note: null,
+      triggerCategories: [],
+      foodTriggerNote: null,
+    });
+
+    await updateDiaryEntryQuickFields(db, firstId, {
+      stoolFrequency: 9,
+      hasBlood: true,
+      stoolConsistency: 'waessrig',
+    });
+
+    const entries = await listDiaryEntries(db);
+    const untouched = entries.find((entry) => entry.id !== firstId);
+
+    expect(untouched?.stoolFrequency).toBe(1);
+    expect(untouched?.hasBlood).toBe(false);
+    expect(untouched?.stoolConsistency).toBe('normal');
   });
 });
