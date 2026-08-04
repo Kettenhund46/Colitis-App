@@ -82,8 +82,8 @@ describe('buildDailyTrend', () => {
 
   it('adds up the frequencies of a day split across entries', () => {
     const entries = [
-      makeEntry({ occurredAt: '2026-07-20T08:00:00.000Z', stoolFrequency: 5, painLevel: 0 }),
-      makeEntry({ occurredAt: '2026-07-20T20:00:00.000Z', stoolFrequency: 4, painLevel: 0 }),
+      makeEntry({ occurredAt: '2026-07-20T08:00:00', stoolFrequency: 5, painLevel: 0 }),
+      makeEntry({ occurredAt: '2026-07-20T20:00:00', stoolFrequency: 4, painLevel: 0 }),
     ];
     const days = buildDailyTrend(entries, 7, REFERENCE_DATE);
     const day = days.find((candidate) => candidate.date === '2026-07-20');
@@ -92,8 +92,8 @@ describe('buildDailyTrend', () => {
 
   it('takes the highest pain level of a split day, not the average', () => {
     const entries = [
-      makeEntry({ occurredAt: '2026-07-20T08:00:00.000Z', stoolFrequency: 0, painLevel: 0 }),
-      makeEntry({ occurredAt: '2026-07-20T20:00:00.000Z', stoolFrequency: 0, painLevel: 8 }),
+      makeEntry({ occurredAt: '2026-07-20T08:00:00', stoolFrequency: 0, painLevel: 0 }),
+      makeEntry({ occurredAt: '2026-07-20T20:00:00', stoolFrequency: 0, painLevel: 8 }),
     ];
     const days = buildDailyTrend(entries, 7, REFERENCE_DATE);
     const day = days.find((candidate) => candidate.date === '2026-07-20');
