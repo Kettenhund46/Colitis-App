@@ -80,6 +80,50 @@ describe('rateDayEntries', () => {
     const entries = [makeEntry({ hasBlood: true }), makeEntry({ painLevel: 1 }), makeEntry({ painLevel: 4 })];
     expect(rateDayEntries(entries)).toBe('bad');
   });
+
+  it('adds up the frequencies of a day split across entries', () => {
+    const entries = [
+      makeEntry({ stoolFrequency: 5, painLevel: 0, hasBlood: false }),
+      makeEntry({ stoolFrequency: 4, painLevel: 0, hasBlood: false }),
+    ];
+    expect(rateDayEntries(entries)).toBe('bad');
+  });
+
+  it('rates a split day as medium once the sum reaches five', () => {
+    const entries = [
+      makeEntry({ stoolFrequency: 3, painLevel: 0, hasBlood: false }),
+      makeEntry({ stoolFrequency: 2, painLevel: 0, hasBlood: false }),
+    ];
+    expect(rateDayEntries(entries)).toBe('medium');
+  });
+
+  it('keeps a quiet split day good', () => {
+    const entries = [
+      makeEntry({ stoolFrequency: 2, painLevel: 1, hasBlood: false }),
+      makeEntry({ stoolFrequency: 2, painLevel: 2, hasBlood: false }),
+    ];
+    expect(rateDayEntries(entries)).toBe('good');
+  });
+
+  it('takes the highest pain level of the day, not the sum', () => {
+    const entries = [
+      makeEntry({ stoolFrequency: 0, painLevel: 3, hasBlood: false }),
+      makeEntry({ stoolFrequency: 0, painLevel: 3, hasBlood: false }),
+    ];
+    expect(rateDayEntries(entries)).toBe('good');
+  });
+
+  it('flags the day as bad when any entry recorded blood', () => {
+    const entries = [
+      makeEntry({ stoolFrequency: 1, painLevel: 0, hasBlood: true }),
+      makeEntry({ stoolFrequency: 1, painLevel: 0, hasBlood: false }),
+    ];
+    expect(rateDayEntries(entries)).toBe('bad');
+  });
+
+  it('rates a day without entries as good', () => {
+    expect(rateDayEntries([])).toBe('good');
+  });
 });
 
 describe('groupEntriesByDay', () => {
