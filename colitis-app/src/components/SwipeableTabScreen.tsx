@@ -44,13 +44,25 @@ export function SwipeableTabScreen({ tab, style, children }: SwipeableTabScreenP
           }
           return false;
         },
-        // Übernimmt die Geste erst, wenn sie am Rand begann, deutlich waagerecht
-        // verläuft und die Mindeststrecke überschritten hat.
+        // Übernimmt die Geste erst, wenn sie am Rand begann, in die für diesen
+        // Rand gültige Richtung geht, deutlich waagerecht verläuft und die
+        // Mindeststrecke überschritten hat. Der Richtungscheck muss hier und
+        // nicht erst bei onPanResponderRelease erfolgen, da sonst eine Geste im
+        // Randstreifen in die "falsche" Richtung trotzdem gekapert würde und
+        // darunterliegende Kind-Elemente (z. B. die Leaflet-Karte im Toiletten-Tab)
+        // kein Pan mehr erhalten, obwohl am Ende gar nicht navigiert wird.
         onMoveShouldSetPanResponderCapture: (_event, gestureState) => {
-          if (!swipeEnabled || startEdgeRef.current === null) {
+          const startEdge = startEdgeRef.current;
+          if (!swipeEnabled || startEdge === null) {
             return false;
           }
           if (Math.abs(gestureState.dx) <= Math.abs(gestureState.dy)) {
+            return false;
+          }
+          if (startEdge === 'left' && gestureState.dx <= 0) {
+            return false;
+          }
+          if (startEdge === 'right' && gestureState.dx >= 0) {
             return false;
           }
           return Math.abs(gestureState.dx) >= MIN_HORIZONTAL_DISTANCE;
@@ -63,14 +75,6 @@ export function SwipeableTabScreen({ tab, style, children }: SwipeableTabScreenP
           }
 
           const direction = gestureState.dx > 0 ? 'previous' : 'next';
-          // Linker Rand darf nur nach rechts, rechter Rand nur nach links wischen.
-          if (startEdge === 'left' && direction !== 'previous') {
-            return;
-          }
-          if (startEdge === 'right' && direction !== 'next') {
-            return;
-          }
-
           const target = getNeighbourTab(tab, direction);
           if (target !== null) {
             router.navigate(tabPath(target));
