@@ -33,6 +33,8 @@ import {
   setBackupReminderNotificationId,
   getCommunityDisclaimerSeen,
   setCommunityDisclaimerSeen,
+  getSwipeNavigationEnabled,
+  setSwipeNavigationEnabled,
 } from './settingsStorage';
 
 beforeEach(() => {
@@ -128,5 +130,22 @@ describe('community disclaimer setting', () => {
   it('persists communityDisclaimerSeen', async () => {
     await setCommunityDisclaimerSeen(true);
     expect(await getCommunityDisclaimerSeen()).toBe(true);
+  });
+});
+
+describe('swipe navigation setting', () => {
+  it('defaults to true when nothing has been stored yet', async () => {
+    await expect(getSwipeNavigationEnabled()).resolves.toBe(true);
+  });
+
+  it('reads back a stored false value', async () => {
+    await setSwipeNavigationEnabled(false);
+    await expect(getSwipeNavigationEnabled()).resolves.toBe(false);
+  });
+
+  it('reads back a stored true value', async () => {
+    await setSwipeNavigationEnabled(false);
+    await setSwipeNavigationEnabled(true);
+    await expect(getSwipeNavigationEnabled()).resolves.toBe(true);
   });
 });

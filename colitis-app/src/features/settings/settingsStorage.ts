@@ -97,3 +97,18 @@ export async function getCommunityDisclaimerSeen(): Promise<boolean> {
 export async function setCommunityDisclaimerSeen(seen: boolean): Promise<void> {
   await AsyncStorage.setItem(COMMUNITY_DISCLAIMER_SEEN_KEY, seen ? 'true' : 'false');
 }
+
+const SWIPE_NAVIGATION_ENABLED_KEY = 'colitis2go.settings.swipeNavigationEnabled';
+
+/** Voreinstellung: eingeschaltet, solange nichts gespeichert wurde. */
+export async function getSwipeNavigationEnabled(): Promise<boolean> {
+  const stored = await AsyncStorage.getItem(SWIPE_NAVIGATION_ENABLED_KEY);
+  if (stored === null) {
+    return true;
+  }
+  return stored === 'true';
+}
+
+export async function setSwipeNavigationEnabled(enabled: boolean): Promise<void> {
+  await AsyncStorage.setItem(SWIPE_NAVIGATION_ENABLED_KEY, enabled ? 'true' : 'false');
+}
