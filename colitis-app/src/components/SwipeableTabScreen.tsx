@@ -74,7 +74,25 @@ export function SwipeableTabScreen({ tab, style, children }: SwipeableTabScreenP
             return;
           }
 
+          // gestureState.dx ist die kumulierte Distanz seit Berührungsbeginn,
+          // nicht die Distanz seit dem letzten Schritt. Und
+          // onMoveShouldSetPanResponderCapture wird nur einmal beim Kapern
+          // der Geste gefragt, nicht erneut bei jeder Bewegung. Eine Geste
+          // kann also z. B. am linken Rand beginnen, weit genug nach rechts
+          // wandern, um gekapert zu werden, und dann ohne Loslassen wieder
+          // über den Ausgangspunkt hinaus nach links zurückwandern. Das
+          // Vorzeichen von dx beim Loslassen entspräche dann "next", obwohl
+          // der Startrand nur "previous" erlauben darf. Deshalb hier erneut
+          // gegen den Startrand prüfen, statt der Kaper-Prüfung blind zu
+          // vertrauen.
           const direction = gestureState.dx > 0 ? 'previous' : 'next';
+          if (startEdge === 'left' && direction !== 'previous') {
+            return;
+          }
+          if (startEdge === 'right' && direction !== 'next') {
+            return;
+          }
+
           const target = getNeighbourTab(tab, direction);
           if (target !== null) {
             router.navigate(tabPath(target));
