@@ -23,6 +23,7 @@ import { BACKUP_FORMAT_VERSION, type BackupData, type BackupEnvelope } from '../
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { SliderToggle } from '../../../src/components/SliderToggle';
 import { SwipeableTabScreen } from '../../../src/components/SwipeableTabScreen';
+import { useSwipeNavigation } from '../../../src/navigation/SwipeNavigationContext';
 import {
   getDailyJokeEnabled,
   setDailyJokeEnabled,
@@ -65,6 +66,7 @@ function isBackupEnvelopeShape(value: unknown): value is BackupEnvelope {
 
 export default function EinstellungenScreen() {
   const { themeId, colors, setThemeId } = useTheme();
+  const { swipeEnabled, setSwipeEnabled } = useSwipeNavigation();
   const styles = makeStyles(colors);
   const [isLockEnabled, setIsLockEnabled] = useState(false);
   const [isSettingPin, setIsSettingPin] = useState(false);
@@ -342,6 +344,16 @@ export default function EinstellungenScreen() {
             </Text>
           </Pressable>
         ))}
+      </View>
+
+      <Text style={styles.sectionTitle}>Navigation</Text>
+      <View style={styles.row}>
+        <Text style={styles.rowLabel}>Zwischen Tabs wischen</Text>
+        <SliderToggle
+          value={swipeEnabled}
+          onValueChange={setSwipeEnabled}
+          accessibilityLabel="Wischen zwischen Tabs aktivieren"
+        />
       </View>
 
       <Text style={styles.sectionTitle}>App-Sperre</Text>

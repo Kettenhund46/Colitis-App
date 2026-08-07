@@ -49,6 +49,21 @@ sobald ein Testgerät zur Verfügung steht.
 - [ ] Flugmodus aktivieren, Neuigkeiten-Screen öffnen — zuletzt geladene Liste bleibt mit Offline-Hinweistext sichtbar statt leer/Fehler
 - [ ] Flugmodus deaktivieren, Screen erneut fokussieren — Liste bleibt während des Hintergrund-Refreshs durchgehend sichtbar (kein Ausblenden hinter einer Ladeanzeige)
 
+## Wischgeste zum Tab-Wechsel
+
+- [ ] Auf der Tagebuch-Übersicht vom rechten Bildschirmrand nach links wischen → Wissen-Tab erscheint
+- [ ] Auf der Wissen-Liste vom linken Bildschirmrand nach rechts wischen → Tagebuch-Tab erscheint
+- [ ] Auf der Tagebuch-Übersicht vom linken Rand nach rechts wischen → nichts passiert (erster Tab)
+- [ ] Auf den Einstellungen vom rechten Rand nach links wischen → nichts passiert (letzter Tab)
+- [ ] Im Toiletten-Tab die Karte in der Bildschirmmitte waagerecht verschieben → Karte bewegt sich, kein Tab-Wechsel
+- [ ] Im Toiletten-Tab vom äußersten linken Rand nach rechts wischen → Medikamente-Tab erscheint
+- [ ] Auf einer Unterseite (z. B. „Neuer Eintrag") vom Rand wischen → kein Tab-Wechsel, Formulareingaben bleiben erhalten
+- [ ] Kurz auf eine Karte/Schaltfläche am Bildschirmrand tippen → normale Aktion wird ausgelöst, kein Tab-Wechsel
+- [ ] Senkrecht scrollen (Wissen-Liste, Einstellungen) → kein Tab-Wechsel
+- [ ] Einstellungen → Navigation → „Zwischen Tabs wischen" ausschalten → auf allen Tabs löst Wischen nichts mehr aus
+- [ ] App vollständig schließen und neu öffnen → Schalter steht weiterhin auf „aus"
+- [ ] Schalter wieder einschalten → Wischen funktioniert sofort wieder, ohne Neustart
+
 ## Allgemeiner Alltagseindruck
 
 - [ ] Ladezeiten beim App-Start und beim Wechseln zwischen Tabs fühlen sich nicht zu lang an
