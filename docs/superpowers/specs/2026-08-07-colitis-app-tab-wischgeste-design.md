@@ -20,7 +20,7 @@ Dieses Dokument beschreibt ausschließlich die Wischgeste. Der ebenfalls gewüns
 ## Entscheidungen (mit Adrian abgestimmt)
 
 - **Wisch-Gefühl:** „Flick" – eine erkannte Wischgeste wechselt den Tab mit der normalen Tab-Animation. Der Inhalt folgt **nicht** live dem Finger. Begründung: nutzt die bereits vorhandene Gesten-Bibliothek, kein neuer nativer Build, kein Umbau der Tab-Struktur, Aussehen der Tab-Leiste bleibt unverändert.
-- **Karten-Konflikt:** Die Geste startet einheitlich auf allen Tabs nur in einem schmalen Streifen am linken bzw. rechten Bildschirmrand. Die Karte behält damit ihre gesamte Fläche. Einheitliches Verhalten wurde einer bequemeren, aber je nach Tab unterschiedlichen Regel vorgezogen.
+- **Karten-Konflikt:** Die Geste startet einheitlich auf allen Tabs nur in einem 25 Pixel breiten Streifen am linken bzw. rechten Bildschirmrand. Die Karte behält damit ihre gesamte Fläche. Einheitliches Verhalten wurde einer bequemeren, aber je nach Tab unterschiedlichen Regel vorgezogen.
 - **Unterseiten:** Wischen wechselt den Tab **nur auf den fünf Tab-Startseiten**. Auf Unterseiten behält die Randgeste ihre gewohnte „Zurück"-Bedeutung, und angefangene Formulareingaben können nicht versehentlich verworfen werden (was wegen `popToTopOnBlur` sonst passieren könnte).
 - **Verhalten an den Enden:** Kein Rundlauf. Auf dem ersten Tab passiert beim Wischen zurück nichts, auf dem letzten beim Wischen weiter nichts.
 
@@ -32,10 +32,12 @@ Die Tab-Reihenfolge entspricht der Tab-Leiste:
 
 (Die Route `app/(tabs)/index.tsx` ist mit `href: null` ausgeblendet und nimmt an der Reihenfolge nicht teil.)
 
+Die fünf Bezeichner sind zugleich die Navigationsziele: `/tagebuch`, `/wissen`, `/medikamente`, `/toiletten`, `/einstellungen`. In `app/(tabs)/_layout.tsx` heißen zwei der Einträge `toiletten/index` bzw. `einstellungen/index`, weil diese Tabs keine eigene `_layout.tsx` haben – das ist ein reiner Registrierungs-Unterschied und ändert die Navigationspfade nicht.
+
 - Ziehen vom **linken** Bildschirmrand nach rechts → vorheriger Tab.
 - Ziehen vom **rechten** Bildschirmrand nach links → nächster Tab.
-- Die Geste wird nur erkannt, wenn sie in einem ca. 25 Pixel breiten Streifen am jeweiligen Rand beginnt.
-- Damit Tippen und senkrechtes Scrollen nicht stören, muss die Bewegung eine waagerechte Mindeststrecke überschreiten und deutlich waagerechter als senkrecht verlaufen.
+- Die Geste wird nur erkannt, wenn sie in einem **25 Pixel** breiten Streifen am jeweiligen Rand beginnt.
+- Damit Tippen und senkrechtes Scrollen nicht stören, muss die waagerechte Bewegung **mindestens 60 Pixel** betragen und ihr Betrag größer sein als der der senkrechten Bewegung.
 - Am Anfang bzw. Ende der Reihe passiert nichts – ohne Meldung, ohne Animation.
 
 ## 2. Aufbau
