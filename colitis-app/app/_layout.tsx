@@ -12,6 +12,7 @@ import { resetAppData } from '../src/lib/appReset';
 import { LockScreen } from '../src/features/appLock/components/LockScreen';
 import { useAppLockGate } from '../src/features/appLock/useAppLockGate';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeContext';
+import { SwipeNavigationProvider } from '../src/navigation/SwipeNavigationContext';
 import { DailyJokeModal } from '../src/features/dailyJoke/components/DailyJokeModal';
 import * as schema from '../src/db/schema';
 import { tokens } from '../src/styles/tokens';
@@ -20,7 +21,9 @@ import type { ThemeColors } from '../src/theme/types';
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <RootLayoutInner />
+      <SwipeNavigationProvider>
+        <RootLayoutInner />
+      </SwipeNavigationProvider>
     </ThemeProvider>
   );
 }
