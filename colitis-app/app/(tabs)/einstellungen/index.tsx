@@ -328,191 +328,191 @@ export default function EinstellungenScreen() {
   return (
     <SwipeableTabScreen tab="einstellungen" style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-      <Text style={styles.sectionTitle}>Darstellung</Text>
-      <View style={styles.themeRow}>
-        {THEME_OPTIONS.map((option) => (
-          <Pressable
-            key={option.id}
-            accessibilityRole="button"
-            accessibilityLabel={`Theme ${option.label} auswählen`}
-            accessibilityState={{ selected: themeId === option.id }}
-            style={[styles.themeCard, themeId === option.id && styles.themeCardActive]}
-            onPress={() => setThemeId(option.id)}
-          >
-            <Text style={[styles.themeCardText, themeId === option.id && styles.themeCardTextActive]}>
-              {option.label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+        <Text style={styles.sectionTitle}>Darstellung</Text>
+        <View style={styles.themeRow}>
+          {THEME_OPTIONS.map((option) => (
+            <Pressable
+              key={option.id}
+              accessibilityRole="button"
+              accessibilityLabel={`Theme ${option.label} auswählen`}
+              accessibilityState={{ selected: themeId === option.id }}
+              style={[styles.themeCard, themeId === option.id && styles.themeCardActive]}
+              onPress={() => setThemeId(option.id)}
+            >
+              <Text style={[styles.themeCardText, themeId === option.id && styles.themeCardTextActive]}>
+                {option.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
 
-      <Text style={styles.sectionTitle}>Navigation</Text>
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>Zwischen Tabs wischen</Text>
-        <SliderToggle
-          value={swipeEnabled}
-          onValueChange={setSwipeEnabled}
-          accessibilityLabel="Wischen zwischen Tabs aktivieren"
-        />
-      </View>
-
-      <Text style={styles.sectionTitle}>App-Sperre</Text>
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>PIN-/Biometrie-Sperre aktivieren</Text>
-        <SliderToggle
-          value={isLockEnabled}
-          onValueChange={handleToggleLock}
-          accessibilityLabel="PIN-/Biometrie-Sperre aktivieren"
-        />
-      </View>
-      {lockActionError && <Text style={styles.error}>{lockActionError}</Text>}
-
-      {isSettingPin && (
-        <View style={styles.card}>
-          <Text style={styles.label}>Neuer PIN ({PIN_LENGTH} Ziffern)</Text>
-          <TextInput
-            style={styles.textInput}
-            placeholderTextColor={colors.textSecondary}
-            value={newPin}
-            onChangeText={(text) => setNewPin(text.replace(/[^0-9]/g, '').slice(0, PIN_LENGTH))}
-            keyboardType="number-pad"
-            secureTextEntry
-            maxLength={PIN_LENGTH}
+        <Text style={styles.sectionTitle}>Navigation</Text>
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>Zwischen Tabs wischen</Text>
+          <SliderToggle
+            value={swipeEnabled}
+            onValueChange={setSwipeEnabled}
+            accessibilityLabel="Wischen zwischen Tabs aktivieren"
           />
-          <Text style={styles.label}>PIN bestätigen</Text>
-          <TextInput
-            style={styles.textInput}
-            placeholderTextColor={colors.textSecondary}
-            value={confirmPin}
-            onChangeText={(text) => setConfirmPin(text.replace(/[^0-9]/g, '').slice(0, PIN_LENGTH))}
-            keyboardType="number-pad"
-            secureTextEntry
-            maxLength={PIN_LENGTH}
+        </View>
+
+        <Text style={styles.sectionTitle}>App-Sperre</Text>
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>PIN-/Biometrie-Sperre aktivieren</Text>
+          <SliderToggle
+            value={isLockEnabled}
+            onValueChange={handleToggleLock}
+            accessibilityLabel="PIN-/Biometrie-Sperre aktivieren"
           />
-          {pinError && <Text style={styles.error}>{pinError}</Text>}
+        </View>
+        {lockActionError && <Text style={styles.error}>{lockActionError}</Text>}
+
+        {isSettingPin && (
+          <View style={styles.card}>
+            <Text style={styles.label}>Neuer PIN ({PIN_LENGTH} Ziffern)</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholderTextColor={colors.textSecondary}
+              value={newPin}
+              onChangeText={(text) => setNewPin(text.replace(/[^0-9]/g, '').slice(0, PIN_LENGTH))}
+              keyboardType="number-pad"
+              secureTextEntry
+              maxLength={PIN_LENGTH}
+            />
+            <Text style={styles.label}>PIN bestätigen</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholderTextColor={colors.textSecondary}
+              value={confirmPin}
+              onChangeText={(text) => setConfirmPin(text.replace(/[^0-9]/g, '').slice(0, PIN_LENGTH))}
+              keyboardType="number-pad"
+              secureTextEntry
+              maxLength={PIN_LENGTH}
+            />
+            {pinError && <Text style={styles.error}>{pinError}</Text>}
+            <View style={styles.buttonRow}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Abbrechen"
+                style={styles.cancelButton}
+                onPress={() => {
+                  setIsSettingPin(false);
+                  setNewPin('');
+                  setConfirmPin('');
+                  setPinError(null);
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Abbrechen</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="PIN speichern"
+                style={styles.submitButton}
+                onPress={handleSetPin}
+              >
+                <Text style={styles.submitButtonText}>PIN speichern</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+
+        <Text style={styles.sectionTitle}>Wortwitze</Text>
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>Wortwitze des Tages</Text>
+          <SliderToggle
+            value={dailyJokeEnabled}
+            onValueChange={handleToggleDailyJoke}
+            accessibilityLabel="Wortwitze des Tages aktivieren"
+          />
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>Auch krankheitsbedingte Witze</Text>
+          <SliderToggle
+            value={includeIllnessJokes}
+            onValueChange={handleToggleIllnessJokes}
+            accessibilityLabel="Auch krankheitsbedingte Witze anzeigen"
+            disabled={!dailyJokeEnabled}
+          />
+        </View>
+
+        <Text style={styles.sectionTitle}>Backup</Text>
+        {backupMessage && <Text style={styles.backupMessage}>{backupMessage}</Text>}
+
+        {backupFormMode === 'export' && (
+          <BackupPasswordForm
+            requireConfirmation
+            submitLabel="Backup erstellen"
+            onSubmit={handleExport}
+            onCancel={() => setBackupFormMode(null)}
+          />
+        )}
+
+        {backupFormMode === 'import' && (
+          <BackupPasswordForm
+            requireConfirmation={false}
+            submitLabel="Wiederherstellen"
+            onSubmit={handleImport}
+            onCancel={() => {
+              setBackupFormMode(null);
+              setPendingImportContent(null);
+            }}
+          />
+        )}
+
+        {backupFormMode === null && (
           <View style={styles.buttonRow}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Abbrechen"
-              style={styles.cancelButton}
+              accessibilityLabel="Backup erstellen"
+              style={styles.submitButton}
               onPress={() => {
-                setIsSettingPin(false);
-                setNewPin('');
-                setConfirmPin('');
-                setPinError(null);
+                setBackupMessage(null);
+                setBackupFormMode('export');
               }}
             >
-              <Text style={styles.cancelButtonText}>Abbrechen</Text>
+              <Text style={styles.submitButtonText}>Backup erstellen</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="PIN speichern"
-              style={styles.submitButton}
-              onPress={handleSetPin}
+              accessibilityLabel="Backup wiederherstellen"
+              style={styles.cancelButton}
+              onPress={handlePickImportFile}
             >
-              <Text style={styles.submitButtonText}>PIN speichern</Text>
+              <Text style={styles.cancelButtonText}>Backup wiederherstellen</Text>
             </Pressable>
           </View>
+        )}
+
+        <Text style={styles.sectionTitle}>Backup-Erinnerung</Text>
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>Erinnerung aktivieren</Text>
+          <SliderToggle
+            value={backupReminderEnabled}
+            onValueChange={handleToggleBackupReminder}
+            accessibilityLabel="Backup-Erinnerung aktivieren"
+          />
         </View>
-      )}
-
-      <Text style={styles.sectionTitle}>Wortwitze</Text>
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>Wortwitze des Tages</Text>
-        <SliderToggle
-          value={dailyJokeEnabled}
-          onValueChange={handleToggleDailyJoke}
-          accessibilityLabel="Wortwitze des Tages aktivieren"
-        />
-      </View>
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>Auch krankheitsbedingte Witze</Text>
-        <SliderToggle
-          value={includeIllnessJokes}
-          onValueChange={handleToggleIllnessJokes}
-          accessibilityLabel="Auch krankheitsbedingte Witze anzeigen"
-          disabled={!dailyJokeEnabled}
-        />
-      </View>
-
-      <Text style={styles.sectionTitle}>Backup</Text>
-      {backupMessage && <Text style={styles.backupMessage}>{backupMessage}</Text>}
-
-      {backupFormMode === 'export' && (
-        <BackupPasswordForm
-          requireConfirmation
-          submitLabel="Backup erstellen"
-          onSubmit={handleExport}
-          onCancel={() => setBackupFormMode(null)}
-        />
-      )}
-
-      {backupFormMode === 'import' && (
-        <BackupPasswordForm
-          requireConfirmation={false}
-          submitLabel="Wiederherstellen"
-          onSubmit={handleImport}
-          onCancel={() => {
-            setBackupFormMode(null);
-            setPendingImportContent(null);
-          }}
-        />
-      )}
-
-      {backupFormMode === null && (
-        <View style={styles.buttonRow}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Backup erstellen"
-            style={styles.submitButton}
-            onPress={() => {
-              setBackupMessage(null);
-              setBackupFormMode('export');
-            }}
-          >
-            <Text style={styles.submitButtonText}>Backup erstellen</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Backup wiederherstellen"
-            style={styles.cancelButton}
-            onPress={handlePickImportFile}
-          >
-            <Text style={styles.cancelButtonText}>Backup wiederherstellen</Text>
-          </Pressable>
+        <View style={styles.themeRow}>
+          {BACKUP_REMINDER_INTERVAL_OPTIONS.map((days) => (
+            <Pressable
+              key={days}
+              accessibilityRole="button"
+              accessibilityLabel={`Erinnerung alle ${days} Tage`}
+              accessibilityState={{ selected: backupReminderIntervalDays === days }}
+              style={[styles.themeCard, backupReminderIntervalDays === days && styles.themeCardActive]}
+              onPress={() => handleChangeBackupReminderInterval(days)}
+            >
+              <Text style={[styles.themeCardText, backupReminderIntervalDays === days && styles.themeCardTextActive]}>
+                {days} Tage
+              </Text>
+            </Pressable>
+          ))}
         </View>
-      )}
-
-      <Text style={styles.sectionTitle}>Backup-Erinnerung</Text>
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>Erinnerung aktivieren</Text>
-        <SliderToggle
-          value={backupReminderEnabled}
-          onValueChange={handleToggleBackupReminder}
-          accessibilityLabel="Backup-Erinnerung aktivieren"
-        />
-      </View>
-      <View style={styles.themeRow}>
-        {BACKUP_REMINDER_INTERVAL_OPTIONS.map((days) => (
-          <Pressable
-            key={days}
-            accessibilityRole="button"
-            accessibilityLabel={`Erinnerung alle ${days} Tage`}
-            accessibilityState={{ selected: backupReminderIntervalDays === days }}
-            style={[styles.themeCard, backupReminderIntervalDays === days && styles.themeCardActive]}
-            onPress={() => handleChangeBackupReminderInterval(days)}
-          >
-            <Text style={[styles.themeCardText, backupReminderIntervalDays === days && styles.themeCardTextActive]}>
-              {days} Tage
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-      <Text style={styles.backupMessage}>
-        {lastBackupAt
-          ? `Letztes Backup: ${new Date(lastBackupAt).toLocaleDateString('de-DE')}`
-          : 'Noch kein Backup erstellt.'}
-      </Text>
+        <Text style={styles.backupMessage}>
+          {lastBackupAt
+            ? `Letztes Backup: ${new Date(lastBackupAt).toLocaleDateString('de-DE')}`
+            : 'Noch kein Backup erstellt.'}
+        </Text>
       </ScrollView>
     </SwipeableTabScreen>
   );

@@ -75,7 +75,7 @@ Stellt den Ein-/Aus-Zustand app-weit bereit – exakt nach dem Vorbild von `src/
 Dadurch wirkt ein Umlegen des Schalters sofort auf allen fünf Tabs, ohne dass jede Seite den Wert einzeln nachladen muss.
 
 ### `src/components/SwipeableTabScreen.tsx` (neu)
-Anzeige-/Gesten-Hülle. Nimmt als Eigenschaften entgegen, auf welchem Tab sie sitzt, sowie die üblichen Stil- und Kind-Elemente. Fragt den Ein-/Aus-Zustand aus dem Kontext ab: Ist die Geste abgeschaltet, rendert sie ihre Kinder ohne jede Gestenerkennung. Andernfalls erkennt sie die Randgeste, ermittelt über die Funktion aus `tabOrder.ts` das Ziel und navigiert bei einem Treffer dorthin. Enthält selbst keine Kenntnis der Reihenfolge.
+Anzeige-/Gesten-Hülle. Nimmt als Eigenschaften entgegen, auf welchem Tab sie sitzt, sowie die üblichen Stil- und Kind-Elemente. Fragt den Ein-/Aus-Zustand aus dem Kontext ab: Ist die Geste abgeschaltet, bleiben die Pan-Handler zwar angehängt, aber jedes `shouldSet`-Callback liefert dann `false` – die Ränder geben ihre Gesten damit vollständig frei, gleichbedeutend mit keiner Gestenerkennung. Andernfalls erkennt sie die Randgeste, ermittelt über die Funktion aus `tabOrder.ts` das Ziel und navigiert bei einem Treffer dorthin. Enthält selbst keine Kenntnis der Reihenfolge.
 
 Liegt in `src/components/`, wo bereits wiederverwendbare Bausteine wie `SliderToggle.tsx` liegen.
 
@@ -85,7 +85,7 @@ Neuer Abschnitt „Navigation" mit der Schalter-Zeile, aufgebaut wie die bestehe
 ### Die fünf Tab-Startseiten (geändert)
 `app/(tabs)/tagebuch/index.tsx`, `app/(tabs)/wissen/index.tsx`, `app/(tabs)/medikamente/index.tsx`, `app/(tabs)/toiletten/index.tsx`, `app/(tabs)/einstellungen/index.tsx`
 
-In jeder wird das äußerste `<View style={styles.container}>` durch `<SwipeableTabScreen tab="…" style={styles.container}>` ersetzt. Kein zusätzliches Verschachteln, keine weiteren Änderungen am Seiteninhalt.
+In jeder wird das äußerste `<View style={styles.container}>` durch `<SwipeableTabScreen tab="…" style={styles.container}>` ersetzt. Keine weiteren Änderungen am Seiteninhalt. Kein zusätzliches Verschachteln – außer beim Einstellungen-Tab: Dessen äußerstes Element war bereits eine `ScrollView` statt einer `View`, daher steckt diese dort zwangsläufig eine Ebene tiefer innerhalb von `SwipeableTabScreen`.
 
 **`app/(tabs)/_layout.tsx` bleibt unverändert.** Dadurch ist ausgeschlossen, dass sich Aussehen oder Verhalten der Tab-Leiste ändern. (`app/_layout.tsx` – die Ebene darüber – wird lediglich um den neuen Kontext-Anbieter ergänzt.)
 

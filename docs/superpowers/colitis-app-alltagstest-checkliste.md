@@ -58,6 +58,7 @@ sobald ein Testgerät zur Verfügung steht.
 - [ ] Im Toiletten-Tab die Karte in der Bildschirmmitte waagerecht verschieben → Karte bewegt sich, kein Tab-Wechsel
 - [ ] Im Toiletten-Tab vom äußersten linken Rand nach rechts wischen → Medikamente-Tab erscheint
 - [ ] Auf einer Unterseite (z. B. „Neuer Eintrag") vom Rand wischen → kein Tab-Wechsel, Formulareingaben bleiben erhalten
+- [ ] Vom rechten Rand nach links wischen, ohne loszulassen wieder fast bis zum Startpunkt zurückziehen, dann loslassen → kein Tab-Wechsel
 - [ ] Kurz auf eine Karte/Schaltfläche am Bildschirmrand tippen → normale Aktion wird ausgelöst, kein Tab-Wechsel
 - [ ] Senkrecht scrollen (Wissen-Liste, Einstellungen) → kein Tab-Wechsel
 - [ ] Einstellungen → Navigation → „Zwischen Tabs wischen" ausschalten → auf allen Tabs löst Wischen nichts mehr aus
