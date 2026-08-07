@@ -7,7 +7,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { getNeighbourTab, tabPath, type TabName } from '../navigation/tabOrder';
+import { directionForEdge, getNeighbourTab, tabPath, type SwipeEdge, type TabName } from '../navigation/tabOrder';
 import { useSwipeNavigation } from '../navigation/SwipeNavigationContext';
 
 /** Breite des Streifens an der Bildschirmkante, in dem die Geste beginnen muss. */
@@ -25,7 +25,7 @@ export function SwipeableTabScreen({ tab, style, children }: SwipeableTabScreenP
   const router = useRouter();
   const { swipeEnabled } = useSwipeNavigation();
   const widthRef = useRef(0);
-  const startEdgeRef = useRef<'left' | 'right' | null>(null);
+  const startEdgeRef = useRef<SwipeEdge | null>(null);
 
   const panResponder = useMemo(
     () =>
@@ -59,10 +59,11 @@ export function SwipeableTabScreen({ tab, style, children }: SwipeableTabScreenP
           if (Math.abs(gestureState.dx) <= Math.abs(gestureState.dy)) {
             return false;
           }
-          if (startEdge === 'left' && gestureState.dx <= 0) {
+          const direction = directionForEdge(startEdge);
+          if (direction === 'previous' && gestureState.dx <= 0) {
             return false;
           }
-          if (startEdge === 'right' && gestureState.dx >= 0) {
+          if (direction === 'next' && gestureState.dx >= 0) {
             return false;
           }
           return Math.abs(gestureState.dx) >= MIN_HORIZONTAL_DISTANCE;
@@ -75,25 +76,28 @@ export function SwipeableTabScreen({ tab, style, children }: SwipeableTabScreenP
           }
 
           // gestureState.dx ist die kumulierte Distanz seit Berührungsbeginn,
-          // nicht die Distanz seit dem letzten Schritt. Und
-          // onMoveShouldSetPanResponderCapture wird nur einmal beim Kapern
-          // der Geste gefragt, nicht erneut bei jeder Bewegung. Eine Geste
+          // nicht die Distanz seit dem letzten Schritt. Sobald der Responder
+          // einmal gekapert wurde, werden die shouldSet-Callbacks für diese
+          // Geste nicht mehr befragt – dx kann sich danach also beliebig
+          // weiterändern, auch das Vorzeichen kann sich umkehren. Eine Geste
           // kann also z. B. am linken Rand beginnen, weit genug nach rechts
           // wandern, um gekapert zu werden, und dann ohne Loslassen wieder
-          // über den Ausgangspunkt hinaus nach links zurückwandern. Das
-          // Vorzeichen von dx beim Loslassen entspräche dann "next", obwohl
-          // der Startrand nur "previous" erlauben darf. Deshalb hier erneut
+          // über den Ausgangspunkt hinaus nach links zurückwandern oder auch
+          // nur knapp hinter den Startpunkt zurückkehren. Deshalb hier beim
+          // Loslassen erneut sowohl die Mindeststrecke als auch die Richtung
           // gegen den Startrand prüfen, statt der Kaper-Prüfung blind zu
           // vertrauen.
-          const direction = gestureState.dx > 0 ? 'previous' : 'next';
-          if (startEdge === 'left' && direction !== 'previous') {
-            return;
-          }
-          if (startEdge === 'right' && direction !== 'next') {
+          if (Math.abs(gestureState.dx) < MIN_HORIZONTAL_DISTANCE) {
             return;
           }
 
-          const target = getNeighbourTab(tab, direction);
+          const expectedDirection = directionForEdge(startEdge);
+          const actualDirection = gestureState.dx > 0 ? 'previous' : 'next';
+          if (actualDirection !== expectedDirection) {
+            return;
+          }
+
+          const target = getNeighbourTab(tab, expectedDirection);
           if (target !== null) {
             router.navigate(tabPath(target));
           }

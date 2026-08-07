@@ -4,6 +4,17 @@ export type TabName = (typeof TAB_ORDER)[number];
 
 export type SwipeDirection = 'previous' | 'next';
 
+export type SwipeEdge = 'left' | 'right';
+
+/**
+ * Vom linken Rand darf nur zum vorherigen, vom rechten nur zum naechsten Tab
+ * gewischt werden. Einzige Quelle dieser Zuordnung, damit Kaper- und
+ * Loslass-Prüfung in SwipeableTabScreen.tsx nicht auseinanderlaufen können.
+ */
+export function directionForEdge(edge: SwipeEdge): SwipeDirection {
+  return edge === 'left' ? 'previous' : 'next';
+}
+
 /**
  * Liefert den Nachbar-Tab in der angegebenen Richtung.
  * Gibt null zurück, wenn kein Nachbar existiert (Anfang/Ende der Reihe)
