@@ -10,6 +10,7 @@ import { shouldShowFlareWarning } from '../../../src/features/diary/flareWarning
 import { DiaryHistoryList } from '../../../src/features/diary/components/DiaryHistoryList';
 import { DiaryCalendarView } from '../../../src/features/diary/components/DiaryCalendarView';
 import { FlareWarningBanner } from '../../../src/features/diary/components/FlareWarningBanner';
+import { SwipeableTabScreen } from '../../../src/components/SwipeableTabScreen';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { DiaryEntryWithTriggers } from '../../../src/features/diary/types';
@@ -121,7 +122,7 @@ export default function TagebuchScreen() {
   const showFlareWarning = !isFlareWarningDismissed && shouldShowFlareWarning(entries, new Date());
 
   return (
-    <View style={styles.container}>
+    <SwipeableTabScreen tab="tagebuch" style={styles.container}>
       <Stack.Screen
         options={{
           headerRight: () => (
@@ -206,7 +207,7 @@ export default function TagebuchScreen() {
       >
         <Text style={styles.addButtonText}>+</Text>
       </Pressable>
-    </View>
+    </SwipeableTabScreen>
   );
 }
 

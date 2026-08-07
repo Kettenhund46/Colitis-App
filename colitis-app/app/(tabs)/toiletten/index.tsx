@@ -29,6 +29,7 @@ import {
   deleteSavedPlace,
 } from '../../../src/features/toilets/db/savedPlacesRepository';
 import { replaceCachedToilets, listCachedToilets } from '../../../src/features/toilets/db/cachedToiletsRepository';
+import { SwipeableTabScreen } from '../../../src/components/SwipeableTabScreen';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { Coordinates, SavedPlace, SavedPlaceInput, Toilet } from '../../../src/features/toilets/types';
@@ -265,7 +266,7 @@ export default function ToilettenScreen() {
     formState?.mode === 'create' ? formState.coordinates : formState?.mode === 'edit' ? formState.place : null;
 
   return (
-    <View style={styles.container}>
+    <SwipeableTabScreen tab="toiletten" style={styles.container}>
       {locationDenied && <LocationPermissionBanner />}
       {locationError && (
         <View style={styles.errorBanner}>
@@ -321,7 +322,7 @@ export default function ToilettenScreen() {
           onCancel={() => setFormState(null)}
         />
       )}
-    </View>
+    </SwipeableTabScreen>
   );
 }
 

@@ -26,6 +26,7 @@ import { buildScreeningReminderContent } from '../../../src/features/medications
 import { exportMedicationPass } from '../../../src/features/medications/medicationPassExport';
 import { MedicationList } from '../../../src/features/medications/components/MedicationList';
 import { ScreeningReminderCard } from '../../../src/features/medications/components/ScreeningReminderCard';
+import { SwipeableTabScreen } from '../../../src/components/SwipeableTabScreen';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type {
@@ -212,7 +213,7 @@ export default function MedikamenteScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SwipeableTabScreen tab="medikamente" style={styles.container}>
       {error && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>{error}</Text>
@@ -258,7 +259,7 @@ export default function MedikamenteScreen() {
       >
         <Text style={styles.addButtonText}>+</Text>
       </Pressable>
-    </View>
+    </SwipeableTabScreen>
   );
 }
 

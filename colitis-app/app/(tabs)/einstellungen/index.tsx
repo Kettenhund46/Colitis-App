@@ -22,6 +22,7 @@ import { rescheduleAllReminders } from '../../../src/features/backup/rescheduleR
 import { BACKUP_FORMAT_VERSION, type BackupData, type BackupEnvelope } from '../../../src/features/backup/types';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { SliderToggle } from '../../../src/components/SliderToggle';
+import { SwipeableTabScreen } from '../../../src/components/SwipeableTabScreen';
 import {
   getDailyJokeEnabled,
   setDailyJokeEnabled,
@@ -323,7 +324,8 @@ export default function EinstellungenScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <SwipeableTabScreen tab="einstellungen" style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
       <Text style={styles.sectionTitle}>Darstellung</Text>
       <View style={styles.themeRow}>
         {THEME_OPTIONS.map((option) => (
@@ -499,7 +501,8 @@ export default function EinstellungenScreen() {
           ? `Letztes Backup: ${new Date(lastBackupAt).toLocaleDateString('de-DE')}`
           : 'Noch kein Backup erstellt.'}
       </Text>
-    </ScrollView>
+      </ScrollView>
+    </SwipeableTabScreen>
   );
 }
 

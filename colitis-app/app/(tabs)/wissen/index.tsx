@@ -11,6 +11,7 @@ import {
   getCommunityDisclaimerSeen,
   setCommunityDisclaimerSeen,
 } from '../../../src/features/settings/settingsStorage';
+import { SwipeableTabScreen } from '../../../src/components/SwipeableTabScreen';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { KnowledgeArticle } from '../../../src/features/knowledge/types';
@@ -104,7 +105,7 @@ export default function WissenScreen() {
     viewFilter === 'favorites' ? filterFavoriteArticles(searchedArticles, favoriteSlugs) : searchedArticles;
 
   return (
-    <View style={styles.container}>
+    <SwipeableTabScreen tab="wissen" style={styles.container}>
       {error && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>{error}</Text>
@@ -169,7 +170,7 @@ export default function WissenScreen() {
           emptyMessage={viewFilter === 'favorites' ? 'Noch keine Favoriten markiert.' : undefined}
         />
       )}
-    </View>
+    </SwipeableTabScreen>
   );
 }
 
