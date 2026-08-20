@@ -32,6 +32,7 @@ import {
   setDiaryReminderTime,
   setDiaryReminderNotificationId,
   getDiaryReminderNotificationId,
+  getDiaryReminderEnabled,
 } from '../settings/settingsStorage';
 
 describe('rescheduleDiaryReminder', () => {
@@ -92,6 +93,7 @@ describe('rescheduleDiaryReminder', () => {
     expect(result).toBe('permission-denied');
     expect(scheduleDailyReminder).not.toHaveBeenCalled();
     expect(await getDiaryReminderNotificationId()).toBeNull();
+    expect(await getDiaryReminderEnabled()).toBe(false);
   });
 
   it('clears the stored id when scheduling fails', async () => {
@@ -105,6 +107,7 @@ describe('rescheduleDiaryReminder', () => {
 
     expect(result).toBe('failed');
     expect(await getDiaryReminderNotificationId()).toBeNull();
+    expect(await getDiaryReminderEnabled()).toBe(false);
 
     consoleError.mockRestore();
   });

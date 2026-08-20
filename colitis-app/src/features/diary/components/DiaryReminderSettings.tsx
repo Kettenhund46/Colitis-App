@@ -28,15 +28,16 @@ export function DiaryReminderSettings() {
   const [isEnabled, setIsEnabled] = useState(false);
   const [timeText, setTimeText] = useState(DEFAULT_DIARY_REMINDER_TIME);
   const [error, setError] = useState<string | null>(null);
+  const [isBusy, setIsBusy] = useState(false);
 
   const isMountedRef = useRef(true);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
       isMountedRef.current = false;
-    },
-    []
-  );
+    };
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -60,38 +61,55 @@ export function DiaryReminderSettings() {
     }, [])
   );
 
-  async function applyResult(result: DiaryReminderResult): Promise<void> {
-    if (result === 'permission-denied' || result === 'failed') {
-      await setDiaryReminderEnabled(false);
+  async function runReschedule(): Promise<void> {
+    try {
+      const result = await rescheduleDiaryReminder();
+
+      if (result === 'permission-denied' || result === 'failed') {
+        if (isMountedRef.current) {
+          setIsEnabled(false);
+          setError(ERROR_MESSAGES[result] ?? null);
+        }
+        return;
+      }
+
+      if (isMountedRef.current) {
+        setError(result === 'invalid-time' ? ERROR_MESSAGES['invalid-time'] ?? null : null);
+      }
+    } catch (rescheduleError: unknown) {
+      console.error('[Tagebuch] Erinnerung konnte nicht eingerichtet werden:', rescheduleError);
+      try {
+        await setDiaryReminderEnabled(false);
+      } catch (resetError: unknown) {
+        console.error('[Tagebuch] Einstellung konnte nicht zurueckgesetzt werden:', resetError);
+      }
       if (isMountedRef.current) {
         setIsEnabled(false);
-        setError(ERROR_MESSAGES[result] ?? null);
-      }
-      return;
-    }
-
-    if (!isMountedRef.current) {
-      return;
-    }
-    setError(result === 'invalid-time' ? ERROR_MESSAGES['invalid-time'] ?? null : null);
-  }
-
-  async function handleToggle(value: boolean) {
-    setIsEnabled(value);
-    try {
-      await setDiaryReminderEnabled(value);
-      await applyResult(await rescheduleDiaryReminder());
-    } catch (toggleError: unknown) {
-      console.error('[Tagebuch] Erinnerung konnte nicht umgeschaltet werden:', toggleError);
-      const stored = await getDiaryReminderEnabled();
-      if (isMountedRef.current) {
-        setIsEnabled(stored);
         setError('Erinnerung konnte nicht eingerichtet werden.');
       }
     }
   }
 
+  async function handleToggle(value: boolean) {
+    if (isBusy) {
+      return;
+    }
+    setIsBusy(true);
+    setIsEnabled(value);
+    try {
+      await setDiaryReminderEnabled(value);
+      await runReschedule();
+    } finally {
+      if (isMountedRef.current) {
+        setIsBusy(false);
+      }
+    }
+  }
+
   async function handleCommitTime() {
+    if (isBusy) {
+      return;
+    }
     const trimmed = timeText.trim();
 
     if (!isValidReminderTime(trimmed)) {
@@ -103,13 +121,13 @@ export function DiaryReminderSettings() {
       return;
     }
 
+    setIsBusy(true);
     try {
       await setDiaryReminderTime(trimmed);
-      await applyResult(await rescheduleDiaryReminder());
-    } catch (timeError: unknown) {
-      console.error('[Tagebuch] Erinnerungszeit konnte nicht gespeichert werden:', timeError);
+      await runReschedule();
+    } finally {
       if (isMountedRef.current) {
-        setError('Erinnerung konnte nicht eingerichtet werden.');
+        setIsBusy(false);
       }
     }
   }
@@ -126,6 +144,7 @@ export function DiaryReminderSettings() {
           value={isEnabled}
           onValueChange={(value) => void handleToggle(value)}
           accessibilityLabel="Tägliche Erinnerung ans Eintragen"
+          disabled={isBusy}
         />
       </View>
 
@@ -142,6 +161,7 @@ export function DiaryReminderSettings() {
             maxLength={5}
             placeholder="20:00"
             placeholderTextColor={colors.textSecondary}
+            editable={!isBusy}
           />
         </View>
       )}

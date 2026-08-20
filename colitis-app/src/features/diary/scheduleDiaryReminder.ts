@@ -1,5 +1,6 @@
 import {
   getDiaryReminderEnabled,
+  setDiaryReminderEnabled,
   getDiaryReminderTime,
   getDiaryReminderNotificationId,
   setDiaryReminderNotificationId,
@@ -42,6 +43,7 @@ export async function rescheduleDiaryReminder(): Promise<DiaryReminderResult> {
 
   const granted = await requestNotificationPermission();
   if (!granted) {
+    await setDiaryReminderEnabled(false);
     return 'permission-denied';
   }
 
@@ -52,6 +54,7 @@ export async function rescheduleDiaryReminder(): Promise<DiaryReminderResult> {
   } catch (error: unknown) {
     console.error('[Tagebuch] Erinnerung konnte nicht geplant werden:', error);
     await setDiaryReminderNotificationId(null);
+    await setDiaryReminderEnabled(false);
     return 'failed';
   }
 }

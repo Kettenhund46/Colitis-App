@@ -8,6 +8,7 @@ import type { ExpoSQLiteDatabase } from 'drizzle-orm/expo-sqlite';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import migrations from '../drizzle/migrations';
 import { createEncryptedDb } from '../src/db/client';
+import { configureNotificationHandling } from '../src/lib/notifications/notificationService';
 import { rescheduleDiaryReminder } from '../src/features/diary/scheduleDiaryReminder';
 import { resetAppData } from '../src/lib/appReset';
 import { LockScreen } from '../src/features/appLock/components/LockScreen';
@@ -58,6 +59,7 @@ function RootLayoutInner() {
   }, [dbGeneration]);
 
   useEffect(() => {
+    configureNotificationHandling();
     rescheduleDiaryReminder().catch((error: unknown) => {
       console.error('[Tagebuch] Erinnerung konnte beim Start nicht geplant werden:', error);
     });
