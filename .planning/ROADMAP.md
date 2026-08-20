@@ -44,9 +44,14 @@ Durchscrollen der Tagebuch-Liste sofort, wie die einzelnen Tage verliefen.
 
 **Success criteria:**
 - Eine tägliche Erinnerung erscheint zur selbst gewählten Uhrzeit und lässt sich in den Einstellungen ein- und ausschalten
-- Wer heute bereits etwas erfasst hat, wird nicht mehr erinnert
 - Jeder Eintrag in der Tagebuch-Liste trägt eine sichtbare Kennzeichnung seines Schweregrads, die nicht allein auf Farbe beruht
 - Die Kennzeichnung stimmt mit der Bewertung überein, die derselbe Tag im Kalender erhält
+
+*Gestrichen am 2026-08-20 im Entwurf:* „Wer heute bereits etwas erfasst hat, wird
+nicht mehr erinnert." Der wiederkehrende Tagestrigger des Betriebssystems lässt
+sich nicht teilweise abbestellen; die Alternative über einen begrenzten Vorrat
+einzelner Termin-Benachrichtigungen würde ausgerechnet bei längerer Nichtnutzung
+verstummen. Entscheidung des Nutzers: immer erinnern, dafür mit neutralem Text.
 
 **Depends on:** none
 
