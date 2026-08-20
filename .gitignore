@@ -1,3 +1,6 @@
 feed-service/node_modules/
 feed-service/dist/
 feed-service/*.tsbuildinfo
+
+# Superpowers-Arbeitsdateien (Brainstorming-Mockups, SDD-Ledger)
+.superpowers/
