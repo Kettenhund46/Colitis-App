@@ -50,12 +50,27 @@ Alle drei in der visuellen Begleitung getroffen:
 
 ## Architektur
 
-Fünf neue Bausteine unter `src/components/ui/`. Danach benutzen alle
+Sechs neue Bausteine unter `src/components/ui/`. Danach benutzen alle
 Bildschirme sie, statt das Muster zu wiederholen.
+
+### `cardStyle.ts` — die reine Schicht
+
+Alle Entscheidungen der Karte als reine Funktionen, ohne React, damit sie
+testbar sind (siehe „Prüfung"):
+
+```
+type CardAccent = 'good' | 'warning' | 'danger' | 'info' | 'neutral';
+type SurfaceTreatment = 'shadow' | 'border';
+
+surfaceTreatmentFor(themeId: ThemeId): SurfaceTreatment
+accentColorFor(accent: CardAccent | undefined, colors: ThemeColors): string | null
+cardSurfaceStyle(colors: ThemeColors, treatment: SurfaceTreatment): ViewStyle
+```
 
 ### `Card.tsx`
 
-Fläche, Rundung, Erhebung, optionale Zustandskante.
+Dünne Hülle über `cardStyle.ts`: Fläche, Rundung, Erhebung, optionale
+Zustandskante.
 
 ```
 interface CardProps {
@@ -121,8 +136,8 @@ ist.
 ### Erhebung als Theme-Eigenschaft
 
 Die Erhebung wird kein Wert im Aufrufer, sondern eine Eigenschaft des Themes.
-Neben `palettes` kommt eine Beschreibung, wie eine Fläche in diesem Theme vom
-Hintergrund abgesetzt wird:
+`surfaceTreatmentFor` in `cardStyle.ts` beantwortet, wie eine Fläche in diesem
+Theme vom Hintergrund abgesetzt wird. `palettes.ts` bleibt reine Farbe:
 
 | Theme | Mittel |
 |---|---|
@@ -135,8 +150,8 @@ dunklem Grund ist er praktisch unsichtbar. Statt Tiefe vorzutäuschen, trennt
 dort ein feiner Rand die hellere Kartenfläche (`surface` #262320) vom
 Hintergrund (`background` #1C1A17).
 
-Der aufrufende Bildschirm muss davon nichts wissen. `Card` liest die
-Beschreibung über `useTheme()`.
+Der aufrufende Bildschirm muss davon nichts wissen. `Card` holt sich `themeId`
+über `useTheme()` und reicht ihn an `surfaceTreatmentFor` weiter.
 
 ## Abstufung innerhalb der Karte
 
@@ -242,13 +257,30 @@ eigenen Rollen hinzu — wo heute ein `Pressable` die Karte ist, bleibt es das.
 Die 463 vorhandenen Tests müssen weiterhin grün sein — das ist die
 Rückversicherung gegen Kollateralschaden beim Umstellen.
 
-Eigene Tests bekommen nur die Bausteine, weil nur dort Verhalten steckt:
-- `Card` setzt bei `accent` eine Kante, ohne `accent` keine
-- `Card` benutzt im dunklen Theme Rand statt Schatten
-- `EmptyState` zeigt den Knopf nur, wenn `action` übergeben wurde
+**Randbedingung:** Vitest läuft mit `environment: 'node'`. Es gibt weder
+jsdom noch `@testing-library/react-native` noch `react-test-renderer`; alle
+463 vorhandenen Tests sind reine Logiktests. Komponenten lassen sich hier
+nicht rendern, und eine Rendering-Abhängigkeit nachzurüsten, wäre für diese
+Phase ein eigenes Vorhaben.
 
-Gestaltung selbst ist im Testlauf nicht nachbildbar. Der Rest wird auf dem
-Gerät geprüft, zusammen mit den offenen Abnahmepunkten 9 bis 11 aus Phase 1.
+**Folge für die Architektur:** Die Rechenarbeit der Karte kommt in reine
+Funktionen in einer eigenen Datei, die Komponente wird eine dünne Hülle
+darüber. Das ist im Projekt eingeführt — `calendarLogic.ts` verhält sich
+genauso zu `DiaryCalendarView.tsx`.
+
+Getestet werden die reinen Funktionen:
+- `accentColorFor` gibt für jede der fünf Bedeutungen die passende Farbe des
+  übergebenen Themes zurück
+- `accentColorFor` gibt ohne Bedeutung `null` zurück, damit die Hülle keine
+  Kante zeichnet
+- `surfaceTreatmentFor` gibt für `dark` das Randmittel zurück, für `light`
+  und `light-blue` das Schattenmittel
+- `cardSurfaceStyle` enthält im Randmittel keine Schattenwerte und im
+  Schattenmittel keine Randbreite
+
+Gestaltung selbst ist im Testlauf nicht nachbildbar. Alles Sichtbare wird auf
+dem Gerät geprüft, zusammen mit den offenen Abnahmepunkten 9 bis 11 aus
+Phase 1.
 
 ## Bewusst nicht enthalten
 
