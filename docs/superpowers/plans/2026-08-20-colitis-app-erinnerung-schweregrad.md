@@ -869,3 +869,13 @@ Nicht automatisiert prüfbar, weil native Module im Testlauf nicht nachgebildet 
 8. Der Kalender sieht unverändert aus wie vor dieser Phase
 
 Punkt 8 ist die Gegenprobe zu Task 3: Das Herausziehen der Formensprache durfte am Kalender nichts ändern.
+
+### Nachtrag nach der Schlussdurchsicht
+
+Die Durchsicht fand zwei Wege, auf denen die Erinnerung still verschwand. Beide sind behoben, beide müssen auf dem Gerät gegengeprüft werden — sie sind nicht automatisiert prüfbar:
+
+9. Erinnerung einschalten, dann eine Sicherung wiederherstellen. Danach prüfen, ob die Erinnerung noch kommt. Vor der Behebung wurde sie beim Wiederherstellen mit abbestellt, während der Schalter weiter „an" zeigte.
+10. Erinnerung einschalten, dann die Benachrichtigungsberechtigung in den Systemeinstellungen entziehen und die App öffnen. Der Schalter muss auf aus stehen. Vorher blieb er dauerhaft auf „an", ohne dass eine Erinnerung geplant war.
+11. Während die App im Vordergrund läuft, die Erinnerungszeit auf wenige Minuten später stellen und warten. Die Benachrichtigung muss erscheinen, ohne dass zuvor der Medikamente-Tab geöffnet wurde.
+
+Punkt 11 ist der einzige Befund der Durchsicht, der sich nicht am Code belegen ließ, sondern nur aus dem dokumentierten Verhalten von expo-notifications abgeleitet wurde. Der Gerätetest ist hier die eigentliche Bestätigung.
