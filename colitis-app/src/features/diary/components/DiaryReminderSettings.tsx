@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { Text, TextInput, View, StyleSheet } from 'react-native';
 import { SliderToggle } from '../../../components/SliderToggle';
@@ -29,6 +29,15 @@ export function DiaryReminderSettings() {
   const [timeText, setTimeText] = useState(DEFAULT_DIARY_REMINDER_TIME);
   const [error, setError] = useState<string | null>(null);
 
+  const isMountedRef = useRef(true);
+
+  useEffect(
+    () => () => {
+      isMountedRef.current = false;
+    },
+    []
+  );
+
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
@@ -51,34 +60,34 @@ export function DiaryReminderSettings() {
     }, [])
   );
 
-  async function applyAndReport(): Promise<void> {
-    const result = await rescheduleDiaryReminder();
-    if (result === 'scheduled' || result === 'disabled') {
-      setError(null);
+  async function applyResult(result: DiaryReminderResult): Promise<void> {
+    if (result === 'permission-denied' || result === 'failed') {
+      await setDiaryReminderEnabled(false);
+      if (isMountedRef.current) {
+        setIsEnabled(false);
+        setError(ERROR_MESSAGES[result] ?? null);
+      }
       return;
     }
-    setError(ERROR_MESSAGES[result] ?? null);
-    setIsEnabled(await getDiaryReminderEnabled());
+
+    if (!isMountedRef.current) {
+      return;
+    }
+    setError(result === 'invalid-time' ? ERROR_MESSAGES['invalid-time'] ?? null : null);
   }
 
   async function handleToggle(value: boolean) {
     setIsEnabled(value);
     try {
       await setDiaryReminderEnabled(value);
-      const result = await rescheduleDiaryReminder();
-
-      if (result === 'permission-denied' || result === 'failed') {
-        await setDiaryReminderEnabled(false);
-        setIsEnabled(false);
-        setError(ERROR_MESSAGES[result] ?? null);
-        return;
-      }
-
-      setError(result === 'invalid-time' ? ERROR_MESSAGES['invalid-time'] ?? null : null);
+      await applyResult(await rescheduleDiaryReminder());
     } catch (toggleError: unknown) {
       console.error('[Tagebuch] Erinnerung konnte nicht umgeschaltet werden:', toggleError);
-      setIsEnabled(await getDiaryReminderEnabled());
-      setError('Erinnerung konnte nicht eingerichtet werden.');
+      const stored = await getDiaryReminderEnabled();
+      if (isMountedRef.current) {
+        setIsEnabled(stored);
+        setError('Erinnerung konnte nicht eingerichtet werden.');
+      }
     }
   }
 
@@ -86,17 +95,22 @@ export function DiaryReminderSettings() {
     const trimmed = timeText.trim();
 
     if (!isValidReminderTime(trimmed)) {
-      setError('Bitte eine Uhrzeit im Format HH:MM angeben, zum Beispiel 20:00.');
-      setTimeText(await getDiaryReminderTime());
+      const stored = await getDiaryReminderTime();
+      if (isMountedRef.current) {
+        setError('Bitte eine Uhrzeit im Format HH:MM angeben, zum Beispiel 20:00.');
+        setTimeText(stored);
+      }
       return;
     }
 
     try {
       await setDiaryReminderTime(trimmed);
-      await applyAndReport();
+      await applyResult(await rescheduleDiaryReminder());
     } catch (timeError: unknown) {
       console.error('[Tagebuch] Erinnerungszeit konnte nicht gespeichert werden:', timeError);
-      setError('Erinnerung konnte nicht eingerichtet werden.');
+      if (isMountedRef.current) {
+        setError('Erinnerung konnte nicht eingerichtet werden.');
+      }
     }
   }
 
