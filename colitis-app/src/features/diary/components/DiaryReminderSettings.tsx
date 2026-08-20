@@ -31,6 +31,7 @@ export function DiaryReminderSettings() {
   const [isBusy, setIsBusy] = useState(false);
 
   const isMountedRef = useRef(true);
+  const isBusyRef = useRef(false);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -91,15 +92,24 @@ export function DiaryReminderSettings() {
   }
 
   async function handleToggle(value: boolean) {
-    if (isBusy) {
+    if (isBusyRef.current) {
       return;
     }
+    isBusyRef.current = true;
     setIsBusy(true);
     setIsEnabled(value);
+
     try {
       await setDiaryReminderEnabled(value);
       await runReschedule();
+    } catch (toggleError: unknown) {
+      console.error('[Tagebuch] Erinnerung konnte nicht umgeschaltet werden:', toggleError);
+      if (isMountedRef.current) {
+        setIsEnabled(false);
+        setError('Erinnerung konnte nicht eingerichtet werden.');
+      }
     } finally {
+      isBusyRef.current = false;
       if (isMountedRef.current) {
         setIsBusy(false);
       }
@@ -107,25 +117,33 @@ export function DiaryReminderSettings() {
   }
 
   async function handleCommitTime() {
-    if (isBusy) {
+    if (isBusyRef.current) {
       return;
     }
-    const trimmed = timeText.trim();
-
-    if (!isValidReminderTime(trimmed)) {
-      const stored = await getDiaryReminderTime();
-      if (isMountedRef.current) {
-        setError('Bitte eine Uhrzeit im Format HH:MM angeben, zum Beispiel 20:00.');
-        setTimeText(stored);
-      }
-      return;
-    }
-
+    isBusyRef.current = true;
     setIsBusy(true);
+
     try {
+      const trimmed = timeText.trim();
+
+      if (!isValidReminderTime(trimmed)) {
+        const stored = await getDiaryReminderTime();
+        if (isMountedRef.current) {
+          setError('Bitte eine Uhrzeit im Format HH:MM angeben, zum Beispiel 20:00.');
+          setTimeText(stored);
+        }
+        return;
+      }
+
       await setDiaryReminderTime(trimmed);
       await runReschedule();
+    } catch (timeError: unknown) {
+      console.error('[Tagebuch] Erinnerungszeit konnte nicht gespeichert werden:', timeError);
+      if (isMountedRef.current) {
+        setError('Erinnerung konnte nicht eingerichtet werden.');
+      }
     } finally {
+      isBusyRef.current = false;
       if (isMountedRef.current) {
         setIsBusy(false);
       }
