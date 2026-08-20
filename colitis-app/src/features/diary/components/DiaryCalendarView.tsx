@@ -3,7 +3,6 @@ import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import { buildCalendarGrid, groupEntriesByDay, rateDayEntries } from '../calendarLogic';
-import type { DayRating } from '../calendarLogic';
 import { DiaryHistoryList } from './DiaryHistoryList';
 import type { DiaryEntryWithTriggers } from '../types';
 import type { ThemeColors } from '../../../theme/types';
