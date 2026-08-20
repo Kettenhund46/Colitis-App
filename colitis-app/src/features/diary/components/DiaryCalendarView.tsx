@@ -3,10 +3,10 @@ import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import { buildCalendarGrid, groupEntriesByDay, rateDayEntries } from '../calendarLogic';
-import type { DayRating } from '../calendarLogic';
 import { DiaryHistoryList } from './DiaryHistoryList';
 import type { DiaryEntryWithTriggers } from '../types';
 import type { ThemeColors } from '../../../theme/types';
+import { RatingIndicator, RATING_LABELS } from './RatingIndicator';
 
 interface DiaryCalendarViewProps {
   entries: DiaryEntryWithTriggers[];
@@ -17,44 +17,6 @@ const WEEKDAY_LABELS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
 function formatMonthTitle(year: number, month: number): string {
   return new Date(year, month, 1).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
-}
-
-const RATING_LABELS: Record<DayRating, string> = {
-  good: 'gut',
-  medium: 'mittel',
-  bad: 'schub-verdächtig',
-};
-
-function ratingIndicatorStyle(colors: ThemeColors, rating: DayRating) {
-  if (rating === 'bad') {
-    return {
-      width: 0,
-      height: 0,
-      marginTop: 2,
-      borderLeftWidth: 4,
-      borderRightWidth: 4,
-      borderBottomWidth: 7,
-      borderLeftColor: 'transparent',
-      borderRightColor: 'transparent',
-      borderBottomColor: colors.danger,
-    } as const;
-  }
-  if (rating === 'medium') {
-    return {
-      width: 6,
-      height: 6,
-      marginTop: 2,
-      borderRadius: 1,
-      backgroundColor: colors.warning,
-    } as const;
-  }
-  return {
-    width: 6,
-    height: 6,
-    marginTop: 2,
-    borderRadius: 3,
-    backgroundColor: colors.success,
-  } as const;
 }
 
 export function DiaryCalendarView({ entries, onDeleteEntry }: DiaryCalendarViewProps) {
@@ -137,7 +99,7 @@ export function DiaryCalendarView({ entries, onDeleteEntry }: DiaryCalendarViewP
               <Text style={[styles.cellText, !cell.isCurrentMonth && styles.cellTextOutsideMonth]}>
                 {cell.dayOfMonth}
               </Text>
-              {rating && <View style={ratingIndicatorStyle(colors, rating)} />}
+              {rating && <RatingIndicator rating={rating} />}
             </Pressable>
           );
         })}

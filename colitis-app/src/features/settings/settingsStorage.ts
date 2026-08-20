@@ -112,3 +112,40 @@ export async function getSwipeNavigationEnabled(): Promise<boolean> {
 export async function setSwipeNavigationEnabled(enabled: boolean): Promise<void> {
   await AsyncStorage.setItem(SWIPE_NAVIGATION_ENABLED_KEY, enabled ? 'true' : 'false');
 }
+
+const DIARY_REMINDER_ENABLED_KEY = 'colitis2go.settings.diaryReminderEnabled';
+const DIARY_REMINDER_TIME_KEY = 'colitis2go.settings.diaryReminderTime';
+const DIARY_REMINDER_NOTIFICATION_ID_KEY = 'colitis2go.settings.diaryReminderNotificationId';
+
+export const DEFAULT_DIARY_REMINDER_TIME = '20:00';
+
+/** Voreinstellung: ausgeschaltet, solange nichts gespeichert wurde. */
+export async function getDiaryReminderEnabled(): Promise<boolean> {
+  const stored = await AsyncStorage.getItem(DIARY_REMINDER_ENABLED_KEY);
+  return stored === 'true';
+}
+
+export async function setDiaryReminderEnabled(enabled: boolean): Promise<void> {
+  await AsyncStorage.setItem(DIARY_REMINDER_ENABLED_KEY, enabled ? 'true' : 'false');
+}
+
+export async function getDiaryReminderTime(): Promise<string> {
+  const stored = await AsyncStorage.getItem(DIARY_REMINDER_TIME_KEY);
+  return stored ?? DEFAULT_DIARY_REMINDER_TIME;
+}
+
+export async function setDiaryReminderTime(time: string): Promise<void> {
+  await AsyncStorage.setItem(DIARY_REMINDER_TIME_KEY, time);
+}
+
+export async function getDiaryReminderNotificationId(): Promise<string | null> {
+  return AsyncStorage.getItem(DIARY_REMINDER_NOTIFICATION_ID_KEY);
+}
+
+export async function setDiaryReminderNotificationId(notificationId: string | null): Promise<void> {
+  if (notificationId === null) {
+    await AsyncStorage.removeItem(DIARY_REMINDER_NOTIFICATION_ID_KEY);
+    return;
+  }
+  await AsyncStorage.setItem(DIARY_REMINDER_NOTIFICATION_ID_KEY, notificationId);
+}

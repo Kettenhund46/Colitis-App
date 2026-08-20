@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { rateDiaryEntry, rateDayEntries, groupEntriesByDay, buildCalendarGrid } from './calendarLogic';
+import { rateDiaryEntry, rateDayEntries, groupEntriesByDay, buildCalendarGrid, buildDayRatings } from './calendarLogic';
 import type { DiaryEntryWithTriggers } from './types';
 
 function makeEntry(overrides: Partial<DiaryEntryWithTriggers> = {}): DiaryEntryWithTriggers {
@@ -185,5 +185,46 @@ describe('buildCalendarGrid', () => {
     const cells = buildCalendarGrid(2028, 1); // February 2028 (leap year)
     const inside = cells.filter((cell) => cell.isCurrentMonth);
     expect(inside).toHaveLength(29);
+  });
+});
+
+describe('buildDayRatings', () => {
+  it('returns an empty map for no entries', () => {
+    expect(buildDayRatings([]).size).toBe(0);
+  });
+
+  it('rates a day with a single entry', () => {
+    const entries = [
+      makeEntry({ occurredAt: '2026-08-18T09:00:00', stoolFrequency: 1, painLevel: 0, hasBlood: false }),
+    ];
+    expect(buildDayRatings(entries).get('2026-08-18')).toBe('good');
+  });
+
+  it('rates a split day by its combined values, not by a single entry', () => {
+    const entries = [
+      makeEntry({ occurredAt: '2026-08-18T09:00:00', stoolFrequency: 5, painLevel: 0, hasBlood: false }),
+      makeEntry({ occurredAt: '2026-08-18T20:00:00', stoolFrequency: 4, painLevel: 0, hasBlood: false }),
+    ];
+    expect(buildDayRatings(entries).get('2026-08-18')).toBe('bad');
+  });
+
+  it('keeps days apart from one another', () => {
+    const entries = [
+      makeEntry({ occurredAt: '2026-08-17T09:00:00', stoolFrequency: 1, painLevel: 0, hasBlood: false }),
+      makeEntry({ occurredAt: '2026-08-18T09:00:00', stoolFrequency: 1, painLevel: 0, hasBlood: true }),
+    ];
+    const ratings = buildDayRatings(entries);
+
+    expect(ratings.get('2026-08-17')).toBe('good');
+    expect(ratings.get('2026-08-18')).toBe('bad');
+    expect(ratings.size).toBe(2);
+  });
+
+  it('agrees with rateDayEntries for the same day', () => {
+    const entries = [
+      makeEntry({ occurredAt: '2026-08-18T09:00:00', stoolFrequency: 3, painLevel: 5, hasBlood: false }),
+      makeEntry({ occurredAt: '2026-08-18T20:00:00', stoolFrequency: 2, painLevel: 1, hasBlood: false }),
+    ];
+    expect(buildDayRatings(entries).get('2026-08-18')).toBe(rateDayEntries(entries));
   });
 });

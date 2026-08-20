@@ -18,6 +18,8 @@ import {
 } from '../../../src/features/backup/backupCrypto';
 import { writeAndShareBackup, pickBackupFileContent } from '../../../src/features/backup/backupFileService';
 import { BackupPasswordForm } from '../../../src/features/backup/components/BackupPasswordForm';
+import { DiaryReminderSettings } from '../../../src/features/diary/components/DiaryReminderSettings';
+import { rescheduleDiaryReminder } from '../../../src/features/diary/scheduleDiaryReminder';
 import { rescheduleAllReminders } from '../../../src/features/backup/rescheduleReminders';
 import { BACKUP_FORMAT_VERSION, type BackupData, type BackupEnvelope } from '../../../src/features/backup/types';
 import { useTheme } from '../../../src/theme/ThemeContext';
@@ -277,6 +279,7 @@ export default function EinstellungenScreen() {
           try {
             await rescheduleAllReminders(db, data);
             await rescheduleBackupReminder();
+            await rescheduleDiaryReminder();
             setBackupMessage('Backup erfolgreich wiederhergestellt.');
           } catch (error: unknown) {
             console.error('[Einstellungen] Erinnerungen konnten nicht neu geplant werden:', error);
@@ -482,6 +485,8 @@ export default function EinstellungenScreen() {
             </Pressable>
           </View>
         )}
+
+        <DiaryReminderSettings />
 
         <Text style={styles.sectionTitle}>Backup-Erinnerung</Text>
         <View style={styles.row}>

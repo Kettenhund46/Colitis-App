@@ -35,6 +35,12 @@ import {
   setCommunityDisclaimerSeen,
   getSwipeNavigationEnabled,
   setSwipeNavigationEnabled,
+  getDiaryReminderEnabled,
+  setDiaryReminderEnabled,
+  getDiaryReminderTime,
+  setDiaryReminderTime,
+  getDiaryReminderNotificationId,
+  setDiaryReminderNotificationId,
 } from './settingsStorage';
 
 beforeEach(() => {
@@ -147,5 +153,43 @@ describe('swipe navigation setting', () => {
     await setSwipeNavigationEnabled(false);
     await setSwipeNavigationEnabled(true);
     await expect(getSwipeNavigationEnabled()).resolves.toBe(true);
+  });
+});
+
+describe('diary reminder settings', () => {
+  it('is switched off when nothing was stored', async () => {
+    expect(await getDiaryReminderEnabled()).toBe(false);
+  });
+
+  it('persists the switched-on state', async () => {
+    await setDiaryReminderEnabled(true);
+    expect(await getDiaryReminderEnabled()).toBe(true);
+  });
+
+  it('persists the switched-off state', async () => {
+    await setDiaryReminderEnabled(true);
+    await setDiaryReminderEnabled(false);
+    expect(await getDiaryReminderEnabled()).toBe(false);
+  });
+
+  it('falls back to eight in the evening when no time was stored', async () => {
+    expect(await getDiaryReminderTime()).toBe('20:00');
+  });
+
+  it('persists a stored time', async () => {
+    await setDiaryReminderTime('07:30');
+    expect(await getDiaryReminderTime()).toBe('07:30');
+  });
+
+  it('reports no notification id when nothing was stored', async () => {
+    expect(await getDiaryReminderNotificationId()).toBeNull();
+  });
+
+  it('persists a notification id and clears it again', async () => {
+    await setDiaryReminderNotificationId('abc-123');
+    expect(await getDiaryReminderNotificationId()).toBe('abc-123');
+
+    await setDiaryReminderNotificationId(null);
+    expect(await getDiaryReminderNotificationId()).toBeNull();
   });
 });

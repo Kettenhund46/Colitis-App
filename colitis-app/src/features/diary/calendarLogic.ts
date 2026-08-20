@@ -86,3 +86,11 @@ export function buildCalendarGrid(year: number, month: number): CalendarCell[] {
   }
   return cells;
 }
+
+export function buildDayRatings(entries: DiaryEntryWithTriggers[]): Map<string, DayRating> {
+  const ratings = new Map<string, DayRating>();
+  for (const [dateKey, dayEntries] of groupEntriesByDay(entries)) {
+    ratings.set(dateKey, rateDayEntries(dayEntries));
+  }
+  return ratings;
+}
