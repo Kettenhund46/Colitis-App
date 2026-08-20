@@ -359,6 +359,8 @@ export default function EinstellungenScreen() {
           />
         </View>
 
+        <DiaryReminderSettings />
+
         <Text style={styles.sectionTitle}>App-Sperre</Text>
         <View style={styles.row}>
           <Text style={styles.rowLabel}>PIN-/Biometrie-Sperre aktivieren</Text>
@@ -485,8 +487,6 @@ export default function EinstellungenScreen() {
             </Pressable>
           </View>
         )}
-
-        <DiaryReminderSettings />
 
         <Text style={styles.sectionTitle}>Backup-Erinnerung</Text>
         <View style={styles.row}>

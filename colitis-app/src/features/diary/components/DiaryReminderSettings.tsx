@@ -194,34 +194,30 @@ export function DiaryReminderSettings() {
 function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: {
-      backgroundColor: colors.surface,
-      borderRadius: tokens.radius.md,
-      borderWidth: 1,
-      borderColor: colors.border,
-      padding: tokens.spacing.md,
-      marginBottom: tokens.spacing.md,
+      marginBottom: tokens.spacing.sm,
     },
     heading: {
       color: colors.textPrimary,
-      fontSize: tokens.typography.fontSize.md,
+      fontSize: tokens.typography.fontSize.lg,
       fontWeight: tokens.typography.fontWeight.bold,
+      marginTop: tokens.spacing.lg,
       marginBottom: tokens.spacing.sm,
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: tokens.spacing.sm,
+      paddingVertical: tokens.spacing.sm,
     },
     timeRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: tokens.spacing.sm,
+      paddingVertical: tokens.spacing.sm,
     },
     rowLabel: {
       color: colors.textPrimary,
-      fontSize: tokens.typography.fontSize.sm,
+      fontSize: tokens.typography.fontSize.md,
     },
     timeInput: {
       color: colors.textPrimary,
@@ -237,6 +233,7 @@ function makeStyles(colors: ThemeColors) {
     hint: {
       color: colors.textSecondary,
       fontSize: tokens.typography.fontSize.sm,
+      marginTop: tokens.spacing.xs,
     },
     errorText: {
       color: colors.danger,
