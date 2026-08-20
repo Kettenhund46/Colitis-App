@@ -28,7 +28,7 @@ bekommen.
 
 | Phase | Ziel | Status |
 |------|------|--------|
-| 1 | Ans Eintragen erinnert werden und den Schweregrad beim Scrollen sehen | todo |
+| 1 | Ans Eintragen erinnert werden und den Schweregrad beim Scrollen sehen | in_progress |
 | 2 | Die App sieht nach Gestaltung aus, nicht nach Formular | todo |
 | 3 | Löschen geht per Wischen und die Bedienung fühlt sich spürbar an | todo |
 | 4 | Medikamenteneinnahme lässt sich abhaken und nachvollziehen | todo |
@@ -46,6 +46,26 @@ Durchscrollen der Tagebuch-Liste sofort, wie die einzelnen Tage verliefen.
 - Eine tägliche Erinnerung erscheint zur selbst gewählten Uhrzeit und lässt sich in den Einstellungen ein- und ausschalten
 - Jeder Eintrag in der Tagebuch-Liste trägt eine sichtbare Kennzeichnung seines Schweregrads, die nicht allein auf Farbe beruht
 - Die Kennzeichnung stimmt mit der Bewertung überein, die derselbe Tag im Kalender erhält
+
+**Stand am 2026-08-20:** Code umgesetzt und nach main übernommen (Merge `06e416e`),
+463 Tests grün, Typprüfung sauber. Die Phase gilt aber erst als abgeschlossen,
+wenn der Gerätedurchgang aus dem Umsetzungsplan durch ist — zwei der drei
+Erfolgskriterien lassen sich nur dort bestätigen, weil Benachrichtigungen und
+Darstellung im Testlauf nicht nachgebildet sind.
+
+Die Schlussdurchsicht fand einen kritischen und drei wichtige Wege in einen
+stillen Fehlzustand („Einstellung an, aber keine Erinnerung geplant"), alle
+behoben. Der schwerste trat beim Wiederherstellen einer Sicherung auf. Die
+Abnahmepunkte 9 bis 11 im Umsetzungsplan prüfen genau diese Wege nach.
+
+**Bewusst offengelassene geringfügige Befunde**, die bei Gelegenheit mitlaufen
+können, keiner davon dringend:
+- Schlägt das Speichern der Benachrichtigungs-Kennung nach erfolgreicher Planung fehl, bleibt eine Benachrichtigung ohne bekannte Kennung zurück (sehr unwahrscheinlich, Fehlerrichtung ungefährlich)
+- Scheitert die Planung beim App-Start, wird ohne sichtbare Rückmeldung ausgeschaltet
+- Wird bei sichtbarem Einstellungen-Bildschirm wiederhergestellt, frischt der Bedienblock sich nicht auf; heilt beim Bildschirmwechsel
+- Wirft das Neuplanen der Medikamenten- oder Backup-Erinnerung, wird der Tagebuch-Aufruf übersprungen
+- `buildDayRatings` läuft bei jedem Render statt einmal je Datenstand
+- Der Bewertungs-Indikator sitzt in der Listenkopfzeile 2 px zu tief; der Wert stammt aus der Kalenderzelle — passt zu Phase 2
 
 *Gestrichen am 2026-08-20 im Entwurf:* „Wer heute bereits etwas erfasst hat, wird
 nicht mehr erinnert." Der wiederkehrende Tagestrigger des Betriebssystems lässt
