@@ -67,6 +67,17 @@ können, keiner davon dringend:
 - `buildDayRatings` läuft bei jedem Render statt einmal je Datenstand
 - Der Bewertungs-Indikator sitzt in der Listenkopfzeile 2 px zu tief; der Wert stammt aus der Kalenderzelle — passt zu Phase 2
 
+**Nachtrag 2026-08-20:** Der Gerätetest bestätigte Erinnerung und Kennzeichnung.
+Dabei fiel auf, dass der Erinnerungs-Block im Backup-Abschnitt saß und als Karte
+gestaltet war, während alle übrigen Abschnitte flach auf dem Hintergrund liegen.
+Behoben in `00a2cc8`: eigener Abschnitt nach „Navigation", Gestaltung an die
+Nachbarn angeglichen. Auf Entscheidung des Nutzers **kein eigener Build dafür** —
+die Sichtprüfung dieser Änderung und die offenen Abnahmepunkte 9 bis 11 laufen
+beim nächsten Build aus Phase 2 mit.
+
+Dieser Befund gehört inhaltlich zu Phase 2: Der Einstellungen-Bildschirm mischt
+zwei Gestaltungssprachen. Phase 2 legt fest, welche gilt.
+
 *Gestrichen am 2026-08-20 im Entwurf:* „Wer heute bereits etwas erfasst hat, wird
 nicht mehr erinnert." Der wiederkehrende Tagestrigger des Betriebssystems lässt
 sich nicht teilweise abbestellen; die Alternative über einen begrenzten Vorrat
