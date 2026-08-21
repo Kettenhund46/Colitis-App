@@ -178,7 +178,7 @@ export default function SchnellEintragScreen() {
         accessibilityRole="button"
         accessibilityLabel="Ausführlichen Eintrag anlegen"
         style={styles.fullFormLink}
-        onPress={() => router.push('/tagebuch/neu')}
+        onPress={() => router.replace('/tagebuch/neu')}
       >
         <Text style={styles.fullFormLinkText}>Ausführlichen Eintrag anlegen →</Text>
       </Pressable>
