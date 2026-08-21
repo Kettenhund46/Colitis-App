@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { rateDiaryEntry, rateDayEntries, groupEntriesByDay, buildCalendarGrid, buildDayRatings } from './calendarLogic';
+import {
+  rateDiaryEntry,
+  rateDayEntries,
+  groupEntriesByDay,
+  buildCalendarGrid,
+  buildDayRatings,
+  accentForRating,
+} from './calendarLogic';
 import type { DiaryEntryWithTriggers } from './types';
 
 function makeEntry(overrides: Partial<DiaryEntryWithTriggers> = {}): DiaryEntryWithTriggers {
@@ -226,5 +233,20 @@ describe('buildDayRatings', () => {
       makeEntry({ occurredAt: '2026-08-18T20:00:00', stoolFrequency: 2, painLevel: 1, hasBlood: false }),
     ];
     expect(buildDayRatings(entries).get('2026-08-18')).toBe(rateDayEntries(entries));
+  });
+});
+
+describe('accentForRating', () => {
+  it('leaves days without a rating without an edge', () => {
+    expect(accentForRating(undefined)).toBeUndefined();
+  });
+
+  it('maps a flare-suspect day to the danger edge', () => {
+    expect(accentForRating('bad')).toBe('danger');
+  });
+
+  it('maps a good day to the good edge and a middling one to warning', () => {
+    expect(accentForRating('good')).toBe('good');
+    expect(accentForRating('medium')).toBe('warning');
   });
 });

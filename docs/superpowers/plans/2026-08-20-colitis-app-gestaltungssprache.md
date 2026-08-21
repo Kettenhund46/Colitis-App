@@ -20,7 +20,7 @@
 - **`accent` nimmt eine Bedeutung entgegen, keine Farbe.** Kein Aufrufer schreibt je einen Farbwert für die Kante.
 - **`primary` bleibt in allen drei Themes unverändert.** Nur `success` wird geändert.
 - **`success` bleibt grün** in allen drei Themes, auch im hellblauen.
-- **Rundung:** überall `tokens.radius.md`. Die hart getippte `12` verschwindet aus jeder angefassten Datei.
+- **Rundung:** überall `tokens.radius.md`. Die hart getippte `12` verschwindet aus jeder angefassten Datei. **Gilt für Stilangaben, nicht für Testzusicherungen.** In einem Test ist der ausgeschriebene Wert richtig: `expect(style.borderRadius).toBe(12)` prüft etwas, `toBe(tokens.radius.md)` vergliche die Implementierung mit sich selbst und liefe auch durch, wenn die Rundung ganz fehlte.
 - **Vorhandene `accessibilityLabel` und `accessibilityRole` bleiben unverändert.** `Card` fügt keine eigenen hinzu; wo heute ein `Pressable` die Karte ist, bleibt es ein `Pressable`.
 - **`Card` bringt keinen Außenabstand mit.** Den Abstand zwischen Karten setzt der umgebende Container mit `gap: tokens.spacing.md`. Grund: Bei den berührbaren Listen liegt `Card` innerhalb eines `Pressable`; ein `marginBottom` an der Karte läge im Berührungsbereich und ein Tipp in die Lücke würde die Karte darüber öffnen. Wo eine Kartenkopie entfernt wird, wandert ihr `marginBottom` als `gap` in den Container.
 - **Keine Bewegung.** Kein Pulsieren, kein Schimmern im Ladeplatzhalter. Das gehört zu Phase 3.
@@ -1440,6 +1440,124 @@ git commit -m "feat: Wissen und Neuigkeiten auf die gemeinsame Karte umstellen"
 
 ---
 
+### Task 9: Die drei übersehenen Karten
+
+**Warum:** Beim Abschlussgrep in Task 8 blieben fünf `borderRadius: 12` übrig. Zwei davon stecken im Einstellungen-Bildschirm und im Backup-Formular und bleiben bewusst liegen — Formulare stehen im Entwurf außerhalb. Die anderen drei sind echte Kartenkopien in Dateien, die wörtlich „Card" heißen, und wurden von der Dateiliste dieses Plans schlicht übersehen. Bleiben sie, hat die App nach Phase 2 weiter zwei Gestaltungssprachen — der Fehler, wegen dem Phase 2 begonnen wurde, nur an anderer Stelle. Entscheidung des Nutzers: mitnehmen.
+
+**Files:**
+- Modify: `src/features/medications/components/ScreeningReminderCard.tsx`
+- Modify: `src/features/toilets/components/SavedPlaceInfoCard.tsx`
+- Modify: `src/features/toilets/components/ToiletInfoCard.tsx`
+
+**Interfaces:**
+- Consumes: `Card` aus `src/components/ui/Card`
+- Produces: nichts. Keine Prop-Änderung, keine Signatur-Änderung, kein Aufrufer merkt etwas.
+
+**Keine Kante in diesem Task.** Alle drei sind Einzelkarten, keine Listeneinträge mit Zustand. Die Regel „Kante, wo eine Liste einen Zustand hat" greift hier nicht — also `<Card>` ohne `accent`. Auch die Vorsorge-Erinnerung bekommt keine, obwohl sie inhaltlich mahnt; das wäre eine neue Gestaltungsentscheidung und gehört nicht in eine Angleichung.
+
+- [ ] **Step 1: `ScreeningReminderCard` umstellen**
+
+Diese Datei benutzt `<View style={styles.card}>` an **zwei** Stellen (etwa Zeile 79 und 104). Beide ersetzen.
+
+Der `card`-Eintrag trägt neben dem Flächenmuster eine Positionierung:
+
+```tsx
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: tokens.spacing.md,
+      margin: tokens.spacing.lg,
+      marginBottom: 0,
+    },
+```
+
+Fläche, Rundung, Rand und Polsterung übernimmt künftig `Card`. Die Positionierung bleibt und wird durchgereicht. Ersetze den Eintrag durch:
+
+```tsx
+    cardPosition: {
+      margin: tokens.spacing.lg,
+      marginBottom: 0,
+    },
+```
+
+und beide Verwendungen durch:
+
+```tsx
+      <Card style={styles.cardPosition}>
+```
+
+mit dem passenden schließenden `</Card>` statt `</View>`.
+
+Import ergänzen: `import { Card } from '../../../components/ui/Card';`
+
+- [ ] **Step 2: `SavedPlaceInfoCard` und `ToiletInfoCard` umstellen**
+
+Beide Dateien haben denselben `card`-Eintrag — eine über der Karte schwebende Einblendung:
+
+```tsx
+    card: {
+      position: 'absolute',
+      left: tokens.spacing.md,
+      right: tokens.spacing.md,
+      bottom: tokens.spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: tokens.spacing.md,
+    },
+```
+
+In **beiden** Dateien ersetzen durch:
+
+```tsx
+    cardPosition: {
+      position: 'absolute',
+      left: tokens.spacing.md,
+      right: tokens.spacing.md,
+      bottom: tokens.spacing.md,
+    },
+```
+
+und das äußere `<View style={styles.card}>` durch `<Card style={styles.cardPosition}>` samt schließendem `</Card>`.
+
+Import in beiden: `import { Card } from '../../../components/ui/Card';`
+
+**Die inneren `Pressable` bleiben unangetastet.** In beiden Dateien ist das äußere Element ein `View`, die `Pressable` darin sind Knöpfe. Hier wird nichts verschachtelt wie bei den Listen aus Task 7.
+
+- [ ] **Step 3: Prüfen, dass nur die beiden gewollten Treffer übrig sind**
+
+```bash
+grep -rn "borderRadius: 12" --include=*.tsx app src
+```
+
+Erwartet: genau zwei Treffer — `app/(tabs)/einstellungen/index.tsx` und `src/features/backup/components/BackupPasswordForm.tsx`. Beide bleiben stehen, sie gehören zu Formularen und stehen im Entwurf außerhalb dieser Phase.
+
+- [ ] **Step 4: Typprüfung und vollständiger Testlauf**
+
+```bash
+npx.cmd tsc --noEmit
+```
+
+Erwartet: keine Ausgabe. Meldet TypeScript ein unbenutztes `View`, prüfe erst mit `grep`, ob `View` in der Datei wirklich nirgends mehr vorkommt — in allen drei Dateien wird es für innere Zeilen weiter gebraucht.
+
+```bash
+npm test
+```
+
+Erwartet: PASS, 477 Tests.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/features/medications/components/ScreeningReminderCard.tsx src/features/toilets/components/SavedPlaceInfoCard.tsx src/features/toilets/components/ToiletInfoCard.tsx
+git commit -m "feat: uebersehene Einzelkarten auf die gemeinsame Karte umstellen"
+```
+
+---
+
 ## Abnahme auf dem Gerät
 
 Im Testlauf nicht nachbildbar. Nach dem Merge und einem Build zu prüfen:
@@ -1456,7 +1574,9 @@ Im Testlauf nicht nachbildbar. Nach dem Merge und einem Build zu prüfen:
 10. **Helles und hellblaues Theme:** Karten liegen mit Schatten auf dem Hintergrund und haben keinen Rand.
 11. **Guter Tag gegen Knopf:** Der grüne Punkt eines guten Tages hat erkennbar eine andere Farbe als die Knöpfe der App.
 12. **Einstellungen:** Alle Abschnittsüberschriften sehen gleich aus, auch „Tägliche Erinnerung".
-13. **Offene Punkte aus Phase 1** (Abnahmepunkte 9 bis 11 aus `2026-08-20-colitis-app-erinnerung-schweregrad.md`) im selben Durchgang miterledigen.
+13. **Toiletten-Tab, helle Themes:** Die eingeblendete Infokarte über der Landkarte hatte bisher immer einen Rand. Jetzt trägt sie im hellen und hellblauen Theme einen Schatten statt des Randes. Prüfen, dass sie sich vor der Karte weiterhin klar absetzt — vor buntem Kartenmaterial ist ein Schatten schwächer als ein Rand. Falls nicht: Das ist der einzige Ort, an dem eine Ausnahme von der Theme-Regel begründbar wäre.
+14. **Vorsorge-Erinnerung** im Medikamente-Tab sitzt weiterhin an derselben Stelle mit demselben Abstand wie vorher.
+15. **Offene Punkte aus Phase 1** (Abnahmepunkte 9 bis 11 aus `2026-08-20-colitis-app-erinnerung-schweregrad.md`) im selben Durchgang miterledigen.
 
 ## Was dieser Plan nicht anfasst
 

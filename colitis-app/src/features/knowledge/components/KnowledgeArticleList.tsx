@@ -1,4 +1,6 @@
-import { FlatList, Pressable, Text, View, StyleSheet } from 'react-native';
+import { FlatList, Pressable, Text, StyleSheet } from 'react-native';
+import { Card } from '../../../components/ui/Card';
+import { EmptyState } from '../../../components/ui/EmptyState';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import type { KnowledgeArticle } from '../types';
@@ -7,25 +9,30 @@ import type { ThemeColors } from '../../../theme/types';
 interface KnowledgeArticleListProps {
   articles: KnowledgeArticle[];
   onSelect: (slug: string) => void;
-  emptyMessage?: string;
+  emptyVariant?: 'search' | 'favorites';
 }
-
-const DEFAULT_EMPTY_MESSAGE = 'Keine Artikel gefunden.';
 
 function teaserFor(body: string): string {
   const trimmed = body.trim();
   return trimmed.length > 100 ? `${trimmed.slice(0, 100)}…` : trimmed;
 }
 
-export function KnowledgeArticleList({ articles, onSelect, emptyMessage = DEFAULT_EMPTY_MESSAGE }: KnowledgeArticleListProps) {
+export function KnowledgeArticleList({ articles, onSelect, emptyVariant = 'search' }: KnowledgeArticleListProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
   if (articles.length === 0) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>{emptyMessage}</Text>
-      </View>
+    return emptyVariant === 'favorites' ? (
+      <EmptyState
+        title="Noch keine Favoriten"
+        description="Markiere einen Artikel als Favorit, dann findest du ihn hier ohne Suchen wieder."
+      />
+    ) : (
+      <EmptyState
+        title="Keine Artikel gefunden"
+        description="Versuch es mit einem anderen Suchbegriff."
+        showGhost={false}
+      />
     );
   }
 
@@ -39,11 +46,12 @@ export function KnowledgeArticleList({ articles, onSelect, emptyMessage = DEFAUL
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Artikel: ${item.title}`}
-          style={styles.card}
           onPress={() => onSelect(item.slug)}
         >
-          <Text style={styles.cardTitle}>{item.title}</Text>
-          <Text style={styles.cardTeaser}>{teaserFor(item.body)}</Text>
+          <Card>
+            <Text style={styles.cardTitle}>{item.title}</Text>
+            <Text style={styles.cardTeaser}>{teaserFor(item.body)}</Text>
+          </Card>
         </Pressable>
       )}
     />
@@ -58,26 +66,7 @@ function makeStyles(colors: ThemeColors) {
     },
     listContent: {
       padding: tokens.spacing.lg,
-    },
-    emptyContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: tokens.spacing.lg,
-      backgroundColor: colors.background,
-    },
-    emptyText: {
-      color: colors.textSecondary,
-      fontSize: tokens.typography.fontSize.md,
-      textAlign: 'center',
-    },
-    card: {
-      backgroundColor: colors.surface,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      padding: tokens.spacing.md,
-      marginBottom: tokens.spacing.md,
+      gap: tokens.spacing.md,
     },
     cardTitle: {
       color: colors.textPrimary,

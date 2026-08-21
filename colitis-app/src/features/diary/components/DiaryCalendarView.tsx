@@ -114,7 +114,9 @@ export function DiaryCalendarView({ entries, onDeleteEntry }: DiaryCalendarViewP
 
       {selectedDate && selectedEntries.length > 0 && (
         <View style={styles.selectedDayList}>
-          <DiaryHistoryList entries={selectedEntries} onDelete={onDeleteEntry} />
+          {/* selectedEntries is always non-empty here, so DiaryHistoryList's empty state
+              (and therefore onCreate) never renders in this context. */}
+          <DiaryHistoryList entries={selectedEntries} onDelete={onDeleteEntry} onCreate={() => {}} />
         </View>
       )}
     </View>

@@ -30,4 +30,19 @@ describe('theme palettes', () => {
     const accentColors = Object.values(palettes).map((colors) => colors.accent.toUpperCase());
     expect(new Set(accentColors).size).toBe(accentColors.length);
   });
+
+  it('separates success from primary in every theme', () => {
+    Object.entries(palettes).forEach(([themeId, colors]) => {
+      expect(colors.success.toUpperCase(), `${themeId}: success darf nicht primary sein`).not.toBe(
+        colors.primary.toUpperCase()
+      );
+    });
+  });
+
+  it('keeps success distinguishable from warning and danger in every theme', () => {
+    Object.entries(palettes).forEach(([themeId, colors]) => {
+      const stateColors = [colors.success, colors.warning, colors.danger].map((value) => value.toUpperCase());
+      expect(new Set(stateColors).size, `${themeId}: Zustandsfarben doppelt`).toBe(3);
+    });
+  });
 });

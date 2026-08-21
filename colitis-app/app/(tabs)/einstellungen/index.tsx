@@ -23,6 +23,7 @@ import { rescheduleDiaryReminder } from '../../../src/features/diary/scheduleDia
 import { rescheduleAllReminders } from '../../../src/features/backup/rescheduleReminders';
 import { BACKUP_FORMAT_VERSION, type BackupData, type BackupEnvelope } from '../../../src/features/backup/types';
 import { useTheme } from '../../../src/theme/ThemeContext';
+import { SectionHeading } from '../../../src/components/ui/SectionHeading';
 import { SliderToggle } from '../../../src/components/SliderToggle';
 import { SwipeableTabScreen } from '../../../src/components/SwipeableTabScreen';
 import { useSwipeNavigation } from '../../../src/navigation/SwipeNavigationContext';
@@ -331,7 +332,7 @@ export default function EinstellungenScreen() {
   return (
     <SwipeableTabScreen tab="einstellungen" style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.sectionTitle}>Darstellung</Text>
+        <SectionHeading>Darstellung</SectionHeading>
         <View style={styles.themeRow}>
           {THEME_OPTIONS.map((option) => (
             <Pressable
@@ -349,7 +350,7 @@ export default function EinstellungenScreen() {
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>Navigation</Text>
+        <SectionHeading>Navigation</SectionHeading>
         <View style={styles.row}>
           <Text style={styles.rowLabel}>Zwischen Tabs wischen</Text>
           <SliderToggle
@@ -361,7 +362,7 @@ export default function EinstellungenScreen() {
 
         <DiaryReminderSettings />
 
-        <Text style={styles.sectionTitle}>App-Sperre</Text>
+        <SectionHeading>App-Sperre</SectionHeading>
         <View style={styles.row}>
           <Text style={styles.rowLabel}>PIN-/Biometrie-Sperre aktivieren</Text>
           <SliderToggle
@@ -421,7 +422,7 @@ export default function EinstellungenScreen() {
           </View>
         )}
 
-        <Text style={styles.sectionTitle}>Wortwitze</Text>
+        <SectionHeading>Wortwitze</SectionHeading>
         <View style={styles.row}>
           <Text style={styles.rowLabel}>Wortwitze des Tages</Text>
           <SliderToggle
@@ -440,7 +441,7 @@ export default function EinstellungenScreen() {
           />
         </View>
 
-        <Text style={styles.sectionTitle}>Backup</Text>
+        <SectionHeading>Backup</SectionHeading>
         {backupMessage && <Text style={styles.backupMessage}>{backupMessage}</Text>}
 
         {backupFormMode === 'export' && (
@@ -488,7 +489,7 @@ export default function EinstellungenScreen() {
           </View>
         )}
 
-        <Text style={styles.sectionTitle}>Backup-Erinnerung</Text>
+        <SectionHeading>Backup-Erinnerung</SectionHeading>
         <View style={styles.row}>
           <Text style={styles.rowLabel}>Erinnerung aktivieren</Text>
           <SliderToggle
@@ -531,13 +532,6 @@ function makeStyles(colors: ThemeColors) {
     },
     content: {
       padding: tokens.spacing.lg,
-    },
-    sectionTitle: {
-      color: colors.textPrimary,
-      fontSize: tokens.typography.fontSize.lg,
-      fontWeight: tokens.typography.fontWeight.bold,
-      marginTop: tokens.spacing.lg,
-      marginBottom: tokens.spacing.sm,
     },
     themeRow: {
       flexDirection: 'row',

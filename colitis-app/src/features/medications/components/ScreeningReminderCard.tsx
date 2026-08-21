@@ -3,6 +3,7 @@ import { useFocusEffect } from 'expo-router';
 import { Alert, Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
+import { Card } from '../../../components/ui/Card';
 import { isValidCalendarDate } from '../dateValidation';
 import type { ScreeningReminder, NewScreeningReminderInput } from '../types';
 import type { ThemeColors } from '../../../theme/types';
@@ -76,7 +77,7 @@ export function ScreeningReminderCard({ reminder, onSave, onDelete }: ScreeningR
 
   if (reminder && !isEditing) {
     return (
-      <View style={styles.card}>
+      <Card style={styles.cardPosition}>
         <Text style={styles.title}>Vorsorge-Koloskopie</Text>
         <Text style={styles.label}>Nächstes fälliges Datum</Text>
         <Text style={styles.viewValue}>{reminder.nextDueDate}</Text>
@@ -96,12 +97,12 @@ export function ScreeningReminderCard({ reminder, onSave, onDelete }: ScreeningR
             <Text style={styles.deleteButtonText}>Löschen</Text>
           </Pressable>
         </View>
-      </View>
+      </Card>
     );
   }
 
   return (
-    <View style={styles.card}>
+    <Card style={styles.cardPosition}>
       <Text style={styles.title}>Vorsorge-Koloskopie</Text>
       <Text style={styles.hintText}>
         Für die Erinnerung wird beim Speichern die Benachrichtigungserlaubnis angefragt. Bei Ablehnung wird der
@@ -149,18 +150,13 @@ export function ScreeningReminderCard({ reminder, onSave, onDelete }: ScreeningR
           </Pressable>
         )}
       </View>
-    </View>
+    </Card>
   );
 }
 
 function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    card: {
-      backgroundColor: colors.surface,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      padding: tokens.spacing.md,
+    cardPosition: {
       margin: tokens.spacing.lg,
       marginBottom: 0,
     },

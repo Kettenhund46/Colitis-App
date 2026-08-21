@@ -5,6 +5,7 @@ import { createEncryptedDb } from '../../../../src/db/client';
 import { listDoctorVisits, deleteDoctorVisit } from '../../../../src/features/doctorVisits/db/doctorVisitsRepository';
 import { exportDoctorVisitPass } from '../../../../src/features/doctorVisits/doctorVisitPassExport';
 import { DoctorVisitList } from '../../../../src/features/doctorVisits/components/DoctorVisitList';
+import { SkeletonList } from '../../../../src/components/ui/SkeletonList';
 import { useTheme } from '../../../../src/theme/ThemeContext';
 import { tokens } from '../../../../src/styles/tokens';
 import type { DoctorVisit } from '../../../../src/features/doctorVisits/types';
@@ -103,11 +104,10 @@ export default function ArztbesucheScreen() {
         </Text>
       </Pressable>
       {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Arztbesuche werden geladen …</Text>
-        </View>
+        <SkeletonList count={3} lines={2} />
       ) : (
         <DoctorVisitList
+          onCreate={() => router.push('/tagebuch/arztbesuche/neu')}
           visits={visits}
           onEdit={(visitId) => router.push(`/tagebuch/arztbesuche/${visitId}`)}
           onDelete={handleDelete}
@@ -149,16 +149,6 @@ function makeStyles(colors: ThemeColors) {
       fontSize: tokens.typography.fontSize.sm,
       fontWeight: tokens.typography.fontWeight.medium,
       textAlign: 'center',
-    },
-    loadingContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: tokens.spacing.lg,
-    },
-    loadingText: {
-      color: colors.textSecondary,
-      fontSize: tokens.typography.fontSize.md,
     },
     addButton: {
       position: 'absolute',

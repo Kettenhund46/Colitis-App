@@ -11,6 +11,7 @@ import { DiaryHistoryList } from '../../../src/features/diary/components/DiaryHi
 import { DiaryCalendarView } from '../../../src/features/diary/components/DiaryCalendarView';
 import { FlareWarningBanner } from '../../../src/features/diary/components/FlareWarningBanner';
 import { SwipeableTabScreen } from '../../../src/components/SwipeableTabScreen';
+import { SkeletonList } from '../../../src/components/ui/SkeletonList';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { DiaryEntryWithTriggers } from '../../../src/features/diary/types';
@@ -191,11 +192,13 @@ export default function TagebuchScreen() {
         </Pressable>
       </View>
       {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Einträge werden geladen …</Text>
-        </View>
+        <SkeletonList count={3} lines={3} />
       ) : viewMode === 'list' ? (
-        <DiaryHistoryList entries={entries} onDelete={handleDelete} />
+        <DiaryHistoryList
+          entries={entries}
+          onDelete={handleDelete}
+          onCreate={() => router.push('/tagebuch/neu')}
+        />
       ) : (
         <DiaryCalendarView entries={entries} onDeleteEntry={handleDelete} />
       )}
@@ -291,16 +294,6 @@ function makeStyles(colors: ThemeColors) {
     },
     headerButtonDisabled: {
       opacity: 0.5,
-    },
-    loadingContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: tokens.spacing.lg,
-    },
-    loadingText: {
-      color: colors.textSecondary,
-      fontSize: tokens.typography.fontSize.md,
     },
     addButton: {
       position: 'absolute',

@@ -27,6 +27,7 @@ import { exportMedicationPass } from '../../../src/features/medications/medicati
 import { MedicationList } from '../../../src/features/medications/components/MedicationList';
 import { ScreeningReminderCard } from '../../../src/features/medications/components/ScreeningReminderCard';
 import { SwipeableTabScreen } from '../../../src/components/SwipeableTabScreen';
+import { SkeletonList } from '../../../src/components/ui/SkeletonList';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type {
@@ -237,11 +238,10 @@ export default function MedikamenteScreen() {
         </Text>
       </Pressable>
       {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Medikamente werden geladen …</Text>
-        </View>
+        <SkeletonList count={3} lines={2} />
       ) : (
         <MedicationList
+          onCreate={() => router.push('/medikamente/neu')}
           medications={medications}
           today={new Date()}
           takenTodayIds={takenTodayIds}
@@ -287,16 +287,6 @@ function makeStyles(colors: ThemeColors) {
       fontSize: tokens.typography.fontSize.sm,
       fontWeight: tokens.typography.fontWeight.medium,
       textAlign: 'center',
-    },
-    loadingContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: tokens.spacing.lg,
-    },
-    loadingText: {
-      color: colors.textSecondary,
-      fontSize: tokens.typography.fontSize.md,
     },
     addButton: {
       position: 'absolute',

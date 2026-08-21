@@ -3,8 +3,10 @@ import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import { STOOL_CONSISTENCY_OPTIONS, SYMPTOM_OPTIONS, labelFor, buildTriggerLabels } from '../constants';
 import { formatOccurredAt } from '../formatting';
-import { buildDayRatings, formatDateKey } from '../calendarLogic';
+import { buildDayRatings, formatDateKey, accentForRating } from '../calendarLogic';
 import { RatingIndicator, RATING_LABELS } from './RatingIndicator';
+import { Card } from '../../../components/ui/Card';
+import { EmptyState } from '../../../components/ui/EmptyState';
 import type { DiaryEntryWithTriggers } from '../types';
 import type { DayRating } from '../calendarLogic';
 import type { ThemeColors } from '../../../theme/types';
@@ -12,20 +14,21 @@ import type { ThemeColors } from '../../../theme/types';
 interface DiaryHistoryListProps {
   entries: DiaryEntryWithTriggers[];
   onDelete: (entryId: number) => void;
+  onCreate: () => void;
 }
 
-export function DiaryHistoryList({ entries, onDelete }: DiaryHistoryListProps) {
+export function DiaryHistoryList({ entries, onDelete, onCreate }: DiaryHistoryListProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const dayRatings = buildDayRatings(entries);
 
   if (entries.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>
-          Noch keine Einträge. Tippe auf „+“, um deinen ersten Eintrag anzulegen.
-        </Text>
-      </View>
+      <EmptyState
+        title="Dein Tagebuch ist noch leer"
+        description="Hier sammeln sich deine Tage — Stuhlgang, Schmerz, Blut und was du dazu notierst. Nach einigen Einträgen zeigt die Auswertung, welche Auslöser mit stärkeren Beschwerden zusammenfallen."
+        action={{ label: 'Ersten Eintrag anlegen', onPress: onCreate }}
+      />
     );
   }
 
@@ -39,45 +42,46 @@ export function DiaryHistoryList({ entries, onDelete }: DiaryHistoryListProps) {
         const rating = dayRatings.get(formatDateKey(new Date(item.occurredAt)));
 
         return (
-          <View
-            style={styles.card}
-            accessibilityRole="text"
-            accessibilityLabel={buildCardAccessibilityLabel(item, rating)}
-          >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardDate}>{formatOccurredAt(item.occurredAt)}</Text>
-              {rating !== undefined && (
-                <View style={styles.ratingBadge}>
-                  <RatingIndicator rating={rating} />
-                  <Text style={styles.ratingText}>Tag: {RATING_LABELS[rating]}</Text>
-                </View>
-              )}
-            </View>
-            <Text style={styles.cardDetail}>
-              Stuhlgang: {item.stoolFrequency}× · {labelFor(STOOL_CONSISTENCY_OPTIONS, item.stoolConsistency)}
-            </Text>
-            <Text style={styles.cardDetail}>Schmerzlevel: {item.painLevel}/10</Text>
-            {item.hasBlood && <Text style={styles.cardWarning}>Blut im Stuhl</Text>}
-            {item.triggerCategories.length > 0 && (
-              <Text style={styles.cardDetail}>
-                Auslöser: {buildTriggerLabels(item.triggerCategories, item.foodTriggerNote).join(', ')}
-              </Text>
-            )}
-            {item.symptoms.length > 0 && (
-              <Text style={styles.cardDetail}>
-                Symptome: {item.symptoms.map((symptomKey) => labelFor(SYMPTOM_OPTIONS, symptomKey)).join(', ')}
-              </Text>
-            )}
-            {item.note && <Text style={styles.cardNote}>{item.note}</Text>}
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Eintrag vom ${formatOccurredAt(item.occurredAt)} löschen`}
-              style={styles.deleteButton}
-              onPress={() => onDelete(item.id)}
+          <Card accent={accentForRating(rating)}>
+            <View
+              accessibilityRole="text"
+              accessibilityLabel={buildCardAccessibilityLabel(item, rating)}
             >
-              <Text style={styles.deleteButtonText}>Löschen</Text>
-            </Pressable>
-          </View>
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardDate}>{formatOccurredAt(item.occurredAt)}</Text>
+                {rating !== undefined && (
+                  <View style={styles.ratingBadge}>
+                    <RatingIndicator rating={rating} />
+                    <Text style={styles.ratingText}>Tag: {RATING_LABELS[rating]}</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.cardDetail}>
+                Stuhlgang: {item.stoolFrequency}× · {labelFor(STOOL_CONSISTENCY_OPTIONS, item.stoolConsistency)}
+              </Text>
+              <Text style={styles.cardDetail}>Schmerzlevel: {item.painLevel}/10</Text>
+              {item.hasBlood && <Text style={styles.cardWarning}>Blut im Stuhl</Text>}
+              {item.triggerCategories.length > 0 && (
+                <Text style={styles.cardDetail}>
+                  Auslöser: {buildTriggerLabels(item.triggerCategories, item.foodTriggerNote).join(', ')}
+                </Text>
+              )}
+              {item.symptoms.length > 0 && (
+                <Text style={styles.cardDetail}>
+                  Symptome: {item.symptoms.map((symptomKey) => labelFor(SYMPTOM_OPTIONS, symptomKey)).join(', ')}
+                </Text>
+              )}
+              {item.note && <Text style={styles.cardNote}>{item.note}</Text>}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Eintrag vom ${formatOccurredAt(item.occurredAt)} löschen`}
+                style={styles.deleteButton}
+                onPress={() => onDelete(item.id)}
+              >
+                <Text style={styles.deleteButtonText}>Löschen</Text>
+              </Pressable>
+            </View>
+          </Card>
         );
       }}
     />
@@ -100,26 +104,7 @@ function makeStyles(colors: ThemeColors) {
     },
     listContent: {
       padding: tokens.spacing.lg,
-    },
-    emptyContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: tokens.spacing.lg,
-      backgroundColor: colors.background,
-    },
-    emptyText: {
-      color: colors.textSecondary,
-      fontSize: tokens.typography.fontSize.md,
-      textAlign: 'center',
-    },
-    card: {
-      backgroundColor: colors.surface,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      padding: tokens.spacing.md,
-      marginBottom: tokens.spacing.md,
+      gap: tokens.spacing.md,
     },
     cardHeader: {
       flexDirection: 'row',

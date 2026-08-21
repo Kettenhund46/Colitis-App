@@ -13,6 +13,7 @@ import { isValidReminderTime } from '../../medications/reminderScheduling';
 import { rescheduleDiaryReminder } from '../scheduleDiaryReminder';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
+import { SectionHeading } from '../../../components/ui/SectionHeading';
 import type { DiaryReminderResult } from '../scheduleDiaryReminder';
 import type { ThemeColors } from '../../../theme/types';
 
@@ -152,7 +153,7 @@ export function DiaryReminderSettings() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Tägliche Erinnerung</Text>
+      <SectionHeading>Tägliche Erinnerung</SectionHeading>
 
       {error && <Text style={styles.errorText}>{error}</Text>}
 
@@ -194,13 +195,6 @@ export function DiaryReminderSettings() {
 function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: {
-      marginBottom: tokens.spacing.sm,
-    },
-    heading: {
-      color: colors.textPrimary,
-      fontSize: tokens.typography.fontSize.lg,
-      fontWeight: tokens.typography.fontWeight.bold,
-      marginTop: tokens.spacing.lg,
       marginBottom: tokens.spacing.sm,
     },
     row: {
