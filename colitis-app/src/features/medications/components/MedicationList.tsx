@@ -2,6 +2,8 @@ import { FlatList, Pressable, Text, View, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import { isMedicationActive } from '../medicationStatus';
+import { Card } from '../../../components/ui/Card';
+import { EmptyState } from '../../../components/ui/EmptyState';
 import type { Medication } from '../types';
 import type { ThemeColors } from '../../../theme/types';
 
@@ -13,6 +15,7 @@ interface MedicationListProps {
   onEnd: (medicationId: number) => void;
   onEdit: (medicationId: number) => void;
   onDelete: (medicationId: number) => void;
+  onCreate: () => void;
 }
 
 export function MedicationList({
@@ -23,17 +26,18 @@ export function MedicationList({
   onEnd,
   onEdit,
   onDelete,
+  onCreate,
 }: MedicationListProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
   if (medications.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>
-          Noch keine Medikamente. Tippe auf „+“, um dein erstes Medikament anzulegen.
-        </Text>
-      </View>
+      <EmptyState
+        title="Noch keine Medikamente hinterlegt"
+        description="Trage ein, was du nimmst — Dosis, Zeitplan und Erinnerungszeiten. Die App meldet sich dann von selbst zur richtigen Zeit."
+        action={{ label: 'Erstes Medikament anlegen', onPress: onCreate }}
+      />
     );
   }
 
@@ -50,7 +54,7 @@ export function MedicationList({
         const isActive = isMedicationActive(item.endDate, today);
         const isTakenToday = takenTodayIds.has(item.id);
         return (
-          <View style={[styles.card, !isActive && styles.cardEnded]}>
+          <Card accent={isActive ? 'good' : 'neutral'} isMuted={!isActive}>
             <Text style={styles.cardName}>{item.name}</Text>
             <Text style={styles.cardDetail}>
               {item.dose} · {item.schedule}
@@ -115,7 +119,7 @@ export function MedicationList({
                 <Text style={styles.deleteButtonText}>Löschen</Text>
               </Pressable>
             </View>
-          </View>
+          </Card>
         );
       }}
     />
@@ -125,24 +129,7 @@ export function MedicationList({
 function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
     list: { flex: 1, backgroundColor: colors.background },
-    listContent: { padding: tokens.spacing.lg },
-    emptyContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: tokens.spacing.lg,
-      backgroundColor: colors.background,
-    },
-    emptyText: { color: colors.textSecondary, fontSize: tokens.typography.fontSize.md, textAlign: 'center' },
-    card: {
-      backgroundColor: colors.surface,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      padding: tokens.spacing.md,
-      marginBottom: tokens.spacing.md,
-    },
-    cardEnded: { opacity: 0.6 },
+    listContent: { padding: tokens.spacing.lg, gap: tokens.spacing.md },
     cardName: {
       color: colors.textPrimary,
       fontSize: tokens.typography.fontSize.md,
