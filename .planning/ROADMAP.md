@@ -29,7 +29,7 @@ bekommen.
 | Phase | Ziel | Status |
 |------|------|--------|
 | 1 | Ans Eintragen erinnert werden und den Schweregrad beim Scrollen sehen | in_progress |
-| 2 | Die App sieht nach Gestaltung aus, nicht nach Formular | todo |
+| 2 | Die App sieht nach Gestaltung aus, nicht nach Formular | in_progress |
 | 3 | Löschen geht per Wischen und die Bedienung fühlt sich spürbar an | todo |
 | 4 | Medikamenteneinnahme lässt sich abhaken und nachvollziehen | todo |
 | 5 | Ein Arzttermin lässt sich mit einer Zusammenfassung vorbereiten | todo |
@@ -110,6 +110,52 @@ jeden Inhalt in gleich aussehende Zeilen mit einem Pixel Rand zu setzen.
 (warmes Creme, Salbeigrün, gedämpftes Orange) und wird von den Layouts kaum
 abgerufen. Fünf Leerzustände existieren, alle als nackter Text.
 
+**Stand am 2026-08-21:** Neun Aufgaben umgesetzt und nach `main` übernommen
+(Merge `24dad83`), 477 Tests grün, Typprüfung sauber. Build
+`497e94c7-6f30-42db-9af0-dd7ca42f4d4e` fertig. Die Phase gilt erst als
+abgeschlossen, wenn der Gerätedurchgang aus dem Umsetzungsplan durch ist —
+Gestaltung ist im Testlauf nicht nachbildbar.
+
+Entwurf: `docs/superpowers/specs/2026-08-20-colitis-app-gestaltungssprache-design.md`
+Plan mit 15 Abnahmepunkten: `docs/superpowers/plans/2026-08-20-colitis-app-gestaltungssprache.md`
+
+Es waren ursprünglich acht Aufgaben. Der Abschlussgrep der achten fand drei
+weitere echte Kartenkopien, die die Dateiliste des Plans übersehen hatte —
+`ScreeningReminderCard`, `SavedPlaceInfoCard`, `ToiletInfoCard`. Entscheidung
+des Nutzers: mitnehmen statt vertagen. Daher Aufgabe 9. Übrig bleiben genau
+zwei `borderRadius: 12`, beide in Formularen und laut Entwurf außerhalb.
+
+Die Schlussdurchsicht fand nichts Kritisches und zwei wichtige Punkte, beide
+behoben in `5bebafd`: `EmptyState` hatte `flex: 1`, also `flexBasis: 0` — im
+Verlaufsdiagramm sitzt es in einem Container ohne `flex` innerhalb einer
+ScrollView, der Leerzustand wäre auf Android verschwunden. Dazu ein toter
+`View`-Import, den `tsc` hier nicht meldet, weil `noUnusedLocals` nicht
+gesetzt ist.
+
+**Erfolgskriterium 4 ist nur teilweise eingelöst.** Weil `success` in allen
+drei Themes grün bleiben sollte, teilen sich Hell und Hellblau jetzt denselben
+Grünton *und* dieselbe Flächenbehandlung (Schatten). Auf der
+Zustandsfarben-Achse ist Hellblau damit eher eine Ableitung von Hell als
+vorher. Dunkel ist echt eigenständig. Das ist eine Schwäche der
+Entwurfsentscheidung, nicht der Umsetzung.
+
+**Auf dem Gerät zu klären, aus der Schlussdurchsicht:**
+- Die neutrale Kante greift auf `colors.border` zu — als 1 px Trennlinie richtig, als 4 px Zustandskante womöglich fast unsichtbar; im dunklen Theme gleicht sie exakt dem Kartenrand. Betrifft beendete Medikamente und Arztbesuche. Falls sie nichts sagt: eine Konstante in `cardStyle.ts`
+- Toiletten-Tab: Die Einblendung über der Landkarte hat in den hellen Themes jetzt Schatten statt Rand. Vor buntem Kartenmaterial ist ein Schatten schwächer — der einzige Ort, an dem eine Ausnahme von der Theme-Regel begründbar wäre
+- Neuigkeiten: Ungelesene tragen eine Kante, gelesene nicht. React Native zeichnet Ränder nach innen, der Text ungelesener Karten beginnt also 4 px weiter rechts — in gemischter Liste ein ausgefranster linker Rand
+- Arztbesuche: `accent="neutral"` steht auf jeder Zeile unbedingt und unterscheidet damit nichts
+
+**Kleinere Befunde, bewusst offengelassen:**
+- Wissens-Suche: Bei leerer Abfrage *und* leerer Artikeltabelle steht dort „Versuch es mit einem anderen Suchbegriff", obwohl es keinen gibt
+- `palettes.test.ts` prüft Ungleichheit, nicht Kontrast. Die gewählten Werte sind in Ordnung (`#3E8E4F` auf Weiß etwa 4,2:1), der Test ließe aber auch schlechte durch
+- `GhostCard` hat ein `hasHeaderBadge`, das kein Aufrufer je übergibt
+- `GhostCard`/`SkeletonList` klemmen `count` und `lines` still auf mindestens 1
+- Die Zuordnung Zustand → Kante wurde nur im Tagebuch in eine reine Funktion gezogen (`accentForRating`, getestet). Die gleichartigen Entscheidungen in `MedicationList` und `NewsFeedList` stehen im JSX und sind damit ungeprüft
+
+**Für Phase 3 gelernt:** Den Abschlussgrep zum festen Schritt der letzten
+Aufgabe machen — er hat mehr gefunden als jede einzelne Durchsicht. Daneben
+einen Durchgang auf unbenutzte Importe, weil `tsc` die hier nicht meldet.
+
 ---
 
 ### Phase 3 — Bedienung
@@ -142,6 +188,13 @@ lassen sich festhalten und im Rückblick nachvollziehen.
 - Die Einnahmedaten sind in Sicherung und Wiederherstellung enthalten
 
 **Depends on:** Phase 2 (folgt der dort festgelegten Gestaltungssprache)
+
+**Achtung, diese Phase ist teilweise schon gebaut.** Beim Lesen von
+`MedicationList.tsx` in Phase 2 fiel auf, dass es dort bereits einen Knopf
+„Heute genommen ✓" mit `takenTodayIds` und `onTakenToday` gibt. Vor dem
+Entwurf dieser Phase ist zu klären, was davon schon steht und welche der vier
+Erfolgskriterien damit bereits erfüllt sind — sonst wird hier etwas zum
+zweiten Mal gebaut.
 
 ---
 
