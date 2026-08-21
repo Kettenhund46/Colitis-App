@@ -1440,6 +1440,124 @@ git commit -m "feat: Wissen und Neuigkeiten auf die gemeinsame Karte umstellen"
 
 ---
 
+### Task 9: Die drei übersehenen Karten
+
+**Warum:** Beim Abschlussgrep in Task 8 blieben fünf `borderRadius: 12` übrig. Zwei davon stecken im Einstellungen-Bildschirm und im Backup-Formular und bleiben bewusst liegen — Formulare stehen im Entwurf außerhalb. Die anderen drei sind echte Kartenkopien in Dateien, die wörtlich „Card" heißen, und wurden von der Dateiliste dieses Plans schlicht übersehen. Bleiben sie, hat die App nach Phase 2 weiter zwei Gestaltungssprachen — der Fehler, wegen dem Phase 2 begonnen wurde, nur an anderer Stelle. Entscheidung des Nutzers: mitnehmen.
+
+**Files:**
+- Modify: `src/features/medications/components/ScreeningReminderCard.tsx`
+- Modify: `src/features/toilets/components/SavedPlaceInfoCard.tsx`
+- Modify: `src/features/toilets/components/ToiletInfoCard.tsx`
+
+**Interfaces:**
+- Consumes: `Card` aus `src/components/ui/Card`
+- Produces: nichts. Keine Prop-Änderung, keine Signatur-Änderung, kein Aufrufer merkt etwas.
+
+**Keine Kante in diesem Task.** Alle drei sind Einzelkarten, keine Listeneinträge mit Zustand. Die Regel „Kante, wo eine Liste einen Zustand hat" greift hier nicht — also `<Card>` ohne `accent`. Auch die Vorsorge-Erinnerung bekommt keine, obwohl sie inhaltlich mahnt; das wäre eine neue Gestaltungsentscheidung und gehört nicht in eine Angleichung.
+
+- [ ] **Step 1: `ScreeningReminderCard` umstellen**
+
+Diese Datei benutzt `<View style={styles.card}>` an **zwei** Stellen (etwa Zeile 79 und 104). Beide ersetzen.
+
+Der `card`-Eintrag trägt neben dem Flächenmuster eine Positionierung:
+
+```tsx
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: tokens.spacing.md,
+      margin: tokens.spacing.lg,
+      marginBottom: 0,
+    },
+```
+
+Fläche, Rundung, Rand und Polsterung übernimmt künftig `Card`. Die Positionierung bleibt und wird durchgereicht. Ersetze den Eintrag durch:
+
+```tsx
+    cardPosition: {
+      margin: tokens.spacing.lg,
+      marginBottom: 0,
+    },
+```
+
+und beide Verwendungen durch:
+
+```tsx
+      <Card style={styles.cardPosition}>
+```
+
+mit dem passenden schließenden `</Card>` statt `</View>`.
+
+Import ergänzen: `import { Card } from '../../../components/ui/Card';`
+
+- [ ] **Step 2: `SavedPlaceInfoCard` und `ToiletInfoCard` umstellen**
+
+Beide Dateien haben denselben `card`-Eintrag — eine über der Karte schwebende Einblendung:
+
+```tsx
+    card: {
+      position: 'absolute',
+      left: tokens.spacing.md,
+      right: tokens.spacing.md,
+      bottom: tokens.spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: tokens.spacing.md,
+    },
+```
+
+In **beiden** Dateien ersetzen durch:
+
+```tsx
+    cardPosition: {
+      position: 'absolute',
+      left: tokens.spacing.md,
+      right: tokens.spacing.md,
+      bottom: tokens.spacing.md,
+    },
+```
+
+und das äußere `<View style={styles.card}>` durch `<Card style={styles.cardPosition}>` samt schließendem `</Card>`.
+
+Import in beiden: `import { Card } from '../../../components/ui/Card';`
+
+**Die inneren `Pressable` bleiben unangetastet.** In beiden Dateien ist das äußere Element ein `View`, die `Pressable` darin sind Knöpfe. Hier wird nichts verschachtelt wie bei den Listen aus Task 7.
+
+- [ ] **Step 3: Prüfen, dass nur die beiden gewollten Treffer übrig sind**
+
+```bash
+grep -rn "borderRadius: 12" --include=*.tsx app src
+```
+
+Erwartet: genau zwei Treffer — `app/(tabs)/einstellungen/index.tsx` und `src/features/backup/components/BackupPasswordForm.tsx`. Beide bleiben stehen, sie gehören zu Formularen und stehen im Entwurf außerhalb dieser Phase.
+
+- [ ] **Step 4: Typprüfung und vollständiger Testlauf**
+
+```bash
+npx.cmd tsc --noEmit
+```
+
+Erwartet: keine Ausgabe. Meldet TypeScript ein unbenutztes `View`, prüfe erst mit `grep`, ob `View` in der Datei wirklich nirgends mehr vorkommt — in allen drei Dateien wird es für innere Zeilen weiter gebraucht.
+
+```bash
+npm test
+```
+
+Erwartet: PASS, 477 Tests.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/features/medications/components/ScreeningReminderCard.tsx src/features/toilets/components/SavedPlaceInfoCard.tsx src/features/toilets/components/ToiletInfoCard.tsx
+git commit -m "feat: uebersehene Einzelkarten auf die gemeinsame Karte umstellen"
+```
+
+---
+
 ## Abnahme auf dem Gerät
 
 Im Testlauf nicht nachbildbar. Nach dem Merge und einem Build zu prüfen:
