@@ -368,7 +368,7 @@ export function isDeleteSwipe({ startX, dx, dy, screenWidth }: SwipeAttempt): bo
 npm test -- src/components/swipe/swipeDecision.test.ts
 ```
 
-Erwartet: PASS, 8 Tests.
+Erwartet: PASS, 9 Tests.
 
 - [ ] **Step 5: `SwipeableTabScreen` auf den gemeinsamen Wert bringen**
 
@@ -399,7 +399,7 @@ Erwartet: keine Ausgabe.
 npm test
 ```
 
-Erwartet: PASS, 492 Tests (484 + 8).
+Erwartet: PASS, 493 Tests (484 + 9).
 
 - [ ] **Step 7: Commit**
 
@@ -513,7 +513,7 @@ Erwartet: keine Ausgabe.
 npm test
 ```
 
-Erwartet: PASS, 492 Tests unverändert. Diese beiden Dateien bekommen keine Tests — `expo-haptics` und `AccessibilityInfo` sind Laufzeitschnittstellen des Geräts.
+Erwartet: PASS, 493 Tests unverändert. Diese beiden Dateien bekommen keine Tests — `expo-haptics` und `AccessibilityInfo` sind Laufzeitschnittstellen des Geräts.
 
 - [ ] **Step 5: Commit**
 
@@ -812,7 +812,7 @@ Erwartet: keine Ausgabe.
 npm test
 ```
 
-Erwartet: PASS, 492 Tests unverändert. Diese drei Dateien bekommen keine Tests — das Prüfbare liegt in Task 1 und 2.
+Erwartet: PASS, 493 Tests unverändert. Diese drei Dateien bekommen keine Tests — das Prüfbare liegt in Task 1 und 2.
 
 - [ ] **Step 5: Commit**
 
@@ -948,7 +948,7 @@ Erwartet: keine Ausgabe.
 npm test
 ```
 
-Erwartet: PASS, 492 Tests.
+Erwartet: PASS, 493 Tests.
 
 - [ ] **Step 5: Commit**
 
@@ -1074,7 +1074,7 @@ Erwartet: keine Ausgabe.
 npm test
 ```
 
-Erwartet: PASS, 492 Tests.
+Erwartet: PASS, 493 Tests.
 
 - [ ] **Step 5: Commit**
 
@@ -1189,7 +1189,7 @@ Erwartet: keine Ausgabe. Meldet TypeScript einen unbenutzten Import, prüfe erst
 npm test
 ```
 
-Erwartet: PASS, 492 Tests.
+Erwartet: PASS, 493 Tests.
 
 - [ ] **Step 6: Abschlussgrep auf unbenutzte Importe**
 
