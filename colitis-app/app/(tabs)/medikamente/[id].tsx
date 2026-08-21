@@ -14,6 +14,7 @@ import {
 } from '../../../src/lib/notifications/notificationService';
 import { buildMedicationReminderContent } from '../../../src/features/medications/notifications/reminderContent';
 import { MedicationForm } from '../../../src/features/medications/components/MedicationForm';
+import { saveFeedback } from '../../../src/lib/haptics';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { Medication, MedicationInput } from '../../../src/features/medications/types';
@@ -79,6 +80,7 @@ export default function MedikamentBearbeitenScreen() {
       }
 
       setSaveError(null);
+      saveFeedback();
       router.back();
     } catch (error: unknown) {
       console.error('[Medikamente] Bearbeiten fehlgeschlagen:', error);

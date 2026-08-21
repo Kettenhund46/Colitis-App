@@ -14,6 +14,7 @@ import {
   buildQuickEntryUpdate,
 } from '../../../src/features/diary/quickEntryLogic';
 import { STOOL_CONSISTENCY_OPTIONS } from '../../../src/features/diary/constants';
+import { saveFeedback } from '../../../src/lib/haptics';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { StoolConsistency } from '../../../src/features/diary/constants';
@@ -97,6 +98,7 @@ export default function SchnellEintragScreen() {
         );
       }
 
+      saveFeedback();
       const entries = await listDiaryEntries(db);
       if (isMountedRef.current) {
         setSummary(summarizeToday(entries, new Date()));

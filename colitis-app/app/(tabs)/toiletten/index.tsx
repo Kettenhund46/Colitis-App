@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { Alert, Linking, Text, View, StyleSheet } from 'react-native';
+import { Linking, Text, View, StyleSheet } from 'react-native';
 import * as Location from 'expo-location';
 import {
   beginPendingPermissionRequest,
@@ -30,6 +30,8 @@ import {
 } from '../../../src/features/toilets/db/savedPlacesRepository';
 import { replaceCachedToilets, listCachedToilets } from '../../../src/features/toilets/db/cachedToiletsRepository';
 import { SwipeableTabScreen } from '../../../src/components/SwipeableTabScreen';
+import { usePendingDeletion } from '../../../src/features/deletion/usePendingDeletion';
+import { UndoBar } from '../../../src/components/ui/UndoBar';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { Coordinates, SavedPlace, SavedPlaceInput, Toilet } from '../../../src/features/toilets/types';
@@ -225,26 +227,21 @@ export default function ToilettenScreen() {
     }
   }
 
+  const { pending, requestDelete, undo } = usePendingDeletion<number>(async (placeId) => {
+    try {
+      const db = await createEncryptedDb();
+      await deleteSavedPlace(db, placeId);
+      setPlaceError(null);
+      setSelectedMarker(null);
+      await reloadSavedPlaces();
+    } catch (error: unknown) {
+      console.error('[Toiletten] Sicheren Ort löschen fehlgeschlagen:', error);
+      setPlaceError('Sicherer Ort konnte nicht gelöscht werden.');
+    }
+  });
+
   function handleDeletePlace(place: SavedPlace) {
-    Alert.alert('Sicheren Ort löschen?', `"${place.name}" wird endgültig gelöscht.`, [
-      { text: 'Abbrechen', style: 'cancel' },
-      {
-        text: 'Löschen',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            const db = await createEncryptedDb();
-            await deleteSavedPlace(db, place.id);
-            setPlaceError(null);
-            setSelectedMarker(null);
-            await reloadSavedPlaces();
-          } catch (error: unknown) {
-            console.error('[Toiletten] Sicheren Ort löschen fehlgeschlagen:', error);
-            setPlaceError('Sicherer Ort konnte nicht gelöscht werden.');
-          }
-        },
-      },
-    ]);
+    requestDelete({ id: place.id, label: place.name });
   }
 
   function handleNavigate(destination: Coordinates) {
@@ -322,6 +319,7 @@ export default function ToilettenScreen() {
           onCancel={() => setFormState(null)}
         />
       )}
+      {pending !== null && <UndoBar label={pending.label} onUndo={undo} />}
     </SwipeableTabScreen>
   );
 }
