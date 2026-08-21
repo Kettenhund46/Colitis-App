@@ -1,6 +1,7 @@
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
+import { Card } from '../../../components/ui/Card';
 import type { Toilet } from '../types';
 import type { ThemeColors } from '../../../theme/types';
 
@@ -22,7 +23,7 @@ export function ToiletInfoCard({ toilet, distanceMeters, onNavigate, onClose }: 
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   return (
-    <View style={styles.card}>
+    <Card style={styles.cardPosition}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Infokarte schließen"
@@ -42,22 +43,17 @@ export function ToiletInfoCard({ toilet, distanceMeters, onNavigate, onClose }: 
       >
         <Text style={styles.navigateButtonText}>Route dorthin</Text>
       </Pressable>
-    </View>
+    </Card>
   );
 }
 
 function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    card: {
+    cardPosition: {
       position: 'absolute',
       left: tokens.spacing.md,
       right: tokens.spacing.md,
       bottom: tokens.spacing.md,
-      backgroundColor: colors.surface,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      padding: tokens.spacing.md,
     },
     closeButton: {
       position: 'absolute',
