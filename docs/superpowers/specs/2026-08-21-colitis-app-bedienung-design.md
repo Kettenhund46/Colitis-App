@@ -53,6 +53,16 @@ erst die zugehörigen `triggers`-Zeilen, dann den Eintrag.
    demselben Bildschirm, kein Risiko für Tab-Geste und Leaflet-Karte.
 3. **Rückgängig gilt überall**, auch bei den beiden Einzelkarten ohne
    Wischgeste. Eine Regel für alle fünf Löschwege.
+
+   **Nachtrag 2026-08-21, eine bewusste Ausnahme.** Beim Schreiben des
+   Umsetzungsplans zeigte sich, dass der Vorsorge-Termin im
+   Medikamente-Bildschirm sitzt, der dort bereits einen wartenden Vorgang für
+   Medikamente hat. Der Automat lässt nur einen gleichzeitig zu; zwei
+   verschiedene Dinge auf einem Bildschirm bräuchten einen gemeinsamen Platz
+   mit unterscheidbarer Kennung, und die Karte klappt beim Löschen ohnehin
+   sofort ins Eingabefeld auf. Dem Nutzer vorgelegt, Entscheidung: **Der
+   Vorsorge-Termin verliert den Dialog, bekommt aber kein Rückgängig.** Damit
+   gilt Rückgängig an vier der fünf Löschwege.
 4. **Kein eigener Haptik-Schalter.** Android und iOS haben je einen systemweiten;
    `expo-haptics` folgt ihm von selbst.
 

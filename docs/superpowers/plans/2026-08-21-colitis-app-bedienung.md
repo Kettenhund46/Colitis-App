@@ -188,6 +188,11 @@ export function requestDeletion<TId>(
 }
 
 export function undoDeletion<TId>(state: DeletionState<TId>): DeletionOutcome<TId> {
+  // Wartet nichts, kommt derselbe Zustand zurueck statt eines neuen leeren -
+  // sonst loeste ein Rueckgaengig ins Leere ein ueberfluessiges Neuzeichnen aus.
+  if (state.pending === null) {
+    return { state, commit: null };
+  }
   return { state: { pending: null }, commit: null };
 }
 
