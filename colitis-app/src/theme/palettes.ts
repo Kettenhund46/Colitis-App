@@ -9,7 +9,7 @@ export const lightColors: ThemeColors = {
   accent: '#D98E4A',
   danger: '#B5533C',
   warning: '#C9A227',
-  success: '#5B8C7B',
+  success: '#3E8E4F',
   border: '#E4DACB',
   overlay: 'rgba(46, 42, 38, 0.4)',
 };
@@ -23,7 +23,7 @@ export const darkColors: ThemeColors = {
   accent: '#E3A768',
   danger: '#E07A5F',
   warning: '#D9B84A',
-  success: '#7BAF9C',
+  success: '#7BC98C',
   border: '#3A362F',
   overlay: 'rgba(0, 0, 0, 0.6)',
 };
@@ -37,7 +37,7 @@ export const lightBlueColors: ThemeColors = {
   accent: '#6BA3C9',
   danger: '#C1443A',
   warning: '#C9A227',
-  success: '#3E7CB1',
+  success: '#3E8E4F',
   border: '#D7E3ED',
   overlay: 'rgba(29, 43, 54, 0.4)',
 };
