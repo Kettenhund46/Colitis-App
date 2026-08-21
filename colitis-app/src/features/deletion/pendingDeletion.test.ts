@@ -36,12 +36,14 @@ describe('undoDeletion', () => {
     const outcome = undoDeletion(parked.state);
     expect(outcome.state.pending).toBeNull();
     expect(outcome.commit).toBeNull();
+    expect(outcome.state).not.toBe(parked.state);
   });
 
   it('does nothing when nothing is waiting', () => {
     const outcome = undoDeletion(emptyState);
     expect(outcome.state.pending).toBeNull();
     expect(outcome.commit).toBeNull();
+    expect(outcome.state).toBe(emptyState);
   });
 });
 
