@@ -1,4 +1,6 @@
-import { FlatList, Pressable, Text, View, StyleSheet } from 'react-native';
+import { FlatList, Pressable, Text, StyleSheet } from 'react-native';
+import { Card } from '../../../components/ui/Card';
+import { EmptyState } from '../../../components/ui/EmptyState';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import { sourceLabelFor } from '../sourceLabel';
@@ -16,9 +18,10 @@ export function NewsFeedList({ items, onSelect }: NewsFeedListProps) {
 
   if (items.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Noch keine Neuigkeiten vorhanden.</Text>
-      </View>
+      <EmptyState
+        title="Noch keine Neuigkeiten"
+        description="Sobald neue Beiträge aus den hinterlegten Quellen eintreffen, erscheinen sie hier."
+      />
     );
   }
 
@@ -32,14 +35,15 @@ export function NewsFeedList({ items, onSelect }: NewsFeedListProps) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Neuigkeit: ${item.title}${item.isRead ? ' (bereits gelesen)' : ''}`}
-          style={[styles.card, item.isRead && styles.cardRead]}
           onPress={() => onSelect(item)}
         >
-          <Text style={[styles.cardTitle, item.isRead && styles.textRead]}>{item.title}</Text>
-          <Text style={[styles.cardSummary, item.isRead && styles.textRead]}>{item.summaryDe}</Text>
-          <Text style={styles.cardMeta}>
-            {sourceLabelFor(item.source)} · {item.publishedDate}
-          </Text>
+          <Card accent={item.isRead ? undefined : 'info'} isMuted={item.isRead}>
+            <Text style={[styles.cardTitle, item.isRead && styles.textRead]}>{item.title}</Text>
+            <Text style={[styles.cardSummary, item.isRead && styles.textRead]}>{item.summaryDe}</Text>
+            <Text style={styles.cardMeta}>
+              {sourceLabelFor(item.source)} · {item.publishedDate}
+            </Text>
+          </Card>
         </Pressable>
       )}
     />
@@ -54,29 +58,7 @@ function makeStyles(colors: ThemeColors) {
     },
     listContent: {
       padding: tokens.spacing.lg,
-    },
-    emptyContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: tokens.spacing.lg,
-      backgroundColor: colors.background,
-    },
-    emptyText: {
-      color: colors.textSecondary,
-      fontSize: tokens.typography.fontSize.md,
-      textAlign: 'center',
-    },
-    card: {
-      backgroundColor: colors.surface,
-      borderRadius: tokens.radius.md,
-      borderWidth: 1,
-      borderColor: colors.border,
-      padding: tokens.spacing.md,
-      marginBottom: tokens.spacing.md,
-    },
-    cardRead: {
-      opacity: 0.6,
+      gap: tokens.spacing.md,
     },
     cardTitle: {
       color: colors.textPrimary,

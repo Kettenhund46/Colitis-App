@@ -9,6 +9,7 @@ import {
   markFeedItemAsRead,
 } from '../../../src/features/newsFeed/db/feedItemsRepository';
 import { NewsFeedList } from '../../../src/features/newsFeed/components/NewsFeedList';
+import { SkeletonList } from '../../../src/components/ui/SkeletonList';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { FeedItem } from '../../../src/features/newsFeed/types';
@@ -113,9 +114,7 @@ export default function NewsFeedScreen() {
         </View>
       )}
       {isLoading && items.length === 0 ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Neuigkeiten werden geladen …</Text>
-        </View>
+        <SkeletonList count={3} lines={3} />
       ) : (
         <NewsFeedList items={items} onSelect={handleSelect} />
       )}
@@ -150,16 +149,6 @@ function makeStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       fontSize: tokens.typography.fontSize.sm,
       textAlign: 'center',
-    },
-    loadingContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: tokens.spacing.lg,
-    },
-    loadingText: {
-      color: colors.textSecondary,
-      fontSize: tokens.typography.fontSize.md,
     },
   });
 }

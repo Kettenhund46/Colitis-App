@@ -6,6 +6,7 @@ import { seedKnowledgeArticles, listKnowledgeArticles } from '../../../src/featu
 import { listFavoriteSlugs } from '../../../src/features/knowledge/db/knowledgeFavoritesRepository';
 import { filterKnowledgeArticles, filterFavoriteArticles } from '../../../src/features/knowledge/search';
 import { KnowledgeArticleList } from '../../../src/features/knowledge/components/KnowledgeArticleList';
+import { SkeletonList } from '../../../src/components/ui/SkeletonList';
 import { COMMUNITY_INVITE_URL } from '../../../src/features/community/constants';
 import {
   getCommunityDisclaimerSeen,
@@ -160,14 +161,12 @@ export default function WissenScreen() {
         accessibilityLabel="Wissensartikel durchsuchen"
       />
       {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Artikel werden geladen …</Text>
-        </View>
+        <SkeletonList count={4} lines={2} />
       ) : (
         <KnowledgeArticleList
           articles={visibleArticles}
           onSelect={(slug) => router.push(`/wissen/${slug}`)}
-          emptyMessage={viewFilter === 'favorites' ? 'Noch keine Favoriten markiert.' : undefined}
+          emptyVariant={viewFilter === 'favorites' ? 'favorites' : 'search'}
         />
       )}
     </SwipeableTabScreen>
@@ -234,16 +233,6 @@ function makeStyles(colors: ThemeColors) {
       margin: tokens.spacing.md,
       padding: tokens.spacing.sm,
       color: colors.textPrimary,
-      fontSize: tokens.typography.fontSize.md,
-    },
-    loadingContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: tokens.spacing.lg,
-    },
-    loadingText: {
-      color: colors.textSecondary,
       fontSize: tokens.typography.fontSize.md,
     },
   });
