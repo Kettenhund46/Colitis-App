@@ -6,6 +6,7 @@ import { listDiaryEntries } from '../../../src/features/diary/db/diaryRepository
 import { computeTriggerPatterns } from '../../../src/features/diary/analysis';
 import { TriggerAnalysisView } from '../../../src/features/diary/components/TriggerAnalysisView';
 import { DiaryTrendChart } from '../../../src/features/diary/components/DiaryTrendChart';
+import { SkeletonList } from '../../../src/components/ui/SkeletonList';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { TriggerPatternStat } from '../../../src/features/diary/analysis';
@@ -57,9 +58,7 @@ export default function AuswertungScreen() {
         </View>
       )}
       {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Auswertung wird geladen …</Text>
-        </View>
+        <SkeletonList count={2} lines={2} />
       ) : (
         <ScrollView style={styles.scroll}>
           <DiaryTrendChart entries={entries} />
@@ -89,16 +88,6 @@ function makeStyles(colors: ThemeColors) {
       color: colors.danger,
       fontSize: tokens.typography.fontSize.sm,
       textAlign: 'center',
-    },
-    loadingContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: tokens.spacing.lg,
-    },
-    loadingText: {
-      color: colors.textSecondary,
-      fontSize: tokens.typography.fontSize.md,
     },
   });
 }

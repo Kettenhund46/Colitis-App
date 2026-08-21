@@ -1,4 +1,5 @@
 import type { DiaryEntryWithTriggers } from './types';
+import type { CardAccent } from '../../components/ui/Card';
 
 export type DayRating = 'good' | 'medium' | 'bad';
 
@@ -93,4 +94,19 @@ export function buildDayRatings(entries: DiaryEntryWithTriggers[]): Map<string, 
     ratings.set(dateKey, rateDayEntries(dayEntries));
   }
   return ratings;
+}
+
+/** Uebersetzt die Tagesbewertung in die Bedeutung der Kartenkante. */
+export function accentForRating(rating: DayRating | undefined): CardAccent | undefined {
+  if (rating === undefined) {
+    return undefined;
+  }
+  switch (rating) {
+    case 'good':
+      return 'good';
+    case 'medium':
+      return 'warning';
+    case 'bad':
+      return 'danger';
+  }
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Text, View, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
+import { EmptyState } from '../../../components/ui/EmptyState';
 import { buildDailyTrend } from '../trendLogic';
 import type { DailyTrendPoint, TrendRangeDays } from '../trendLogic';
 import type { DiaryEntryWithTriggers } from '../types';
@@ -131,7 +132,11 @@ export function DiaryTrendChart({ entries }: DiaryTrendChartProps) {
           </View>
         </>
       ) : (
-        <Text style={styles.emptyText}>Keine Daten in diesem Zeitraum.</Text>
+        <EmptyState
+          title="Keine Daten in diesem Zeitraum"
+          description="Wähle einen anderen Zeitraum, oder erfasse Einträge für diese Tage."
+          showGhost={false}
+        />
       )}
     </View>
   );
@@ -183,12 +188,6 @@ function makeStyles(colors: ThemeColors) {
     dateRangeText: {
       color: colors.textSecondary,
       fontSize: tokens.typography.fontSize.sm,
-    },
-    emptyText: {
-      color: colors.textSecondary,
-      fontSize: tokens.typography.fontSize.md,
-      textAlign: 'center',
-      paddingVertical: tokens.spacing.lg,
     },
   });
 }

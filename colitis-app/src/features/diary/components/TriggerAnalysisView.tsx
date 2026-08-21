@@ -2,6 +2,8 @@ import { Text, View, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import { TRIGGER_CATEGORY_OPTIONS } from '../constants';
+import { Card } from '../../../components/ui/Card';
+import { EmptyState } from '../../../components/ui/EmptyState';
 import type { TriggerPatternStat } from '../analysis';
 import type { ThemeColors } from '../../../theme/types';
 
@@ -19,25 +21,23 @@ export function TriggerAnalysisView({ patterns }: TriggerAnalysisViewProps) {
 
   if (patterns.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>
-          Noch keine Auswertung möglich. Erfasse Einträge mit Auslösern im Tagebuch, um hier Muster zu
-          sehen.
-        </Text>
-      </View>
+      <EmptyState
+        title="Noch keine Muster erkennbar"
+        description="Sobald du beim Eintragen Auslöser mit erfasst, erscheint hier, welche davon mit stärkeren Beschwerden zusammenfallen."
+      />
     );
   }
 
   return (
     <View style={styles.list}>
       {patterns.map((pattern) => (
-        <View key={pattern.category} style={styles.card}>
+        <Card key={pattern.category}>
           <Text style={styles.cardTitle}>{labelForCategory(pattern.category)}</Text>
           <Text style={styles.cardDetail}>
             {pattern.entryCount} {pattern.entryCount === 1 ? 'Eintrag' : 'Einträge'}
           </Text>
           <Text style={styles.cardDetail}>Ø Schmerzlevel: {pattern.averagePainLevel}/10</Text>
-        </View>
+        </Card>
       ))}
     </View>
   );
@@ -47,26 +47,7 @@ function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
     list: {
       padding: tokens.spacing.lg,
-    },
-    emptyContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: tokens.spacing.lg,
-      backgroundColor: colors.background,
-    },
-    emptyText: {
-      color: colors.textSecondary,
-      fontSize: tokens.typography.fontSize.md,
-      textAlign: 'center',
-    },
-    card: {
-      backgroundColor: colors.surface,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      padding: tokens.spacing.md,
-      marginBottom: tokens.spacing.md,
+      gap: tokens.spacing.md,
     },
     cardTitle: {
       color: colors.textPrimary,
