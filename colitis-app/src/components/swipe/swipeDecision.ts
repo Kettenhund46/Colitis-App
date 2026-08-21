@@ -39,3 +39,24 @@ export function isDeleteSwipe({ startX, dx, dy, screenWidth }: SwipeAttempt): bo
   }
   return Math.abs(dx) >= ROW_SWIPE_THRESHOLD;
 }
+
+/**
+ * Waagerechte Mindeststrecke, ab der die Zeilengeste den Responder ueberhaupt
+ * beansprucht. Ohne sie kaeme jeder Tipp, der zwei Pixel nach links rutscht,
+ * bei den Knoepfen in der Zeile nicht mehr an.
+ */
+export const ROW_SWIPE_CLAIM_THRESHOLD = 10;
+
+/** Ob die Zeilengeste diese Bewegung ueberhaupt uebernehmen soll. */
+export function shouldClaimRowSwipe({ startX, dx, dy, screenWidth }: SwipeAttempt): boolean {
+  if (startedInEdgeStrip(startX, screenWidth)) {
+    return false;
+  }
+  if (dx >= 0) {
+    return false;
+  }
+  if (Math.abs(dx) <= Math.abs(dy)) {
+    return false;
+  }
+  return Math.abs(dx) >= ROW_SWIPE_CLAIM_THRESHOLD;
+}

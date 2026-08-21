@@ -51,9 +51,22 @@ export function usePendingDeletion<TId>(onCommit: (id: TId) => Promise<void>) {
       timerRef.current = setTimeout(() => {
         timerRef.current = null;
         const expired = commitDeletion(stateRef.current);
-        stateRef.current = expired.state;
-        setState(expired.state);
-        runCommit(expired.commit);
+        if (expired.commit === null) {
+          stateRef.current = expired.state;
+          setState(expired.state);
+          return;
+        }
+        // Erst ausfuehren, dann ausblenden aufheben: Sonst taucht die Zeile
+        // zwischen dem Aufraeumen des Zustands und dem Neuladen der Liste
+        // kurz wieder auf.
+        onCommitRef.current(expired.commit)
+          .catch((error: unknown) => {
+            console.error('[Loeschen] Vorgang konnte nicht ausgefuehrt werden:', error);
+          })
+          .finally(() => {
+            stateRef.current = expired.state;
+            setState(expired.state);
+          });
       }, UNDO_WINDOW_MS);
     },
     [clearTimer, runCommit]

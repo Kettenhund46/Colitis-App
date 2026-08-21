@@ -29,6 +29,13 @@ export function requestDeletion<TId>(
   state: DeletionState<TId>,
   entry: PendingDeletion<TId>
 ): DeletionOutcome<TId> {
+  // Dieselbe Kennung noch einmal: nur die Uhr neu starten. Wuerde hier
+  // ausgefuehrt, waere der Eintrag weg, waehrend der Streifen noch
+  // Rueckgaengig anbietet - genau das, was diese Phase verhindern soll.
+  if (state.pending !== null && state.pending.id === entry.id) {
+    return { state: { pending: entry }, commit: null };
+  }
+
   return {
     state: { pending: entry },
     commit: state.pending === null ? null : state.pending.id,

@@ -28,6 +28,13 @@ describe('requestDeletion', () => {
     expect(emptyState.pending).toBeNull();
     expect(outcome.state).not.toBe(emptyState);
   });
+
+  it('only restarts the clock when the same entry is deleted twice', () => {
+    const first = requestDeletion(emptyState, { id: 7, label: 'Eintrag' });
+    const again = requestDeletion(first.state, { id: 7, label: 'Eintrag' });
+    expect(again.commit).toBeNull();
+    expect(again.state.pending).toEqual({ id: 7, label: 'Eintrag' });
+  });
 });
 
 describe('undoDeletion', () => {
