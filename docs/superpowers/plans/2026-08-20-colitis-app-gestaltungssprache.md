@@ -20,7 +20,7 @@
 - **`accent` nimmt eine Bedeutung entgegen, keine Farbe.** Kein Aufrufer schreibt je einen Farbwert für die Kante.
 - **`primary` bleibt in allen drei Themes unverändert.** Nur `success` wird geändert.
 - **`success` bleibt grün** in allen drei Themes, auch im hellblauen.
-- **Rundung:** überall `tokens.radius.md`. Die hart getippte `12` verschwindet aus jeder angefassten Datei.
+- **Rundung:** überall `tokens.radius.md`. Die hart getippte `12` verschwindet aus jeder angefassten Datei. **Gilt für Stilangaben, nicht für Testzusicherungen.** In einem Test ist der ausgeschriebene Wert richtig: `expect(style.borderRadius).toBe(12)` prüft etwas, `toBe(tokens.radius.md)` vergliche die Implementierung mit sich selbst und liefe auch durch, wenn die Rundung ganz fehlte.
 - **Vorhandene `accessibilityLabel` und `accessibilityRole` bleiben unverändert.** `Card` fügt keine eigenen hinzu; wo heute ein `Pressable` die Karte ist, bleibt es ein `Pressable`.
 - **`Card` bringt keinen Außenabstand mit.** Den Abstand zwischen Karten setzt der umgebende Container mit `gap: tokens.spacing.md`. Grund: Bei den berührbaren Listen liegt `Card` innerhalb eines `Pressable`; ein `marginBottom` an der Karte läge im Berührungsbereich und ein Tipp in die Lücke würde die Karte darüber öffnen. Wo eine Kartenkopie entfernt wird, wandert ihr `marginBottom` als `gap` in den Container.
 - **Keine Bewegung.** Kein Pulsieren, kein Schimmern im Ladeplatzhalter. Das gehört zu Phase 3.
