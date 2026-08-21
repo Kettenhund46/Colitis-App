@@ -28,6 +28,8 @@ import { MedicationList } from '../../../src/features/medications/components/Med
 import { ScreeningReminderCard } from '../../../src/features/medications/components/ScreeningReminderCard';
 import { SwipeableTabScreen } from '../../../src/components/SwipeableTabScreen';
 import { SkeletonList } from '../../../src/components/ui/SkeletonList';
+import { UndoBar } from '../../../src/components/ui/UndoBar';
+import { usePendingDeletion } from '../../../src/features/deletion/usePendingDeletion';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type {
@@ -129,36 +131,23 @@ export default function MedikamenteScreen() {
     }
   }
 
+  const { pending, requestDelete, undo } = usePendingDeletion<number>(async (medicationId) => {
+    const db = await createEncryptedDb();
+    const reminderTimes = await deleteMedication(db, medicationId);
+    for (const reminderTime of reminderTimes) {
+      if (reminderTime.notificationId) {
+        await cancelScheduledReminder(reminderTime.notificationId);
+      }
+    }
+    setMedications(await listMedications(db));
+  });
+
   function handleDelete(medicationId: number) {
     const medication = medications.find((entry) => entry.id === medicationId);
     if (!medication) {
       return;
     }
-    Alert.alert('Medikament löschen?', `„${medication.name}“ wird endgültig gelöscht.`, [
-      { text: 'Abbrechen', style: 'cancel' },
-      {
-        text: 'Löschen',
-        style: 'destructive',
-        onPress: () => void confirmDelete(medicationId),
-      },
-    ]);
-  }
-
-  async function confirmDelete(medicationId: number) {
-    try {
-      const db = await createEncryptedDb();
-      const reminderTimes = await deleteMedication(db, medicationId);
-      for (const reminderTime of reminderTimes) {
-        if (reminderTime.notificationId) {
-          await cancelScheduledReminder(reminderTime.notificationId);
-        }
-      }
-      setMedications(await listMedications(db));
-      setError(null);
-    } catch (deleteError: unknown) {
-      console.error('[Medikamente] Löschen fehlgeschlagen:', deleteError);
-      setError('Medikament konnte nicht gelöscht werden.');
-    }
+    requestDelete({ id: medicationId, label: medication.name });
   }
 
   async function handleSaveScreeningReminder(input: NewScreeningReminderInput) {
@@ -249,6 +238,7 @@ export default function MedikamenteScreen() {
           onEnd={handleEnd}
           onEdit={(medicationId) => router.push(`/medikamente/${medicationId}`)}
           onDelete={handleDelete}
+          hiddenId={pending === null ? null : pending.id}
         />
       )}
       <Pressable
@@ -259,6 +249,7 @@ export default function MedikamenteScreen() {
       >
         <Text style={styles.addButtonText}>+</Text>
       </Pressable>
+      {pending !== null && <UndoBar label={pending.label} onUndo={undo} />}
     </SwipeableTabScreen>
   );
 }

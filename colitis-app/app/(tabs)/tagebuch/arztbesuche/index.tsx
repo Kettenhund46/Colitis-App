@@ -1,11 +1,13 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Alert, Pressable, Text, View, StyleSheet } from 'react-native';
+import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../../src/db/client';
 import { listDoctorVisits, deleteDoctorVisit } from '../../../../src/features/doctorVisits/db/doctorVisitsRepository';
 import { exportDoctorVisitPass } from '../../../../src/features/doctorVisits/doctorVisitPassExport';
 import { DoctorVisitList } from '../../../../src/features/doctorVisits/components/DoctorVisitList';
 import { SkeletonList } from '../../../../src/components/ui/SkeletonList';
+import { UndoBar } from '../../../../src/components/ui/UndoBar';
+import { usePendingDeletion } from '../../../../src/features/deletion/usePendingDeletion';
 import { useTheme } from '../../../../src/theme/ThemeContext';
 import { tokens } from '../../../../src/styles/tokens';
 import type { DoctorVisit } from '../../../../src/features/doctorVisits/types';
@@ -48,27 +50,14 @@ export default function ArztbesucheScreen() {
     }, [])
   );
 
-  function handleDelete(visitId: number) {
-    Alert.alert('Arztbesuch löschen?', 'Dieser Arztbesuch wird endgültig gelöscht.', [
-      { text: 'Abbrechen', style: 'cancel' },
-      {
-        text: 'Löschen',
-        style: 'destructive',
-        onPress: () => void confirmDelete(visitId),
-      },
-    ]);
-  }
+  const { pending, requestDelete, undo } = usePendingDeletion<number>(async (visitId) => {
+    const db = await createEncryptedDb();
+    await deleteDoctorVisit(db, visitId);
+    setVisits(await listDoctorVisits(db));
+  });
 
-  async function confirmDelete(visitId: number) {
-    try {
-      const db = await createEncryptedDb();
-      await deleteDoctorVisit(db, visitId);
-      setVisits(await listDoctorVisits(db));
-      setError(null);
-    } catch (deleteError: unknown) {
-      console.error('[Arztbesuche] Löschen fehlgeschlagen:', deleteError);
-      setError('Arztbesuch konnte nicht gelöscht werden.');
-    }
+  function handleDelete(visitId: number) {
+    requestDelete({ id: visitId, label: 'Arztbesuch' });
   }
 
   async function handleExportPass() {
@@ -111,6 +100,7 @@ export default function ArztbesucheScreen() {
           visits={visits}
           onEdit={(visitId) => router.push(`/tagebuch/arztbesuche/${visitId}`)}
           onDelete={handleDelete}
+          hiddenId={pending === null ? null : pending.id}
         />
       )}
       <Pressable
@@ -121,6 +111,7 @@ export default function ArztbesucheScreen() {
       >
         <Text style={styles.addButtonText}>+</Text>
       </Pressable>
+      {pending !== null && <UndoBar label={pending.label} onUndo={undo} />}
     </View>
   );
 }
