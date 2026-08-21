@@ -22,6 +22,7 @@
 - **`success` bleibt grün** in allen drei Themes, auch im hellblauen.
 - **Rundung:** überall `tokens.radius.md`. Die hart getippte `12` verschwindet aus jeder angefassten Datei.
 - **Vorhandene `accessibilityLabel` und `accessibilityRole` bleiben unverändert.** `Card` fügt keine eigenen hinzu; wo heute ein `Pressable` die Karte ist, bleibt es ein `Pressable`.
+- **`Card` bringt keinen Außenabstand mit.** Den Abstand zwischen Karten setzt der umgebende Container mit `gap: tokens.spacing.md`. Grund: Bei den berührbaren Listen liegt `Card` innerhalb eines `Pressable`; ein `marginBottom` an der Karte läge im Berührungsbereich und ein Tipp in die Lücke würde die Karte darüber öffnen. Wo eine Kartenkopie entfernt wird, wandert ihr `marginBottom` als `gap` in den Container.
 - **Keine Bewegung.** Kein Pulsieren, kein Schimmern im Ladeplatzhalter. Das gehört zu Phase 3.
 - **Deutsche Texte**, Du-Form, wie im Rest der App.
 - **Keine Datei über 800 Zeilen.** Alle neuen Dateien deutlich darunter.
@@ -393,15 +394,26 @@ export function Card({ children, accent, isMuted = false, style }: CardProps) {
 }
 
 const styles = StyleSheet.create({
-  base: {
-    // Der Abstand, den heute jede Kartenkopie einzeln setzt.
-    marginBottom: tokens.spacing.md,
-  },
   muted: {
     opacity: MUTED_OPACITY,
   },
 });
 ```
+
+Entferne dabei `styles.base` aus dem `style`-Array in der Komponente — es bleibt:
+
+```tsx
+      style={[
+        surface,
+        accentColor !== null && { borderLeftWidth: ACCENT_BORDER_WIDTH, borderLeftColor: accentColor },
+        isMuted && styles.muted,
+        style,
+      ]}
+```
+
+**`Card` bringt bewusst keinen Außenabstand mit.** Bei den berührbaren Listen (Arztbesuche, Neuigkeiten, Wissen) liegt `Card` innerhalb eines `Pressable`; ein `marginBottom` an der Karte läge dann im Berührungsbereich, und ein Tipp in die Lücke zwischen zwei Karten würde die obere öffnen. Den Abstand setzt stattdessen der umgebende Container über `gap` — so steht es in den Tasks 4, 6, 7 und 8.
+
+Dadurch wird auch der `tokens`-Import in `Card.tsx` nicht mehr gebraucht — entferne ihn.
 
 - [ ] **Step 2: Typprüfung**
 
@@ -656,11 +668,14 @@ function makeStyles(colors: ThemeColors) {
     container: {
       flex: 1,
       padding: tokens.spacing.lg,
+      gap: tokens.spacing.md,
       backgroundColor: colors.background,
     },
   });
 }
 ```
+
+`gap` statt `marginBottom` an der Karte — `Card` bringt keinen Außenabstand mit, siehe Task 3.
 
 - [ ] **Step 4: Typprüfung und Testlauf**
 
@@ -904,6 +919,8 @@ Der `accessibilityRole="text"` und das Label bleiben erhalten, wandern aber auf 
 
 Aus `makeStyles` entfernen: `card`, `emptyContainer`, `emptyText`. Alles andere bleibt.
 
+In `listContent` ergänzen: `gap: tokens.spacing.md,` — das ersetzt den `marginBottom` der entfernten Kartenkopie.
+
 - [ ] **Step 5: `TriggerAnalysisView` umstellen**
 
 In `src/features/diary/components/TriggerAnalysisView.tsx`:
@@ -940,6 +957,8 @@ Die Kartenschleife:
 ```
 
 Aus `makeStyles` entfernen: `card`, `emptyContainer`, `emptyText`.
+
+In `list` ergänzen: `gap: tokens.spacing.md,`.
 
 Der `View`-Import bleibt, weil `styles.list` weiterhin ein `View` umschließt.
 
@@ -1073,6 +1092,8 @@ und den schließenden `</View>` des äußeren Elements durch `</Card>`. Das Inne
 
 Aus `makeStyles` entfernen: `card`, `cardEnded`, `emptyContainer`, `emptyText`.
 
+In `listContent` ergänzen: `gap: tokens.spacing.md,`.
+
 `accent="good"` für laufende, `accent="neutral"` für beendete Medikamente; `isMuted` übernimmt, was bisher `cardEnded` tat.
 
 - [ ] **Step 2: `DoctorVisitList` umstellen**
@@ -1119,6 +1140,8 @@ Die Karte ist hier ein `Pressable` und muss eines bleiben — `Card` nimmt keine
 ```
 
 Aus `makeStyles` entfernen: `card`, `emptyContainer`, `emptyText`.
+
+In `listContent` ergänzen: `gap: tokens.spacing.md,`.
 
 - [ ] **Step 3: Dieselbe Behandlung für die anderen berührbaren Karten prüfen**
 
@@ -1266,6 +1289,8 @@ Die Karte ist ein `Pressable` und bleibt eines; `Card` kommt hinein:
 
 Aus `makeStyles` entfernen: `card`, `cardRead`, `emptyContainer`, `emptyText`. `textRead` bleibt.
 
+In `listContent` ergänzen: `gap: tokens.spacing.md,`.
+
 Ungelesen bekommt die Kante, gelesen keine — die Kante markiert hier das, was noch Aufmerksamkeit braucht.
 
 **`cardSummary` bleibt bewusst auf `colors.textPrimary`**, obwohl die übrigen Karten ihr Detail in `colors.textSecondary` setzen. Die Zusammenfassung eines Beitrags ist hier der eigentliche Inhalt, nicht Beiwerk. Das ist die einzige gewollte Abweichung von der Abstufung Titel/Detail.
@@ -1327,6 +1352,8 @@ Die Karte ist ein `Pressable` und bleibt eines:
 ```
 
 Aus `makeStyles` entfernen: `card`, `emptyContainer`, `emptyText`.
+
+In `listContent` ergänzen: `gap: tokens.spacing.md,`.
 
 Keine Kante: Ein Wissensartikel hat keinen Zustand.
 
