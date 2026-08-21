@@ -51,9 +51,15 @@ export default function ArztbesucheScreen() {
   );
 
   const { pending, requestDelete, undo } = usePendingDeletion<number>(async (visitId) => {
-    const db = await createEncryptedDb();
-    await deleteDoctorVisit(db, visitId);
-    setVisits(await listDoctorVisits(db));
+    try {
+      const db = await createEncryptedDb();
+      await deleteDoctorVisit(db, visitId);
+      setVisits(await listDoctorVisits(db));
+      setError(null);
+    } catch (deleteError: unknown) {
+      console.error('[Arztbesuche] Arztbesuch löschen fehlgeschlagen:', deleteError);
+      setError('Arztbesuch konnte nicht gelöscht werden.');
+    }
   });
 
   function handleDelete(visitId: number) {

@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react';
 import { Animated, PanResponder, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
-import { isDeleteSwipe, startedInEdgeStrip } from './swipeDecision';
+import { isDeleteSwipe, shouldClaimRowSwipe } from './swipeDecision';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import type { ReactNode } from 'react';
 
@@ -26,13 +26,12 @@ export function SwipeableRow({ children, onDelete }: SwipeableRowProps) {
         onStartShouldSetPanResponder: () => false,
         onMoveShouldSetPanResponder: (event, gestureState) => {
           startXRef.current = event.nativeEvent.pageX - gestureState.dx;
-          if (startedInEdgeStrip(startXRef.current, screenWidth)) {
-            return false;
-          }
-          if (gestureState.dx >= 0) {
-            return false;
-          }
-          return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+          return shouldClaimRowSwipe({
+            startX: startXRef.current,
+            dx: gestureState.dx,
+            dy: gestureState.dy,
+            screenWidth,
+          });
         },
         onPanResponderMove: (_event, gestureState) => {
           if (gestureState.dx < 0) {

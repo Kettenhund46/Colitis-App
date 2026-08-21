@@ -132,14 +132,20 @@ export default function MedikamenteScreen() {
   }
 
   const { pending, requestDelete, undo } = usePendingDeletion<number>(async (medicationId) => {
-    const db = await createEncryptedDb();
-    const reminderTimes = await deleteMedication(db, medicationId);
-    for (const reminderTime of reminderTimes) {
-      if (reminderTime.notificationId) {
-        await cancelScheduledReminder(reminderTime.notificationId);
+    try {
+      const db = await createEncryptedDb();
+      const reminderTimes = await deleteMedication(db, medicationId);
+      for (const reminderTime of reminderTimes) {
+        if (reminderTime.notificationId) {
+          await cancelScheduledReminder(reminderTime.notificationId);
+        }
       }
+      setMedications(await listMedications(db));
+      setError(null);
+    } catch (deleteError: unknown) {
+      console.error('[Medikamente] Medikament löschen fehlgeschlagen:', deleteError);
+      setError('Medikament konnte nicht gelöscht werden.');
     }
-    setMedications(await listMedications(db));
   });
 
   function handleDelete(medicationId: number) {

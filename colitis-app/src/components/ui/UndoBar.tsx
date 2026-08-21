@@ -36,7 +36,12 @@ function makeStyles(colors: ThemeColors) {
       justifyContent: 'space-between',
       backgroundColor: colors.textPrimary,
       borderRadius: tokens.radius.md,
-      margin: tokens.spacing.md,
+      marginHorizontal: tokens.spacing.md,
+      marginTop: tokens.spacing.md,
+      // Haelt den Streifen ueber dem "+"-Knopf, der bei drei Bildschirmen
+      // absolut bei bottom: 24 mit 56 Pixeln Hoehe sitzt und sonst genau den
+      // Rueckgaengig-Knopf verdeckt.
+      marginBottom: 88,
       paddingVertical: tokens.spacing.sm,
       paddingHorizontal: tokens.spacing.md,
     },

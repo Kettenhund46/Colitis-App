@@ -59,9 +59,15 @@ export default function TagebuchScreen() {
   );
 
   const { pending, requestDelete, undo } = usePendingDeletion<number>(async (entryId) => {
-    const db = await createEncryptedDb();
-    await deleteDiaryEntry(db, entryId);
-    setEntries(await listDiaryEntries(db));
+    try {
+      const db = await createEncryptedDb();
+      await deleteDiaryEntry(db, entryId);
+      setEntries(await listDiaryEntries(db));
+      setError(null);
+    } catch (deleteError: unknown) {
+      console.error('[Tagebuch] Eintrag löschen fehlgeschlagen:', deleteError);
+      setError('Eintrag konnte nicht gelöscht werden.');
+    }
   });
 
   function handleDelete(entryId: number) {
@@ -190,7 +196,11 @@ export default function TagebuchScreen() {
           hiddenId={pending === null ? null : pending.id}
         />
       ) : (
-        <DiaryCalendarView entries={entries} onDeleteEntry={handleDelete} />
+        <DiaryCalendarView
+          entries={entries}
+          onDeleteEntry={handleDelete}
+          hiddenId={pending === null ? null : pending.id}
+        />
       )}
       <Pressable
         accessibilityRole="button"

@@ -11,6 +11,7 @@ import { RatingIndicator, RATING_LABELS } from './RatingIndicator';
 interface DiaryCalendarViewProps {
   entries: DiaryEntryWithTriggers[];
   onDeleteEntry: (entryId: number) => void;
+  hiddenId: number | null;
 }
 
 const WEEKDAY_LABELS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
@@ -19,7 +20,7 @@ function formatMonthTitle(year: number, month: number): string {
   return new Date(year, month, 1).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
 }
 
-export function DiaryCalendarView({ entries, onDeleteEntry }: DiaryCalendarViewProps) {
+export function DiaryCalendarView({ entries, onDeleteEntry, hiddenId }: DiaryCalendarViewProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const today = new Date();
@@ -120,7 +121,7 @@ export function DiaryCalendarView({ entries, onDeleteEntry }: DiaryCalendarViewP
             entries={selectedEntries}
             onDelete={onDeleteEntry}
             onCreate={() => {}}
-            hiddenId={null}
+            hiddenId={hiddenId}
           />
         </View>
       )}

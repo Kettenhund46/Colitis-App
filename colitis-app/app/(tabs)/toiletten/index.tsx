@@ -232,7 +232,6 @@ export default function ToilettenScreen() {
       const db = await createEncryptedDb();
       await deleteSavedPlace(db, placeId);
       setPlaceError(null);
-      setSelectedMarker(null);
       await reloadSavedPlaces();
     } catch (error: unknown) {
       console.error('[Toiletten] Sicheren Ort löschen fehlgeschlagen:', error);
@@ -241,6 +240,7 @@ export default function ToilettenScreen() {
   });
 
   function handleDeletePlace(place: SavedPlace) {
+    setSelectedMarker(null);
     requestDelete({ id: place.id, label: place.name });
   }
 
