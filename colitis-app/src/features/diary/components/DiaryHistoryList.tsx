@@ -26,7 +26,7 @@ export function DiaryHistoryList({ entries, onDelete, onCreate, hiddenId }: Diar
   const dayRatings = buildDayRatings(entries);
   const visibleEntries = entries.filter((entry) => entry.id !== hiddenId);
 
-  if (visibleEntries.length === 0) {
+  if (visibleEntries.length === 0 && hiddenId === null) {
     return (
       <EmptyState
         title="Dein Tagebuch ist noch leer"
