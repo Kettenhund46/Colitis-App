@@ -1,4 +1,4 @@
-import { Pressable, Text, View, StyleSheet } from 'react-native';
+import { Pressable, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import { Card } from '../../../components/ui/Card';

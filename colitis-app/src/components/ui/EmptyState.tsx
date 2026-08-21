@@ -45,7 +45,7 @@ export function EmptyState({ title, description, action, showGhost = true }: Emp
 function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: {
-      flex: 1,
+      flexGrow: 1,
       alignItems: 'center',
       justifyContent: 'center',
       padding: tokens.spacing.lg,
