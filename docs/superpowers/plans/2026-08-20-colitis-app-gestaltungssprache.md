@@ -1574,7 +1574,9 @@ Im Testlauf nicht nachbildbar. Nach dem Merge und einem Build zu prüfen:
 10. **Helles und hellblaues Theme:** Karten liegen mit Schatten auf dem Hintergrund und haben keinen Rand.
 11. **Guter Tag gegen Knopf:** Der grüne Punkt eines guten Tages hat erkennbar eine andere Farbe als die Knöpfe der App.
 12. **Einstellungen:** Alle Abschnittsüberschriften sehen gleich aus, auch „Tägliche Erinnerung".
-13. **Offene Punkte aus Phase 1** (Abnahmepunkte 9 bis 11 aus `2026-08-20-colitis-app-erinnerung-schweregrad.md`) im selben Durchgang miterledigen.
+13. **Toiletten-Tab, helle Themes:** Die eingeblendete Infokarte über der Landkarte hatte bisher immer einen Rand. Jetzt trägt sie im hellen und hellblauen Theme einen Schatten statt des Randes. Prüfen, dass sie sich vor der Karte weiterhin klar absetzt — vor buntem Kartenmaterial ist ein Schatten schwächer als ein Rand. Falls nicht: Das ist der einzige Ort, an dem eine Ausnahme von der Theme-Regel begründbar wäre.
+14. **Vorsorge-Erinnerung** im Medikamente-Tab sitzt weiterhin an derselben Stelle mit demselben Abstand wie vorher.
+15. **Offene Punkte aus Phase 1** (Abnahmepunkte 9 bis 11 aus `2026-08-20-colitis-app-erinnerung-schweregrad.md`) im selben Durchgang miterledigen.
 
 ## Was dieser Plan nicht anfasst
 
