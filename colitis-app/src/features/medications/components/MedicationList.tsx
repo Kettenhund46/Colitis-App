@@ -2,6 +2,7 @@ import { FlatList, Pressable, Text, View, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import { isMedicationActive } from '../medicationStatus';
+import { expectedDosesPerDay, formatTakenButtonLabel } from '../adherence';
 import { Card } from '../../../components/ui/Card';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { SwipeableRow } from '../../../components/swipe/SwipeableRow';
@@ -11,7 +12,7 @@ import type { ThemeColors } from '../../../theme/types';
 interface MedicationListProps {
   medications: Medication[];
   today: Date;
-  takenTodayIds: Set<number>;
+  takenTodayCounts: Map<number, number>;
   onTakenToday: (medicationId: number) => void;
   onEnd: (medicationId: number) => void;
   onEdit: (medicationId: number) => void;
@@ -23,7 +24,7 @@ interface MedicationListProps {
 export function MedicationList({
   medications,
   today,
-  takenTodayIds,
+  takenTodayCounts,
   onTakenToday,
   onEnd,
   onEdit,
@@ -55,7 +56,9 @@ export function MedicationList({
       keyExtractor={(medication) => String(medication.id)}
       renderItem={({ item }) => {
         const isActive = isMedicationActive(item.endDate, today);
-        const isTakenToday = takenTodayIds.has(item.id);
+        const expectedToday = expectedDosesPerDay(item);
+        const takenToday = takenTodayCounts.get(item.id) ?? 0;
+        const isTakenToday = takenToday >= expectedToday;
         return (
           <SwipeableRow onDelete={() => onDelete(item.id)}>
             <Card accent={isActive ? 'good' : 'neutral'} isMuted={!isActive}>
@@ -78,14 +81,16 @@ export function MedicationList({
                     accessibilityRole="button"
                     accessibilityState={{ disabled: isTakenToday }}
                     accessibilityLabel={
-                      isTakenToday ? `${item.name} heute bereits genommen` : `${item.name} heute genommen`
+                      isTakenToday
+                        ? `${item.name} heute vollständig genommen`
+                        : `${item.name} heute genommen, ${takenToday} von ${expectedToday}`
                     }
                     disabled={isTakenToday}
                     style={isTakenToday ? styles.takenButton : styles.notTakenButton}
                     onPress={() => onTakenToday(item.id)}
                   >
                     <Text style={isTakenToday ? styles.takenButtonText : styles.notTakenButtonText}>
-                      {isTakenToday ? 'Heute genommen ✓' : 'Heute genommen'}
+                      {formatTakenButtonLabel(takenToday, expectedToday)}
                     </Text>
                   </Pressable>
                 )}

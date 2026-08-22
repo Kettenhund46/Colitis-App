@@ -5,11 +5,19 @@ import { createEncryptedDb } from '../../../src/db/client';
 import {
   listMedications,
   logMedicationTaken,
-  listMedicationIdsTakenOn,
+  listMedicationIntakes,
   endMedication,
   deleteMedication,
 } from '../../../src/features/medications/db/medicationsRepository';
 import { formatLocalDate } from '../../../src/features/medications/medicationStatus';
+import {
+  buildTodaySummary,
+  countByMedication,
+  intakesOnDate,
+  queryLowerBoundIso,
+} from '../../../src/features/medications/adherence';
+import { TodaySummaryLine } from '../../../src/features/medications/components/TodaySummaryLine';
+import type { TodaySummary } from '../../../src/features/medications/adherence';
 import {
   getScreeningReminder,
   upsertScreeningReminder,
@@ -44,7 +52,8 @@ export default function MedikamenteScreen() {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const [medications, setMedications] = useState<Medication[]>([]);
-  const [takenTodayIds, setTakenTodayIds] = useState<Set<number>>(new Set());
+  const [takenTodayCounts, setTakenTodayCounts] = useState<Map<number, number>>(new Map());
+  const [todaySummary, setTodaySummary] = useState<TodaySummary | null>(null);
   const [screeningReminder, setScreeningReminder] = useState<ScreeningReminder | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,15 +70,17 @@ export default function MedikamenteScreen() {
 
       createEncryptedDb()
         .then(async (db) => {
-          const [loadedMedications, loadedScreening, loadedTakenTodayIds] = await Promise.all([
+          const today = formatLocalDate(new Date());
+          const [loadedMedications, loadedScreening, loadedIntakes] = await Promise.all([
             listMedications(db),
             getScreeningReminder(db),
-            listMedicationIdsTakenOn(db, formatLocalDate(new Date())),
+            listMedicationIntakes(db, queryLowerBoundIso(today)),
           ]);
           if (isActive) {
             setMedications(loadedMedications);
             setScreeningReminder(loadedScreening);
-            setTakenTodayIds(new Set(loadedTakenTodayIds));
+            setTakenTodayCounts(countByMedication(intakesOnDate(loadedIntakes, today)));
+            setTodaySummary(buildTodaySummary(loadedMedications, loadedIntakes, today));
             setError(null);
             setIsLoading(false);
           }
@@ -92,7 +103,11 @@ export default function MedikamenteScreen() {
     try {
       const db = await createEncryptedDb();
       await logMedicationTaken(db, medicationId, new Date().toISOString());
-      setTakenTodayIds((current) => new Set(current).add(medicationId));
+      const today = formatLocalDate(new Date());
+      const intakes = await listMedicationIntakes(db, queryLowerBoundIso(today));
+      setTakenTodayCounts(countByMedication(intakesOnDate(intakes, today)));
+      setTodaySummary(buildTodaySummary(medications, intakes, today));
+      setError(null);
     } catch (takenError: unknown) {
       console.error('[Medikamente] Eintragen der Einnahme fehlgeschlagen:', takenError);
       setError('Einnahme konnte nicht gespeichert werden.');
@@ -215,6 +230,7 @@ export default function MedikamenteScreen() {
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
+      <TodaySummaryLine summary={todaySummary} />
       <ScreeningReminderCard
         reminder={screeningReminder}
         onSave={handleSaveScreeningReminder}
@@ -239,7 +255,7 @@ export default function MedikamenteScreen() {
           onCreate={() => router.push('/medikamente/neu')}
           medications={medications}
           today={new Date()}
-          takenTodayIds={takenTodayIds}
+          takenTodayCounts={takenTodayCounts}
           onTakenToday={handleTakenToday}
           onEnd={handleEnd}
           onEdit={(medicationId) => router.push(`/medikamente/${medicationId}`)}
