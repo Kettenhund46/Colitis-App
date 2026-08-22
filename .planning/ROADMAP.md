@@ -28,9 +28,9 @@ bekommen.
 
 | Phase | Ziel | Status |
 |------|------|--------|
-| 1 | Ans Eintragen erinnert werden und den Schweregrad beim Scrollen sehen | in_progress |
-| 2 | Die App sieht nach Gestaltung aus, nicht nach Formular | in_progress |
-| 3 | Löschen geht per Wischen und die Bedienung fühlt sich spürbar an | in_progress |
+| 1 | Ans Eintragen erinnert werden und den Schweregrad beim Scrollen sehen | done |
+| 2 | Die App sieht nach Gestaltung aus, nicht nach Formular | done |
+| 3 | Löschen geht per Wischen und die Bedienung fühlt sich spürbar an | done |
 | 4 | Medikamenteneinnahme lässt sich abhaken und nachvollziehen | todo |
 | 5 | Ein Arzttermin lässt sich mit einer Zusammenfassung vorbereiten | todo |
 | 6 | Die App ist auf Deutsch und Englisch bedienbar | todo |
@@ -235,12 +235,27 @@ lassen sich festhalten und im Rückblick nachvollziehen.
 
 **Depends on:** Phase 2 (folgt der dort festgelegten Gestaltungssprache)
 
-**Achtung, diese Phase ist teilweise schon gebaut.** Beim Lesen von
-`MedicationList.tsx` in Phase 2 fiel auf, dass es dort bereits einen Knopf
-„Heute genommen ✓" mit `takenTodayIds` und `onTakenToday` gibt. Vor dem
-Entwurf dieser Phase ist zu klären, was davon schon steht und welche der vier
-Erfolgskriterien damit bereits erfüllt sind — sonst wird hier etwas zum
-zweiten Mal gebaut.
+**Bestandsaufnahme am 2026-08-22 — die Hälfte steht schon.** Nachgeprüft am Code:
+
+| Kriterium | Stand |
+|---|---|
+| Heutige Einnahme mit einem Tipp festhalten | **erfüllt** |
+| Der Tab zeigt auf einen Blick, was heute noch offen ist | offen |
+| Vergangene Einnahmen und Lücken für einen wählbaren Zeitraum | offen |
+| Einnahmedaten in Sicherung und Wiederherstellung | **erfüllt** |
+
+Vorhanden: die Tabelle `medication_log` in `src/db/schema.ts`,
+`logMedicationTaken` und `listMedicationIdsTakenOn` in
+`src/features/medications/db/medicationsRepository.ts`, der Knopf
+„Heute genommen ✓" in `MedicationList.tsx`, und `medicationLog` vollständig in
+Export, Leeren und Wiederherstellen in
+`src/features/backup/db/backupRepository.ts`.
+
+**Was diese Phase noch zu tun hat**, ist also nicht das Erfassen, sondern das
+Zurückschauen: eine Übersicht des heutigen Stands im Tab, und eine Ansicht
+vergangener Einnahmen samt Lücken über einen wählbaren Zeitraum.
+`listMedicationIdsTakenOn` liest heute genau einen Tag — für den Rückblick
+braucht es eine Abfrage über einen Bereich.
 
 ---
 
