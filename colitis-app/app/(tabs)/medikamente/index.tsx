@@ -248,6 +248,14 @@ export default function MedikamenteScreen() {
           {isExporting ? 'PDF wird erstellt …' : 'Medikamenten-Pass als PDF exportieren'}
         </Text>
       </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Einnahme-Verlauf öffnen"
+        style={styles.historyLink}
+        onPress={() => router.push('/medikamente/verlauf')}
+      >
+        <Text style={styles.historyLinkText}>Einnahme-Verlauf ansehen</Text>
+      </Pressable>
       {isLoading ? (
         <SkeletonList count={3} lines={2} />
       ) : (
@@ -296,6 +304,18 @@ function makeStyles(colors: ThemeColors) {
       opacity: 0.5,
     },
     exportLinkText: {
+      color: colors.primary,
+      fontSize: tokens.typography.fontSize.sm,
+      fontWeight: tokens.typography.fontWeight.medium,
+      textAlign: 'center',
+    },
+    historyLink: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      padding: tokens.spacing.md,
+    },
+    historyLinkText: {
       color: colors.primary,
       fontSize: tokens.typography.fontSize.sm,
       fontWeight: tokens.typography.fontWeight.medium,

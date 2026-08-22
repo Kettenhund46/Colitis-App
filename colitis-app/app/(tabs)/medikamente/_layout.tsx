@@ -14,6 +14,7 @@ export default function MedikamenteLayout() {
     >
       <Stack.Screen name="index" options={{ title: 'Medikamente' }} />
       <Stack.Screen name="neu" options={{ title: 'Neues Medikament' }} />
+      <Stack.Screen name="verlauf" options={{ title: 'Einnahme-Verlauf' }} />
       <Stack.Screen name="[id]" options={{ title: 'Medikament bearbeiten' }} />
     </Stack>
   );
