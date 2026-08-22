@@ -31,7 +31,7 @@ bekommen.
 | 1 | Ans Eintragen erinnert werden und den Schweregrad beim Scrollen sehen | done |
 | 2 | Die App sieht nach Gestaltung aus, nicht nach Formular | done |
 | 3 | Löschen geht per Wischen und die Bedienung fühlt sich spürbar an | done |
-| 4 | Medikamenteneinnahme lässt sich abhaken und nachvollziehen | todo |
+| 4 | Medikamenteneinnahme lässt sich abhaken und nachvollziehen | in_progress |
 | 5 | Ein Arzttermin lässt sich mit einer Zusammenfassung vorbereiten | todo |
 | 6 | Die App ist auf Deutsch und Englisch bedienbar | todo |
 
