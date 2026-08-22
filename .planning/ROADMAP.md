@@ -30,7 +30,7 @@ bekommen.
 |------|------|--------|
 | 1 | Ans Eintragen erinnert werden und den Schweregrad beim Scrollen sehen | in_progress |
 | 2 | Die App sieht nach Gestaltung aus, nicht nach Formular | in_progress |
-| 3 | Löschen geht per Wischen und die Bedienung fühlt sich spürbar an | todo |
+| 3 | Löschen geht per Wischen und die Bedienung fühlt sich spürbar an | in_progress |
 | 4 | Medikamenteneinnahme lässt sich abhaken und nachvollziehen | todo |
 | 5 | Ein Arzttermin lässt sich mit einer Zusammenfassung vorbereiten | todo |
 | 6 | Die App ist auf Deutsch und Englisch bedienbar | todo |
@@ -173,6 +173,52 @@ einen Durchgang auf unbenutzte Importe, weil `tsc` die hier nicht meldet.
 **Achtung:** Die Tab-Wischgeste aus `src/components/SwipeableTabScreen.tsx`
 greift bereits auf Randgesten zu. Das Wischen auf Listeneinträgen darf ihr nicht
 in die Quere kommen — das ist der Kern des Entwurfs dieser Phase.
+
+**Stand am 2026-08-21:** Sieben Aufgaben umgesetzt und nach `main` übernommen
+(Merge `8b8240a`), 502 Tests grün, Typprüfung sauber. Die Phase gilt erst als
+abgeschlossen, wenn der Gerätedurchgang durch ist — Gesten, Zeitverhalten und
+Haptik sind im Testlauf nicht nachbildbar.
+
+Entwurf: `docs/superpowers/specs/2026-08-21-colitis-app-bedienung-design.md`
+Plan mit 16 Abnahmepunkten: `docs/superpowers/plans/2026-08-21-colitis-app-bedienung.md`
+
+Neue Abhängigkeit: `expo-haptics ~57.0.1`. **Nach einem `git pull` auf einem
+anderen Rechner erst `npm install`**, sonst bricht die Typprüfung.
+
+**Der Gestenkonflikt hält.** Beide Gesten holen `EDGE_WIDTH` aus derselben
+Datei und benutzen denselben Vergleich; es gibt keinen Pixel, den beide
+beanspruchen. Die Schlussdurchsicht hat sechs Kombinationen durchgespielt.
+Bestätigen kann das aber erst das Gerät — die Abnahmepunkte 8 bis 11 prüfen
+ausdrücklich das Alte, nicht das Neue: Tab-Wischgeste, Leaflet-Karte,
+Randstreifen, Scrollen mit schrägem Finger.
+
+**Die Schlussdurchsicht fand stillen Datenverlust.** Im Kalender und im
+Toiletten-Tab blieb der Löschen-Knopf während des Rückgängig-Fensters
+bedienbar; ein zweiter Druck führte den ersten Vorgang endgültig aus, während
+der Streifen weiter Rückgängig anbot. Behoben an drei Stellen: ein Wächter in
+`requestDeletion` (gleiche Kennung führt nichts aus, startet nur die Uhr neu),
+eine eigene `hiddenId`-Prop für `DiaryCalendarView`, und die Infokarte im
+Toiletten-Tab schließt jetzt sofort.
+
+Dazu vier wichtige Befunde, alle behoben: Der Streifen lag unter dem
+„+"-Knopf. Ein fehlgeschlagener Löschvorgang erreichte den Nutzer nicht. Die
+Zeilengeste beanspruchte die Berührung ab einem Pixel und schluckte damit
+Tipps auf die Knöpfe in der Zeile. Und die Zeile tauchte zwischen
+Zustandswechsel und Neuladen kurz wieder auf.
+
+**Bewusste Ausnahme:** Der Vorsorge-Termin verliert den Dialog, bekommt aber
+kein Rückgängig — er sitzt im Medikamente-Bildschirm, der bereits einen
+wartenden Vorgang führt, und die Karte klappt beim Löschen ohnehin sofort ins
+Eingabefeld auf. Entscheidung des Nutzers. Rückgängig gilt damit an vier der
+fünf Löschwege.
+
+**Kleinere Befunde, bewusst offengelassen:**
+- `usePendingDeletion` schreibt zwei Refs im Render-Rumpf; gängiges Muster, widerspricht aber der Projektregel
+- `SwipeableRow` baut seinen `PanResponder` neu, wenn `onDelete` die Identität wechselt — alle Aufrufer übergeben frische Pfeilfunktionen
+- `UndoBar` setzt `accessibilityRole="alert"` ohne `accessibilityLiveRegion`; TalkBack kündigt den Streifen also nicht an, und er ist nach acht Sekunden weg
+- Rückgängig gibt kein haptisches Signal, Löschen schon
+- Zwei Speicherwege ticken nicht: der sichere Ort im Toiletten-Tab und der Vorsorge-Termin
+- Die drei Listen filtern `hiddenId` unterschiedlich (einmal als Variable, zweimal inline)
 
 ---
 
