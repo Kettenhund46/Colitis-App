@@ -19,14 +19,21 @@ interface UndoBarProps {
   /** Was geloescht wurde, etwa "Eintrag" oder "Medikament". */
   label: string;
   onUndo: () => void;
+  /**
+   * Ob der Streifen dem "+"-Knopf ausweichen muss. Bildschirme ohne diesen
+   * Knopf setzen false; sonst bleibt unter dem Streifen eine leere Flaeche.
+   */
+  avoidsFloatingButton?: boolean;
 }
 
-export function UndoBar({ label, onUndo }: UndoBarProps) {
+export function UndoBar({ label, onUndo, avoidsFloatingButton = true }: UndoBarProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
   return (
-    <View style={styles.bar} accessibilityRole="alert">
+    <View
+      style={[styles.bar, !avoidsFloatingButton && styles.barWithoutFloatingButton]}
+      accessibilityRole="alert">
       <Text style={styles.text}>{label} gelöscht</Text>
       <Pressable
         accessibilityRole="button"
@@ -56,6 +63,9 @@ function makeStyles(colors: ThemeColors) {
       marginBottom: FAB_CLEARANCE,
       paddingVertical: tokens.spacing.sm,
       paddingHorizontal: tokens.spacing.md,
+    },
+    barWithoutFloatingButton: {
+      marginBottom: tokens.spacing.md,
     },
     text: {
       color: colors.surface,

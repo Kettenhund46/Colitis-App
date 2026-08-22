@@ -5,12 +5,15 @@ import { createEncryptedDb } from '../../../src/db/client';
 import {
   listMedications,
   listMedicationIntakes,
+  deleteMedicationIntake,
 } from '../../../src/features/medications/db/medicationsRepository';
 import { formatLocalDate } from '../../../src/features/medications/medicationStatus';
 import { buildDaySummaries, periodStartDate } from '../../../src/features/medications/adherence';
 import { IntakeHistoryList } from '../../../src/features/medications/components/IntakeHistoryList';
 import { EmptyState } from '../../../src/components/ui/EmptyState';
 import { SkeletonList } from '../../../src/components/ui/SkeletonList';
+import { UndoBar } from '../../../src/components/ui/UndoBar';
+import { usePendingDeletion } from '../../../src/features/deletion/usePendingDeletion';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { HistoryPeriod } from '../../../src/features/medications/adherence';
@@ -31,6 +34,7 @@ export default function EinnahmeVerlaufScreen() {
   const [intakes, setIntakes] = useState<MedicationIntake[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedDate, setExpandedDate] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -64,13 +68,39 @@ export default function EinnahmeVerlaufScreen() {
     }, [])
   );
 
+  const { pending, requestDelete, undo } = usePendingDeletion<number>(async (intakeId) => {
+    try {
+      const db = await createEncryptedDb();
+      await deleteMedicationIntake(db, intakeId);
+      setIntakes(await listMedicationIntakes(db, null));
+      setError(null);
+    } catch (deleteError: unknown) {
+      console.error('[Einnahme-Verlauf] Einnahme loeschen fehlgeschlagen:', deleteError);
+      setError('Einnahme konnte nicht gelöscht werden.');
+    }
+  });
+
+  // Die schwebende Einnahme faellt schon vor der Rechnung heraus: So
+  // verschwindet ihre Zeile sofort, der Tageszaehler geht im selben Moment
+  // zurueck, und ein zweiter Druck auf denselben Entfernen-Knopf ist gar
+  // nicht erst moeglich.
+  const visibleIntakes = useMemo(
+    () => (pending === null ? intakes : intakes.filter((intake) => intake.id !== pending.id)),
+    [intakes, pending]
+  );
+
   // Die Tagesliste laeuft ueber jeden Tag des Zeitraums und gruppiert dabei
   // alle Einnahmen. Bei "Alles" sind das schnell mehrere hundert Zeilen; das
   // bei jedem Tastendruck neu zu rechnen waere spuerbar.
   const summaries = useMemo(() => {
     const today = formatLocalDate(new Date());
-    return buildDaySummaries(medications, intakes, periodStartDate(period, medications, today), today);
-  }, [medications, intakes, period]);
+    return buildDaySummaries(
+      medications,
+      visibleIntakes,
+      periodStartDate(period, medications, today),
+      today
+    );
+  }, [medications, visibleIntakes, period]);
 
   function renderBody() {
     if (isLoading) {
@@ -94,7 +124,15 @@ export default function EinnahmeVerlaufScreen() {
         />
       );
     }
-    return <IntakeHistoryList summaries={summaries} />;
+    return (
+      <IntakeHistoryList
+        summaries={summaries}
+        medications={medications}
+        expandedDate={expandedDate}
+        onToggleDate={(date) => setExpandedDate((current) => (current === date ? null : date))}
+        onDeleteIntake={(intakeId) => requestDelete({ id: intakeId, label: 'Einnahme' })}
+      />
+    );
   }
 
   return (
@@ -126,6 +164,10 @@ export default function EinnahmeVerlaufScreen() {
       </View>
 
       {renderBody()}
+
+      {pending !== null && (
+        <UndoBar label={pending.label} onUndo={undo} avoidsFloatingButton={false} />
+      )}
     </View>
   );
 }
