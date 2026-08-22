@@ -38,3 +38,11 @@ export interface NewScreeningReminderInput {
   nextDueDate: string;
   note: string | null;
 }
+
+export interface MedicationIntake {
+  /** Zeilen-ID aus medication_log — noetig, um eine einzelne Einnahme zu entfernen. */
+  id: number;
+  medicationId: number;
+  /** ISO-Zeitstempel in UTC, wie ihn new Date().toISOString() liefert. */
+  takenAt: string;
+}
