@@ -8,7 +8,8 @@ import {
   endMedication,
   setReminderTimeNotificationId,
   logMedicationTaken,
-  listMedicationIdsTakenOn,
+  listMedicationIntakes,
+  deleteMedicationIntake,
   deleteMedication,
 } from './medicationsRepository';
 import { medicationLog, medicationReminderTimes } from '../../../db/schema';
@@ -192,64 +193,6 @@ describe('medications repository', () => {
     );
   });
 
-  it('lists medication ids taken on a given date', async () => {
-    const takenToday = await createMedication(db, {
-      name: 'Salofalk',
-      dose: '500mg',
-      schedule: '1x täglich',
-      startDate: '2026-07-12',
-      endDate: null,
-      sideEffectsNote: null,
-      reminderTimes: [],
-    });
-    const takenYesterday = await createMedication(db, {
-      name: 'Tremfya',
-      dose: '100mg',
-      schedule: 'alle 8 Wochen',
-      startDate: '2026-07-12',
-      endDate: null,
-      sideEffectsNote: null,
-      reminderTimes: [],
-    });
-    const neverTaken = await createMedication(db, {
-      name: 'Azathioprin',
-      dose: '50mg',
-      schedule: '1x täglich',
-      startDate: '2026-07-12',
-      endDate: null,
-      sideEffectsNote: null,
-      reminderTimes: [],
-    });
-
-    await logMedicationTaken(db, takenToday.id, '2026-07-16T08:05:00.000Z');
-    await logMedicationTaken(db, takenYesterday.id, '2026-07-15T08:05:00.000Z');
-
-    const ids = await listMedicationIdsTakenOn(db, '2026-07-16');
-
-    expect(ids).toContain(takenToday.id);
-    expect(ids).not.toContain(takenYesterday.id);
-    expect(ids).not.toContain(neverTaken.id);
-  });
-
-  it('deduplicates medication ids taken multiple times on the same date', async () => {
-    const created = await createMedication(db, {
-      name: 'Salofalk',
-      dose: '500mg',
-      schedule: '2x täglich',
-      startDate: '2026-07-12',
-      endDate: null,
-      sideEffectsNote: null,
-      reminderTimes: [],
-    });
-
-    await logMedicationTaken(db, created.id, '2026-07-16T08:00:00.000Z');
-    await logMedicationTaken(db, created.id, '2026-07-16T20:00:00.000Z');
-
-    const ids = await listMedicationIdsTakenOn(db, '2026-07-16');
-
-    expect(ids).toEqual([created.id]);
-  });
-
   it('deletes a medication along with its reminder times and log entries', async () => {
     const created = await createMedication(db, {
       name: 'Salofalk',
@@ -314,5 +257,74 @@ describe('medications repository', () => {
 
     const updated = await getMedicationById(db, created.id);
     expect(updated?.sideEffectsNote).toBeNull();
+  });
+
+  async function createSimpleMedication(name: string) {
+    return createMedication(db, {
+      name,
+      dose: '500mg',
+      schedule: '3x täglich',
+      startDate: '2026-08-01',
+      endDate: null,
+      sideEffectsNote: null,
+      reminderTimes: [],
+    });
+  }
+
+  it('lists every intake with its row id, oldest first', async () => {
+    const medication = await createSimpleMedication('Mesalazin');
+    await logMedicationTaken(db, medication.id, '2026-08-20T11:00:00.000Z');
+    await logMedicationTaken(db, medication.id, '2026-08-20T06:00:00.000Z');
+
+    const intakes = await listMedicationIntakes(db, null);
+
+    expect(intakes).toHaveLength(2);
+    expect(intakes[0].takenAt).toBe('2026-08-20T06:00:00.000Z');
+    expect(intakes[1].takenAt).toBe('2026-08-20T11:00:00.000Z');
+    expect(intakes[0].medicationId).toBe(medication.id);
+    expect(intakes[0].id).toBeGreaterThan(0);
+  });
+
+  it('keeps several intakes of the same medication on the same day apart', async () => {
+    const medication = await createSimpleMedication('Mesalazin');
+    await logMedicationTaken(db, medication.id, '2026-08-20T06:00:00.000Z');
+    await logMedicationTaken(db, medication.id, '2026-08-20T11:00:00.000Z');
+    await logMedicationTaken(db, medication.id, '2026-08-20T17:00:00.000Z');
+
+    expect(await listMedicationIntakes(db, null)).toHaveLength(3);
+  });
+
+  it('drops intakes before the lower bound', async () => {
+    const medication = await createSimpleMedication('Mesalazin');
+    await logMedicationTaken(db, medication.id, '2026-08-18T06:00:00.000Z');
+    await logMedicationTaken(db, medication.id, '2026-08-20T06:00:00.000Z');
+
+    const intakes = await listMedicationIntakes(db, '2026-08-19T00:00:00.000Z');
+
+    expect(intakes.map((intake) => intake.takenAt)).toEqual(['2026-08-20T06:00:00.000Z']);
+  });
+
+  it('keeps an intake that sits exactly on the lower bound', async () => {
+    const medication = await createSimpleMedication('Mesalazin');
+    await logMedicationTaken(db, medication.id, '2026-08-19T00:00:00.000Z');
+
+    expect(await listMedicationIntakes(db, '2026-08-19T00:00:00.000Z')).toHaveLength(1);
+  });
+
+  it('deletes a single intake and leaves the others alone', async () => {
+    const medication = await createSimpleMedication('Mesalazin');
+    await logMedicationTaken(db, medication.id, '2026-08-20T06:00:00.000Z');
+    await logMedicationTaken(db, medication.id, '2026-08-20T11:00:00.000Z');
+    const intakes = await listMedicationIntakes(db, null);
+
+    await deleteMedicationIntake(db, intakes[0].id);
+
+    const remaining = await listMedicationIntakes(db, null);
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].takenAt).toBe('2026-08-20T11:00:00.000Z');
+  });
+
+  it('stays quiet when the intake is already gone', async () => {
+    await expect(deleteMedicationIntake(db, 999)).resolves.toBeUndefined();
   });
 });
