@@ -1,8 +1,8 @@
 import { FlatList, Pressable, Text, View, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
-import { isMedicationActive } from '../medicationStatus';
-import { expectedDosesPerDay, formatTakenButtonLabel } from '../adherence';
+import { isMedicationActive, formatLocalDate } from '../medicationStatus';
+import { expectedDosesPerDay, formatTakenButtonLabel, isMedicationDueOn } from '../adherence';
 import { Card } from '../../../components/ui/Card';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { SwipeableRow } from '../../../components/swipe/SwipeableRow';
@@ -56,6 +56,7 @@ export function MedicationList({
       keyExtractor={(medication) => String(medication.id)}
       renderItem={({ item }) => {
         const isActive = isMedicationActive(item.endDate, today);
+        const isDueToday = isMedicationDueOn(item, formatLocalDate(today));
         const expectedToday = expectedDosesPerDay(item);
         const takenToday = takenTodayCounts.get(item.id) ?? 0;
         const isTakenToday = takenToday >= expectedToday;
@@ -76,7 +77,7 @@ export function MedicationList({
               )}
               {!isActive && item.endDate && <Text style={styles.cardEndedLabel}>Beendet am {item.endDate}</Text>}
               <View style={styles.actionsRow}>
-                {isActive && (
+                {isDueToday && (
                   <Pressable
                     accessibilityRole="button"
                     accessibilityState={{ disabled: isTakenToday }}

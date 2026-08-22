@@ -1,4 +1,5 @@
 import { isValidCalendarDate } from './dateValidation';
+import { formatLocalDate } from './medicationStatus';
 import type { MedicationInput } from './types';
 
 export interface MedicationFormState {
@@ -15,7 +16,7 @@ export const INITIAL_MEDICATION_FORM_STATE: MedicationFormState = {
   name: '',
   dose: '',
   schedule: '',
-  startDate: new Date().toISOString().slice(0, 10),
+  startDate: formatLocalDate(new Date()),
   endDate: '',
   sideEffectsNote: '',
   reminderTimes: [],

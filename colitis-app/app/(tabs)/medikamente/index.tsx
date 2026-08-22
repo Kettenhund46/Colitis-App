@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Alert, Pressable, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
@@ -17,7 +17,6 @@ import {
   queryLowerBoundIso,
 } from '../../../src/features/medications/adherence';
 import { TodaySummaryLine } from '../../../src/features/medications/components/TodaySummaryLine';
-import type { TodaySummary } from '../../../src/features/medications/adherence';
 import {
   getScreeningReminder,
   upsertScreeningReminder,
@@ -42,6 +41,7 @@ import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type {
   Medication,
+  MedicationIntake,
   ScreeningReminder,
   NewScreeningReminderInput,
 } from '../../../src/features/medications/types';
@@ -52,12 +52,12 @@ export default function MedikamenteScreen() {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const [medications, setMedications] = useState<Medication[]>([]);
-  const [takenTodayCounts, setTakenTodayCounts] = useState<Map<number, number>>(new Map());
-  const [todaySummary, setTodaySummary] = useState<TodaySummary | null>(null);
+  const [intakes, setIntakes] = useState<MedicationIntake[]>([]);
   const [screeningReminder, setScreeningReminder] = useState<ScreeningReminder | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const isSavingRef = useRef(false);
 
   useEffect(() => {
     configureNotificationHandling();
@@ -79,8 +79,7 @@ export default function MedikamenteScreen() {
           if (isActive) {
             setMedications(loadedMedications);
             setScreeningReminder(loadedScreening);
-            setTakenTodayCounts(countByMedication(intakesOnDate(loadedIntakes, today)));
-            setTodaySummary(buildTodaySummary(loadedMedications, loadedIntakes, today));
+            setIntakes(loadedIntakes);
             setError(null);
             setIsLoading(false);
           }
@@ -100,17 +99,25 @@ export default function MedikamenteScreen() {
   );
 
   async function handleTakenToday(medicationId: number) {
+    // Der Knopf schaltet erst ab, wenn alle faelligen Dosen erfasst sind. Ohne
+    // diese Sperre schriebe ein zweiter Tipp waehrend des Speicherns eine
+    // ueberzaehlige Zeile ins Protokoll -- und das ist die Zahl, die beim
+    // Arztbesuch gezeigt wird.
+    if (isSavingRef.current) {
+      return;
+    }
+    isSavingRef.current = true;
+
     try {
       const db = await createEncryptedDb();
       await logMedicationTaken(db, medicationId, new Date().toISOString());
-      const today = formatLocalDate(new Date());
-      const intakes = await listMedicationIntakes(db, queryLowerBoundIso(today));
-      setTakenTodayCounts(countByMedication(intakesOnDate(intakes, today)));
-      setTodaySummary(buildTodaySummary(medications, intakes, today));
+      setIntakes(await listMedicationIntakes(db, queryLowerBoundIso(formatLocalDate(new Date()))));
       setError(null);
     } catch (takenError: unknown) {
       console.error('[Medikamente] Eintragen der Einnahme fehlgeschlagen:', takenError);
       setError('Einnahme konnte nicht gespeichert werden.');
+    } finally {
+      isSavingRef.current = false;
     }
   }
 
@@ -156,12 +163,30 @@ export default function MedikamenteScreen() {
         }
       }
       setMedications(await listMedications(db));
+      setIntakes(await listMedicationIntakes(db, queryLowerBoundIso(formatLocalDate(new Date()))));
       setError(null);
     } catch (deleteError: unknown) {
       console.error('[Medikamente] Medikament löschen fehlgeschlagen:', deleteError);
       setError('Medikament konnte nicht gelöscht werden.');
     }
   });
+
+  // Das schwebend geloeschte Medikament faellt schon vor der Rechnung heraus,
+  // damit die Zeile nicht etwas als offen nennt, dessen Karte bereits weg ist.
+  const visibleMedications = useMemo(
+    () => (pending === null ? medications : medications.filter((entry) => entry.id !== pending.id)),
+    [medications, pending]
+  );
+
+  const takenTodayCounts = useMemo(
+    () => countByMedication(intakesOnDate(intakes, formatLocalDate(new Date()))),
+    [intakes]
+  );
+
+  const todaySummary = useMemo(
+    () => buildTodaySummary(visibleMedications, intakes, formatLocalDate(new Date())),
+    [visibleMedications, intakes]
+  );
 
   function handleDelete(medicationId: number) {
     const medication = medications.find((entry) => entry.id === medicationId);
