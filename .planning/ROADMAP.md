@@ -31,7 +31,7 @@ bekommen.
 | 1 | Ans Eintragen erinnert werden und den Schweregrad beim Scrollen sehen | done |
 | 2 | Die App sieht nach Gestaltung aus, nicht nach Formular | done |
 | 3 | Löschen geht per Wischen und die Bedienung fühlt sich spürbar an | done |
-| 4 | Medikamenteneinnahme lässt sich abhaken und nachvollziehen | todo |
+| 4 | Medikamenteneinnahme lässt sich abhaken und nachvollziehen | in_progress |
 | 5 | Ein Arzttermin lässt sich mit einer Zusammenfassung vorbereiten | todo |
 | 6 | Die App ist auf Deutsch und Englisch bedienbar | todo |
 
@@ -222,7 +222,7 @@ fünf Löschwege.
 
 ---
 
-### Phase 4 — Medikamenteneinnahme abhaken
+### Phase 4 — Medikamenteneinnahme nachvollziehen
 
 **Goal:** Der Medikamente-Tab wird vom Nachschlagewerk zum Werkzeug: Einnahmen
 lassen sich festhalten und im Rückblick nachvollziehen.
@@ -256,6 +256,59 @@ Zurückschauen: eine Übersicht des heutigen Stands im Tab, und eine Ansicht
 vergangener Einnahmen samt Lücken über einen wählbaren Zeitraum.
 `listMedicationIdsTakenOn` liest heute genau einen Tag — für den Rückblick
 braucht es eine Abfrage über einen Bereich.
+
+**Stand am 2026-08-22:** Fünf Aufgaben umgesetzt, 544 Tests grün (vorher 502),
+Typprüfung sauber. Die Phase gilt erst als abgeschlossen, wenn der
+Gerätedurchgang durch ist.
+
+**Was sich beim Bauen als falsch herausstellte.** Die Bestandsaufnahme oben
+nannte das Erfassen „erfüllt". Das stimmte nur halb. `listMedicationIdsTakenOn`
+faltete die Zeilen eines Tages mit `[...new Set(...)]` zu einer Menge zusammen
+— die Erfassung war damit binär je Medikament und Tag, ein dreimal täglich
+einzunehmendes Präparat las sich nach der ersten Dosis den ganzen Tag als
+erledigt. Dieselbe Abfrage verglich zudem mit `like` ein lokales Datum gegen
+einen UTC-Zeitstempel, sodass eine Einnahme kurz nach Mitternacht auf den
+Vortag fiel. Beides fiel nicht auf, solange der Haken binär war. Die Funktion
+ist ersatzlos entfallen; gezählt wird jetzt in `adherence.ts` über lokale
+Kalendertage.
+
+**Die Rechnung.** Fällige Einnahmen je Tag = Anzahl der hinterlegten
+Erinnerungszeiten, mindestens eine. Ein Tag zählt nur innerhalb der Laufzeit
+des Medikaments. Kein Schemawechsel — jedes Abhaken schrieb schon immer eine
+eigene Zeile mit Zeitstempel, sie wurden nur zusammengefaltet.
+
+**Befunde der Schlussdurchsicht, alle behoben:** Der „Heute genommen"-Knopf
+hatte keine Sperre gegen Doppeltippen — bisher folgenlos, jetzt eine
+überzählige Zeile in genau der Zahl, die der Arzt sieht. Die
+Zusammenfassungszeile blieb nach dem Löschen eines Medikaments stehen und
+nannte etwas als offen, dessen Karte bereits weg war; sie wird jetzt aus dem
+Zustand abgeleitet statt getrennt geführt. Der Einnahme-Knopf beachtete das
+Startdatum nicht. Das vorbelegte Startdatum im Formular stammte aus UTC. Und
+ein Testaufräumer schrieb die Zeichenkette `"undefined"` in `process.env.TZ`.
+
+**Bewusst offengelassen, für Phase 5 zu entscheiden:**
+- **Die Rückschau bewertet jeden vergangenen Tag mit der *heutigen* Zahl der
+  Erinnerungszeiten.** Wer im Juli eine Zeit hatte und im August auf drei
+  erhöht, dessen Juli liest sich rückwirkend als lauter „1 von 3". Das folgt
+  der Spezifikation (§1 definiert Fälligkeit über die aktuellen
+  `reminderTimes`, und „kein Schemawechsel" schließt eine Historisierung aus),
+  ist aber die einzige Stelle, an der ohne Fehlbedienung eine belastbar falsche
+  Zahl entsteht. **Bis das entschieden ist, darf die Auswertung nicht in den
+  Medikamenten-Pass wandern.** Zwei Wege: eine historisierte Sollmenge
+  (`medication_schedule_history`, echter Schemawechsel) oder ein Hinweis im
+  Verlauf, dass die Sollmenge dem aktuellen Zeitplan folgt.
+- Ein pausiertes und wieder aufgenommenes Medikament liest sich als lange
+  Versäumnisstrecke — `startDate`/`endDate` bilden genau ein Intervall ab.
+- Einnahmen an Tagen, an denen kein Medikament fällig war, sind im Verlauf
+  weder sichtbar noch entfernbar, obwohl sie in Datenbank und Sicherung stehen.
+- Bleibt ein Bildschirm über Mitternacht im Vordergrund, altert sein „heute";
+  ein Wechsel weg und zurück heilt es. Vorbestehend, durch die Zählung nur
+  sichtbarer.
+- `medicationStatus.test.ts` schreibt beim Aufräumen dieselbe Zeichenkette
+  `"undefined"` in `process.env.TZ` wie der in dieser Phase behobene Fall.
+- Während des Rückgängig-Fensters eine *andere* Einnahme zu löschen lässt die
+  erste kurz wieder auftauchen. Stammt aus `usePendingDeletion` (Phase 3) und
+  beträfe Tagebuch und Arztbesuche gleichermaßen — dort zu beheben, nicht hier.
 
 ---
 

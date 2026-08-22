@@ -1,15 +1,22 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Alert, Pressable, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
 import {
   listMedications,
   logMedicationTaken,
-  listMedicationIdsTakenOn,
+  listMedicationIntakes,
   endMedication,
   deleteMedication,
 } from '../../../src/features/medications/db/medicationsRepository';
 import { formatLocalDate } from '../../../src/features/medications/medicationStatus';
+import {
+  buildTodaySummary,
+  countByMedication,
+  intakesOnDate,
+  queryLowerBoundIso,
+} from '../../../src/features/medications/adherence';
+import { TodaySummaryLine } from '../../../src/features/medications/components/TodaySummaryLine';
 import {
   getScreeningReminder,
   upsertScreeningReminder,
@@ -34,6 +41,7 @@ import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type {
   Medication,
+  MedicationIntake,
   ScreeningReminder,
   NewScreeningReminderInput,
 } from '../../../src/features/medications/types';
@@ -44,11 +52,12 @@ export default function MedikamenteScreen() {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const [medications, setMedications] = useState<Medication[]>([]);
-  const [takenTodayIds, setTakenTodayIds] = useState<Set<number>>(new Set());
+  const [intakes, setIntakes] = useState<MedicationIntake[]>([]);
   const [screeningReminder, setScreeningReminder] = useState<ScreeningReminder | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const isSavingRef = useRef(false);
 
   useEffect(() => {
     configureNotificationHandling();
@@ -61,15 +70,16 @@ export default function MedikamenteScreen() {
 
       createEncryptedDb()
         .then(async (db) => {
-          const [loadedMedications, loadedScreening, loadedTakenTodayIds] = await Promise.all([
+          const today = formatLocalDate(new Date());
+          const [loadedMedications, loadedScreening, loadedIntakes] = await Promise.all([
             listMedications(db),
             getScreeningReminder(db),
-            listMedicationIdsTakenOn(db, formatLocalDate(new Date())),
+            listMedicationIntakes(db, queryLowerBoundIso(today)),
           ]);
           if (isActive) {
             setMedications(loadedMedications);
             setScreeningReminder(loadedScreening);
-            setTakenTodayIds(new Set(loadedTakenTodayIds));
+            setIntakes(loadedIntakes);
             setError(null);
             setIsLoading(false);
           }
@@ -89,13 +99,25 @@ export default function MedikamenteScreen() {
   );
 
   async function handleTakenToday(medicationId: number) {
+    // Der Knopf schaltet erst ab, wenn alle faelligen Dosen erfasst sind. Ohne
+    // diese Sperre schriebe ein zweiter Tipp waehrend des Speicherns eine
+    // ueberzaehlige Zeile ins Protokoll -- und das ist die Zahl, die beim
+    // Arztbesuch gezeigt wird.
+    if (isSavingRef.current) {
+      return;
+    }
+    isSavingRef.current = true;
+
     try {
       const db = await createEncryptedDb();
       await logMedicationTaken(db, medicationId, new Date().toISOString());
-      setTakenTodayIds((current) => new Set(current).add(medicationId));
+      setIntakes(await listMedicationIntakes(db, queryLowerBoundIso(formatLocalDate(new Date()))));
+      setError(null);
     } catch (takenError: unknown) {
       console.error('[Medikamente] Eintragen der Einnahme fehlgeschlagen:', takenError);
       setError('Einnahme konnte nicht gespeichert werden.');
+    } finally {
+      isSavingRef.current = false;
     }
   }
 
@@ -141,12 +163,30 @@ export default function MedikamenteScreen() {
         }
       }
       setMedications(await listMedications(db));
+      setIntakes(await listMedicationIntakes(db, queryLowerBoundIso(formatLocalDate(new Date()))));
       setError(null);
     } catch (deleteError: unknown) {
       console.error('[Medikamente] Medikament löschen fehlgeschlagen:', deleteError);
       setError('Medikament konnte nicht gelöscht werden.');
     }
   });
+
+  // Das schwebend geloeschte Medikament faellt schon vor der Rechnung heraus,
+  // damit die Zeile nicht etwas als offen nennt, dessen Karte bereits weg ist.
+  const visibleMedications = useMemo(
+    () => (pending === null ? medications : medications.filter((entry) => entry.id !== pending.id)),
+    [medications, pending]
+  );
+
+  const takenTodayCounts = useMemo(
+    () => countByMedication(intakesOnDate(intakes, formatLocalDate(new Date()))),
+    [intakes]
+  );
+
+  const todaySummary = useMemo(
+    () => buildTodaySummary(visibleMedications, intakes, formatLocalDate(new Date())),
+    [visibleMedications, intakes]
+  );
 
   function handleDelete(medicationId: number) {
     const medication = medications.find((entry) => entry.id === medicationId);
@@ -215,6 +255,7 @@ export default function MedikamenteScreen() {
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
+      <TodaySummaryLine summary={todaySummary} />
       <ScreeningReminderCard
         reminder={screeningReminder}
         onSave={handleSaveScreeningReminder}
@@ -232,6 +273,14 @@ export default function MedikamenteScreen() {
           {isExporting ? 'PDF wird erstellt …' : 'Medikamenten-Pass als PDF exportieren'}
         </Text>
       </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Einnahme-Verlauf öffnen"
+        style={styles.historyLink}
+        onPress={() => router.push('/medikamente/verlauf')}
+      >
+        <Text style={styles.historyLinkText}>Einnahme-Verlauf ansehen</Text>
+      </Pressable>
       {isLoading ? (
         <SkeletonList count={3} lines={2} />
       ) : (
@@ -239,7 +288,7 @@ export default function MedikamenteScreen() {
           onCreate={() => router.push('/medikamente/neu')}
           medications={medications}
           today={new Date()}
-          takenTodayIds={takenTodayIds}
+          takenTodayCounts={takenTodayCounts}
           onTakenToday={handleTakenToday}
           onEnd={handleEnd}
           onEdit={(medicationId) => router.push(`/medikamente/${medicationId}`)}
@@ -280,6 +329,18 @@ function makeStyles(colors: ThemeColors) {
       opacity: 0.5,
     },
     exportLinkText: {
+      color: colors.primary,
+      fontSize: tokens.typography.fontSize.sm,
+      fontWeight: tokens.typography.fontWeight.medium,
+      textAlign: 'center',
+    },
+    historyLink: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      padding: tokens.spacing.md,
+    },
+    historyLinkText: {
       color: colors.primary,
       fontSize: tokens.typography.fontSize.sm,
       fontWeight: tokens.typography.fontWeight.medium,

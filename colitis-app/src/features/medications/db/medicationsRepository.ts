@@ -1,8 +1,8 @@
-import { asc, eq, like } from 'drizzle-orm';
+import { asc, eq, gte } from 'drizzle-orm';
 import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core';
 import { medications, medicationReminderTimes, medicationLog } from '../../../db/schema';
 import * as schema from '../../../db/schema';
-import type { Medication, MedicationInput, MedicationReminderTime } from '../types';
+import type { Medication, MedicationInput, MedicationReminderTime, MedicationIntake } from '../types';
 
 export type MedicationsDb = BaseSQLiteDatabase<'sync', any, typeof schema>;
 
@@ -160,12 +160,34 @@ export async function logMedicationTaken(db: MedicationsDb, medicationId: number
   await db.insert(medicationLog).values({ medicationId, takenAt });
 }
 
-export async function listMedicationIdsTakenOn(db: MedicationsDb, date: string): Promise<number[]> {
-  const rows = await db
-    .select({ medicationId: medicationLog.medicationId })
+/**
+ * Alle Einnahmen ab der Untergrenze, aelteste zuerst. fromIsoInclusive null
+ * liest das ganze Protokoll. Der gespeicherte Zeitstempel ist ISO in UTC,
+ * deshalb ist der lexikografische Vergleich zugleich der zeitliche.
+ */
+export async function listMedicationIntakes(
+  db: MedicationsDb,
+  fromIsoInclusive: string | null
+): Promise<MedicationIntake[]> {
+  const columns = {
+    id: medicationLog.id,
+    medicationId: medicationLog.medicationId,
+    takenAt: medicationLog.takenAt,
+  };
+
+  if (fromIsoInclusive === null) {
+    return db.select(columns).from(medicationLog).orderBy(asc(medicationLog.takenAt));
+  }
+
+  return db
+    .select(columns)
     .from(medicationLog)
-    .where(like(medicationLog.takenAt, `${date}%`));
-  return [...new Set(rows.map((row) => row.medicationId))];
+    .where(gte(medicationLog.takenAt, fromIsoInclusive))
+    .orderBy(asc(medicationLog.takenAt));
+}
+
+export async function deleteMedicationIntake(db: MedicationsDb, intakeId: number): Promise<void> {
+  await db.delete(medicationLog).where(eq(medicationLog.id, intakeId));
 }
 
 export async function deleteMedication(db: MedicationsDb, medicationId: number): Promise<MedicationReminderTime[]> {
