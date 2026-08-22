@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { Alert, Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
+import { Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import { Card } from '../../../components/ui/Card';
 import { isValidCalendarDate } from '../dateValidation';
+import { deleteFeedback } from '../../../lib/haptics';
 import type { ScreeningReminder, NewScreeningReminderInput } from '../types';
 import type { ThemeColors } from '../../../theme/types';
 
@@ -65,14 +66,8 @@ export function ScreeningReminderCard({ reminder, onSave, onDelete }: ScreeningR
   }
 
   function handleDelete() {
-    Alert.alert('Vorsorge-Termin löschen?', 'Der gespeicherte Koloskopie-Termin wird endgültig gelöscht.', [
-      { text: 'Abbrechen', style: 'cancel' },
-      {
-        text: 'Löschen',
-        style: 'destructive',
-        onPress: () => void Promise.resolve(onDelete()).then(() => setIsEditing(true)),
-      },
-    ]);
+    deleteFeedback();
+    void Promise.resolve(onDelete()).then(() => setIsEditing(true));
   }
 
   if (reminder && !isEditing) {

@@ -4,6 +4,7 @@ import { tokens } from '../../../styles/tokens';
 import { isMedicationActive } from '../medicationStatus';
 import { Card } from '../../../components/ui/Card';
 import { EmptyState } from '../../../components/ui/EmptyState';
+import { SwipeableRow } from '../../../components/swipe/SwipeableRow';
 import type { Medication } from '../types';
 import type { ThemeColors } from '../../../theme/types';
 
@@ -16,6 +17,7 @@ interface MedicationListProps {
   onEdit: (medicationId: number) => void;
   onDelete: (medicationId: number) => void;
   onCreate: () => void;
+  hiddenId: number | null;
 }
 
 export function MedicationList({
@@ -27,11 +29,12 @@ export function MedicationList({
   onEdit,
   onDelete,
   onCreate,
+  hiddenId,
 }: MedicationListProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
-  if (medications.length === 0) {
+  if (medications.filter((medication) => medication.id !== hiddenId).length === 0 && hiddenId === null) {
     return (
       <EmptyState
         title="Noch keine Medikamente hinterlegt"
@@ -48,78 +51,82 @@ export function MedicationList({
     <FlatList
       style={styles.list}
       contentContainerStyle={styles.listContent}
-      data={[...activeMedications, ...endedMedications]}
+      data={[...activeMedications, ...endedMedications].filter((medication) => medication.id !== hiddenId)}
       keyExtractor={(medication) => String(medication.id)}
       renderItem={({ item }) => {
         const isActive = isMedicationActive(item.endDate, today);
         const isTakenToday = takenTodayIds.has(item.id);
         return (
-          <Card accent={isActive ? 'good' : 'neutral'} isMuted={!isActive}>
-            <Text style={styles.cardName}>{item.name}</Text>
-            <Text style={styles.cardDetail}>
-              {item.dose} · {item.schedule}
-            </Text>
-            {item.reminderTimes.length > 0 && (
+          <SwipeableRow onDelete={() => onDelete(item.id)}>
+            <Card accent={isActive ? 'good' : 'neutral'} isMuted={!isActive}>
+              <Text style={styles.cardName}>{item.name}</Text>
               <Text style={styles.cardDetail}>
-                Erinnerungen: {item.reminderTimes.map((reminderTime) => reminderTime.time).join(', ')}
+                {item.dose} · {item.schedule}
               </Text>
-            )}
-            {item.sideEffectsNote && <Text style={styles.cardSideEffects}>Nebenwirkungen: {item.sideEffectsNote}</Text>}
-            {!isActive && item.endDate && <Text style={styles.cardEndedLabel}>Beendet am {item.endDate}</Text>}
-            <View style={styles.actionsRow}>
-              {isActive && (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: isTakenToday }}
-                  accessibilityLabel={
-                    isTakenToday ? `${item.name} heute bereits genommen` : `${item.name} heute genommen`
-                  }
-                  disabled={isTakenToday}
-                  style={isTakenToday ? styles.takenButton : styles.notTakenButton}
-                  onPress={() => onTakenToday(item.id)}
-                >
-                  <Text style={isTakenToday ? styles.takenButtonText : styles.notTakenButtonText}>
-                    {isTakenToday ? 'Heute genommen ✓' : 'Heute genommen'}
-                  </Text>
-                </Pressable>
+              {item.reminderTimes.length > 0 && (
+                <Text style={styles.cardDetail}>
+                  Erinnerungen: {item.reminderTimes.map((reminderTime) => reminderTime.time).join(', ')}
+                </Text>
               )}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`${item.name} bearbeiten`}
-                style={styles.editButton}
-                onPress={() => onEdit(item.id)}
-              >
-                <Text style={styles.editButtonText}>Bearbeiten</Text>
-              </Pressable>
-              {isActive &&
-                (item.endDate === null ? (
+              {item.sideEffectsNote && (
+                <Text style={styles.cardSideEffects}>Nebenwirkungen: {item.sideEffectsNote}</Text>
+              )}
+              {!isActive && item.endDate && <Text style={styles.cardEndedLabel}>Beendet am {item.endDate}</Text>}
+              <View style={styles.actionsRow}>
+                {isActive && (
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`${item.name} beenden`}
-                    style={styles.endButton}
-                    onPress={() => onEnd(item.id)}
+                    accessibilityState={{ disabled: isTakenToday }}
+                    accessibilityLabel={
+                      isTakenToday ? `${item.name} heute bereits genommen` : `${item.name} heute genommen`
+                    }
+                    disabled={isTakenToday}
+                    style={isTakenToday ? styles.takenButton : styles.notTakenButton}
+                    onPress={() => onTakenToday(item.id)}
                   >
-                    <Text style={styles.endButtonText}>Beenden</Text>
+                    <Text style={isTakenToday ? styles.takenButtonText : styles.notTakenButtonText}>
+                      {isTakenToday ? 'Heute genommen ✓' : 'Heute genommen'}
+                    </Text>
                   </Pressable>
-                ) : (
-                  <View
-                    accessibilityRole="text"
-                    accessibilityLabel={`${item.name} beendet`}
-                    style={styles.endedHintBadge}
-                  >
-                    <Text style={styles.endedHintBadgeText}>Beendet</Text>
-                  </View>
-                ))}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`${item.name} löschen`}
-                style={styles.deleteButton}
-                onPress={() => onDelete(item.id)}
-              >
-                <Text style={styles.deleteButtonText}>Löschen</Text>
-              </Pressable>
-            </View>
-          </Card>
+                )}
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${item.name} bearbeiten`}
+                  style={styles.editButton}
+                  onPress={() => onEdit(item.id)}
+                >
+                  <Text style={styles.editButtonText}>Bearbeiten</Text>
+                </Pressable>
+                {isActive &&
+                  (item.endDate === null ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`${item.name} beenden`}
+                      style={styles.endButton}
+                      onPress={() => onEnd(item.id)}
+                    >
+                      <Text style={styles.endButtonText}>Beenden</Text>
+                    </Pressable>
+                  ) : (
+                    <View
+                      accessibilityRole="text"
+                      accessibilityLabel={`${item.name} beendet`}
+                      style={styles.endedHintBadge}
+                    >
+                      <Text style={styles.endedHintBadgeText}>Beendet</Text>
+                    </View>
+                  ))}
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${item.name} löschen`}
+                  style={styles.deleteButton}
+                  onPress={() => onDelete(item.id)}
+                >
+                  <Text style={styles.deleteButtonText}>Löschen</Text>
+                </Pressable>
+              </View>
+            </Card>
+          </SwipeableRow>
         );
       }}
     />

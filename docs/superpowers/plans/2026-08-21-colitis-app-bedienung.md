@@ -368,7 +368,7 @@ export function isDeleteSwipe({ startX, dx, dy, screenWidth }: SwipeAttempt): bo
 npm test -- src/components/swipe/swipeDecision.test.ts
 ```
 
-Erwartet: PASS, 8 Tests.
+Erwartet: PASS, 9 Tests.
 
 - [ ] **Step 5: `SwipeableTabScreen` auf den gemeinsamen Wert bringen**
 
@@ -399,7 +399,7 @@ Erwartet: keine Ausgabe.
 npm test
 ```
 
-Erwartet: PASS, 492 Tests (484 + 8).
+Erwartet: PASS, 493 Tests (484 + 9).
 
 - [ ] **Step 7: Commit**
 
@@ -513,7 +513,7 @@ Erwartet: keine Ausgabe.
 npm test
 ```
 
-Erwartet: PASS, 492 Tests unverändert. Diese beiden Dateien bekommen keine Tests — `expo-haptics` und `AccessibilityInfo` sind Laufzeitschnittstellen des Geräts.
+Erwartet: PASS, 493 Tests unverändert. Diese beiden Dateien bekommen keine Tests — `expo-haptics` und `AccessibilityInfo` sind Laufzeitschnittstellen des Geräts.
 
 - [ ] **Step 5: Commit**
 
@@ -812,7 +812,7 @@ Erwartet: keine Ausgabe.
 npm test
 ```
 
-Erwartet: PASS, 492 Tests unverändert. Diese drei Dateien bekommen keine Tests — das Prüfbare liegt in Task 1 und 2.
+Erwartet: PASS, 493 Tests unverändert. Diese drei Dateien bekommen keine Tests — das Prüfbare liegt in Task 1 und 2.
 
 - [ ] **Step 5: Commit**
 
@@ -859,7 +859,15 @@ Direkt nach `const dayRatings = buildDayRatings(entries);` einfügen:
   const visibleEntries = entries.filter((entry) => entry.id !== hiddenId);
 ```
 
-Danach **alle** weiteren Verwendungen von `entries` in dieser Komponente durch `visibleEntries` ersetzen — sowohl die Prüfung `entries.length === 0` als auch `data={entries}` in der `FlatList`. `buildDayRatings` bleibt bei `entries`: Die Tagesbewertung soll sich nicht ändern, nur weil eine Zeile gerade ausgeblendet ist.
+Danach `data={entries}` in der `FlatList` durch `data={visibleEntries}` ersetzen. `buildDayRatings` bleibt bei `entries`: Die Tagesbewertung soll sich nicht ändern, nur weil eine Zeile gerade ausgeblendet ist.
+
+Die Leerzustandsprüfung bekommt **einen zusätzlichen Wächter**:
+
+```tsx
+  if (visibleEntries.length === 0 && hiddenId === null) {
+```
+
+Ohne `hiddenId === null` behauptet die Liste beim Löschen des letzten Eintrags „Dein Tagebuch ist noch leer" und bietet an, den ersten anzulegen — während unten der Streifen „Eintrag gelöscht — Rückgängig" steht. Zwei Aussagen, die sich widersprechen. Läuft eine Uhr, bleibt die Liste stattdessen leer stehen; sobald die Uhr abläuft, wird `hiddenId` wieder `null` und der Leerzustand erscheint richtig.
 
 Im `renderItem` die `<Card>` in `SwipeableRow` fassen:
 ```tsx
@@ -948,7 +956,7 @@ Erwartet: keine Ausgabe.
 npm test
 ```
 
-Erwartet: PASS, 492 Tests.
+Erwartet: PASS, 493 Tests.
 
 - [ ] **Step 5: Commit**
 
@@ -1038,8 +1046,10 @@ die `data`-Prop der `FlatList` ändern zu:
 ```
 und die Leerzustandsprüfung ganz oben auf
 ```tsx
-  if (medications.filter((medication) => medication.id !== hiddenId).length === 0) {
+  if (medications.filter((medication) => medication.id !== hiddenId).length === 0 && hiddenId === null) {
 ```
+
+Der Zusatz `&& hiddenId === null` ist nicht überflüssig: Ohne ihn behauptet die Liste beim Löschen des letzten Medikaments „Noch keine Medikamente hinterlegt" und bietet an, das erste anzulegen — während unten der Streifen „… gelöscht — Rückgängig" steht. Läuft eine Uhr, bleibt die Liste stattdessen leer stehen.
 
 Im `renderItem` die `<Card>` in `SwipeableRow` fassen:
 ```tsx
@@ -1048,7 +1058,13 @@ Im `renderItem` die `<Card>` in `SwipeableRow` fassen:
 ```
 mit dem passenden schließenden Paar.
 
-In `src/features/doctorVisits/components/DoctorVisitList.tsx` dasselbe: `hiddenId: number | null;` in die Props, `data={visits.filter((visit) => visit.id !== hiddenId)}`, Leerzustandsprüfung entsprechend, und das äußere `Pressable` in `SwipeableRow` fassen:
+In `src/features/doctorVisits/components/DoctorVisitList.tsx` dasselbe: `hiddenId: number | null;` in die Props, `data={visits.filter((visit) => visit.id !== hiddenId)}`, und die Leerzustandsprüfung mit demselben Wächter:
+
+```tsx
+  if (visits.filter((visit) => visit.id !== hiddenId).length === 0 && hiddenId === null) {
+```
+
+Und das äußere `Pressable` in `SwipeableRow` fassen:
 ```tsx
         <SwipeableRow onDelete={() => onDelete(item.id)}>
           <Pressable
@@ -1074,7 +1090,7 @@ Erwartet: keine Ausgabe.
 npm test
 ```
 
-Erwartet: PASS, 492 Tests.
+Erwartet: PASS, 493 Tests.
 
 - [ ] **Step 5: Commit**
 
@@ -1189,7 +1205,7 @@ Erwartet: keine Ausgabe. Meldet TypeScript einen unbenutzten Import, prüfe erst
 npm test
 ```
 
-Erwartet: PASS, 492 Tests.
+Erwartet: PASS, 493 Tests.
 
 - [ ] **Step 6: Abschlussgrep auf unbenutzte Importe**
 

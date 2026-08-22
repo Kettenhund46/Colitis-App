@@ -9,9 +9,8 @@ import {
 import { useRouter } from 'expo-router';
 import { directionForEdge, getNeighbourTab, tabPath, type SwipeEdge, type TabName } from '../navigation/tabOrder';
 import { useSwipeNavigation } from '../navigation/SwipeNavigationContext';
+import { EDGE_WIDTH } from './swipe/swipeDecision';
 
-/** Breite des Streifens an der Bildschirmkante, in dem die Geste beginnen muss. */
-const EDGE_WIDTH = 25;
 /** Waagerechte Mindeststrecke, ab der die Geste als Wischen gilt. */
 const MIN_HORIZONTAL_DISTANCE = 60;
 

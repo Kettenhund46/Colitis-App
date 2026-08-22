@@ -4,6 +4,7 @@ import { Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../../src/db/client';
 import { getDoctorVisitById, updateDoctorVisit } from '../../../../src/features/doctorVisits/db/doctorVisitsRepository';
 import { DoctorVisitForm } from '../../../../src/features/doctorVisits/components/DoctorVisitForm';
+import { saveFeedback } from '../../../../src/lib/haptics';
 import { useTheme } from '../../../../src/theme/ThemeContext';
 import { tokens } from '../../../../src/styles/tokens';
 import type { DoctorVisit, DoctorVisitInput } from '../../../../src/features/doctorVisits/types';
@@ -49,6 +50,7 @@ export default function ArztbesuchBearbeitenScreen() {
       const db = await createEncryptedDb();
       await updateDoctorVisit(db, visitId, input);
       setSaveError(null);
+      saveFeedback();
       router.back();
     } catch (error: unknown) {
       console.error('[Arztbesuche] Bearbeiten fehlgeschlagen:', error);

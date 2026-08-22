@@ -12,6 +12,8 @@ import { DiaryCalendarView } from '../../../src/features/diary/components/DiaryC
 import { FlareWarningBanner } from '../../../src/features/diary/components/FlareWarningBanner';
 import { SwipeableTabScreen } from '../../../src/components/SwipeableTabScreen';
 import { SkeletonList } from '../../../src/components/ui/SkeletonList';
+import { UndoBar } from '../../../src/components/ui/UndoBar';
+import { usePendingDeletion } from '../../../src/features/deletion/usePendingDeletion';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { DiaryEntryWithTriggers } from '../../../src/features/diary/types';
@@ -56,27 +58,20 @@ export default function TagebuchScreen() {
     }, [])
   );
 
-  function handleDelete(entryId: number) {
-    Alert.alert('Eintrag löschen?', 'Dieser Tagebucheintrag wird endgültig gelöscht.', [
-      { text: 'Abbrechen', style: 'cancel' },
-      {
-        text: 'Löschen',
-        style: 'destructive',
-        onPress: () => void confirmDelete(entryId),
-      },
-    ]);
-  }
-
-  async function confirmDelete(entryId: number) {
+  const { pending, requestDelete, undo } = usePendingDeletion<number>(async (entryId) => {
     try {
       const db = await createEncryptedDb();
       await deleteDiaryEntry(db, entryId);
       setEntries(await listDiaryEntries(db));
       setError(null);
     } catch (deleteError: unknown) {
-      console.error('[Tagebuch] Löschen fehlgeschlagen:', deleteError);
+      console.error('[Tagebuch] Eintrag löschen fehlgeschlagen:', deleteError);
       setError('Eintrag konnte nicht gelöscht werden.');
     }
+  });
+
+  function handleDelete(entryId: number) {
+    requestDelete({ id: entryId, label: 'Eintrag' });
   }
 
   async function handleExportPdf() {
@@ -198,9 +193,14 @@ export default function TagebuchScreen() {
           entries={entries}
           onDelete={handleDelete}
           onCreate={() => router.push('/tagebuch/neu')}
+          hiddenId={pending === null ? null : pending.id}
         />
       ) : (
-        <DiaryCalendarView entries={entries} onDeleteEntry={handleDelete} />
+        <DiaryCalendarView
+          entries={entries}
+          onDeleteEntry={handleDelete}
+          hiddenId={pending === null ? null : pending.id}
+        />
       )}
       <Pressable
         accessibilityRole="button"
@@ -210,6 +210,7 @@ export default function TagebuchScreen() {
       >
         <Text style={styles.addButtonText}>+</Text>
       </Pressable>
+      {pending !== null && <UndoBar label={pending.label} onUndo={undo} />}
     </SwipeableTabScreen>
   );
 }

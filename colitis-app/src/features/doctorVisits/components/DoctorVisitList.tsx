@@ -4,6 +4,7 @@ import { tokens } from '../../../styles/tokens';
 import { formatGermanDate } from '../doctorVisitPassBuilder';
 import { Card } from '../../../components/ui/Card';
 import { EmptyState } from '../../../components/ui/EmptyState';
+import { SwipeableRow } from '../../../components/swipe/SwipeableRow';
 import type { DoctorVisit } from '../types';
 import type { ThemeColors } from '../../../theme/types';
 
@@ -12,13 +13,14 @@ interface DoctorVisitListProps {
   onEdit: (visitId: number) => void;
   onDelete: (visitId: number) => void;
   onCreate: () => void;
+  hiddenId: number | null;
 }
 
-export function DoctorVisitList({ visits, onEdit, onDelete, onCreate }: DoctorVisitListProps) {
+export function DoctorVisitList({ visits, onEdit, onDelete, onCreate, hiddenId }: DoctorVisitListProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
-  if (visits.length === 0) {
+  if (visits.filter((visit) => visit.id !== hiddenId).length === 0 && hiddenId === null) {
     return (
       <EmptyState
         title="Noch keine Arztbesuche erfasst"
@@ -32,35 +34,37 @@ export function DoctorVisitList({ visits, onEdit, onDelete, onCreate }: DoctorVi
     <FlatList
       style={styles.list}
       contentContainerStyle={styles.listContent}
-      data={visits}
+      data={visits.filter((visit) => visit.id !== hiddenId)}
       keyExtractor={(visit) => String(visit.id)}
       renderItem={({ item }) => (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Arztbesuch vom ${formatGermanDate(item.visitDate)} bearbeiten`}
-          onPress={() => onEdit(item.id)}
-        >
-          <Card accent="neutral">
-            <Text style={styles.cardDate}>{formatGermanDate(item.visitDate)}</Text>
-            {item.doctorName && <Text style={styles.cardDetail}>{item.doctorName}</Text>}
-            {item.reason && <Text style={styles.cardDetail}>{item.reason}</Text>}
-            {item.nextAppointmentDate && (
-              <Text style={styles.cardNextAppointment}>
-                Nächster Termin: {formatGermanDate(item.nextAppointmentDate)}
-              </Text>
-            )}
-            <View style={styles.actionsRow}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Arztbesuch vom ${formatGermanDate(item.visitDate)} löschen`}
-                style={styles.deleteButton}
-                onPress={() => onDelete(item.id)}
-              >
-                <Text style={styles.deleteButtonText}>Löschen</Text>
-              </Pressable>
-            </View>
-          </Card>
-        </Pressable>
+        <SwipeableRow onDelete={() => onDelete(item.id)}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Arztbesuch vom ${formatGermanDate(item.visitDate)} bearbeiten`}
+            onPress={() => onEdit(item.id)}
+          >
+            <Card accent="neutral">
+              <Text style={styles.cardDate}>{formatGermanDate(item.visitDate)}</Text>
+              {item.doctorName && <Text style={styles.cardDetail}>{item.doctorName}</Text>}
+              {item.reason && <Text style={styles.cardDetail}>{item.reason}</Text>}
+              {item.nextAppointmentDate && (
+                <Text style={styles.cardNextAppointment}>
+                  Nächster Termin: {formatGermanDate(item.nextAppointmentDate)}
+                </Text>
+              )}
+              <View style={styles.actionsRow}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Arztbesuch vom ${formatGermanDate(item.visitDate)} löschen`}
+                  style={styles.deleteButton}
+                  onPress={() => onDelete(item.id)}
+                >
+                  <Text style={styles.deleteButtonText}>Löschen</Text>
+                </Pressable>
+              </View>
+            </Card>
+          </Pressable>
+        </SwipeableRow>
       )}
     />
   );

@@ -4,6 +4,7 @@ import { Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
 import { createDiaryEntry } from '../../../src/features/diary/db/diaryRepository';
 import { DiaryEntryForm } from '../../../src/features/diary/components/DiaryEntryForm';
+import { saveFeedback } from '../../../src/lib/haptics';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { NewDiaryEntryInput } from '../../../src/features/diary/types';
@@ -31,6 +32,7 @@ export default function NeuerEintragScreen() {
         return;
       }
       setSaveError(null);
+      saveFeedback();
       router.back();
     } catch (error: unknown) {
       console.error('[Tagebuch] Speichern des Eintrags fehlgeschlagen:', error);

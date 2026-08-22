@@ -7,6 +7,7 @@ import { buildDayRatings, formatDateKey, accentForRating } from '../calendarLogi
 import { RatingIndicator, RATING_LABELS } from './RatingIndicator';
 import { Card } from '../../../components/ui/Card';
 import { EmptyState } from '../../../components/ui/EmptyState';
+import { SwipeableRow } from '../../../components/swipe/SwipeableRow';
 import type { DiaryEntryWithTriggers } from '../types';
 import type { DayRating } from '../calendarLogic';
 import type { ThemeColors } from '../../../theme/types';
@@ -15,14 +16,17 @@ interface DiaryHistoryListProps {
   entries: DiaryEntryWithTriggers[];
   onDelete: (entryId: number) => void;
   onCreate: () => void;
+  /** Kennung des Eintrags, dessen Loeschen noch rueckgaengig gemacht werden kann. */
+  hiddenId: number | null;
 }
 
-export function DiaryHistoryList({ entries, onDelete, onCreate }: DiaryHistoryListProps) {
+export function DiaryHistoryList({ entries, onDelete, onCreate, hiddenId }: DiaryHistoryListProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const dayRatings = buildDayRatings(entries);
+  const visibleEntries = entries.filter((entry) => entry.id !== hiddenId);
 
-  if (entries.length === 0) {
+  if (visibleEntries.length === 0 && hiddenId === null) {
     return (
       <EmptyState
         title="Dein Tagebuch ist noch leer"
@@ -36,52 +40,54 @@ export function DiaryHistoryList({ entries, onDelete, onCreate }: DiaryHistoryLi
     <FlatList
       style={styles.list}
       contentContainerStyle={styles.listContent}
-      data={entries}
+      data={visibleEntries}
       keyExtractor={(entry) => String(entry.id)}
       renderItem={({ item }) => {
         const rating = dayRatings.get(formatDateKey(new Date(item.occurredAt)));
 
         return (
-          <Card accent={accentForRating(rating)}>
-            <View
-              accessibilityRole="text"
-              accessibilityLabel={buildCardAccessibilityLabel(item, rating)}
-            >
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardDate}>{formatOccurredAt(item.occurredAt)}</Text>
-                {rating !== undefined && (
-                  <View style={styles.ratingBadge}>
-                    <RatingIndicator rating={rating} />
-                    <Text style={styles.ratingText}>Tag: {RATING_LABELS[rating]}</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.cardDetail}>
-                Stuhlgang: {item.stoolFrequency}× · {labelFor(STOOL_CONSISTENCY_OPTIONS, item.stoolConsistency)}
-              </Text>
-              <Text style={styles.cardDetail}>Schmerzlevel: {item.painLevel}/10</Text>
-              {item.hasBlood && <Text style={styles.cardWarning}>Blut im Stuhl</Text>}
-              {item.triggerCategories.length > 0 && (
-                <Text style={styles.cardDetail}>
-                  Auslöser: {buildTriggerLabels(item.triggerCategories, item.foodTriggerNote).join(', ')}
-                </Text>
-              )}
-              {item.symptoms.length > 0 && (
-                <Text style={styles.cardDetail}>
-                  Symptome: {item.symptoms.map((symptomKey) => labelFor(SYMPTOM_OPTIONS, symptomKey)).join(', ')}
-                </Text>
-              )}
-              {item.note && <Text style={styles.cardNote}>{item.note}</Text>}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Eintrag vom ${formatOccurredAt(item.occurredAt)} löschen`}
-                style={styles.deleteButton}
-                onPress={() => onDelete(item.id)}
+          <SwipeableRow onDelete={() => onDelete(item.id)}>
+            <Card accent={accentForRating(rating)}>
+              <View
+                accessibilityRole="text"
+                accessibilityLabel={buildCardAccessibilityLabel(item, rating)}
               >
-                <Text style={styles.deleteButtonText}>Löschen</Text>
-              </Pressable>
-            </View>
-          </Card>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardDate}>{formatOccurredAt(item.occurredAt)}</Text>
+                  {rating !== undefined && (
+                    <View style={styles.ratingBadge}>
+                      <RatingIndicator rating={rating} />
+                      <Text style={styles.ratingText}>Tag: {RATING_LABELS[rating]}</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.cardDetail}>
+                  Stuhlgang: {item.stoolFrequency}× · {labelFor(STOOL_CONSISTENCY_OPTIONS, item.stoolConsistency)}
+                </Text>
+                <Text style={styles.cardDetail}>Schmerzlevel: {item.painLevel}/10</Text>
+                {item.hasBlood && <Text style={styles.cardWarning}>Blut im Stuhl</Text>}
+                {item.triggerCategories.length > 0 && (
+                  <Text style={styles.cardDetail}>
+                    Auslöser: {buildTriggerLabels(item.triggerCategories, item.foodTriggerNote).join(', ')}
+                  </Text>
+                )}
+                {item.symptoms.length > 0 && (
+                  <Text style={styles.cardDetail}>
+                    Symptome: {item.symptoms.map((symptomKey) => labelFor(SYMPTOM_OPTIONS, symptomKey)).join(', ')}
+                  </Text>
+                )}
+                {item.note && <Text style={styles.cardNote}>{item.note}</Text>}
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Eintrag vom ${formatOccurredAt(item.occurredAt)} löschen`}
+                  style={styles.deleteButton}
+                  onPress={() => onDelete(item.id)}
+                >
+                  <Text style={styles.deleteButtonText}>Löschen</Text>
+                </Pressable>
+              </View>
+            </Card>
+          </SwipeableRow>
         );
       }}
     />

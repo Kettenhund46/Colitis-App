@@ -12,6 +12,7 @@ import {
 } from '../../../src/lib/notifications/notificationService';
 import { buildMedicationReminderContent } from '../../../src/features/medications/notifications/reminderContent';
 import { MedicationForm } from '../../../src/features/medications/components/MedicationForm';
+import { saveFeedback } from '../../../src/lib/haptics';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { MedicationInput } from '../../../src/features/medications/types';
@@ -53,6 +54,7 @@ export default function NeuesMedikamentScreen() {
     }
 
     setSaveError(null);
+    saveFeedback();
     router.back();
   }
 
