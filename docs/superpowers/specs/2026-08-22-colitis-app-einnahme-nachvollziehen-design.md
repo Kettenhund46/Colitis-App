@@ -188,11 +188,18 @@ Fehlerstreifen (`Einnahmen konnten nicht geladen werden.`,
 
 ## Leerzustände
 
-- Verlauf ohne jede Einnahme: `EmptyState` mit Titel
-  `Noch keine Einnahmen erfasst`, `showGhost={false}` — durch Anlegen entsteht
-  hier nichts, eine Formvorschau wäre ein falsches Versprechen.
-- Verlauf mit Einnahmen, aber leerem Zeitraum: `EmptyState` mit
-  `In diesem Zeitraum wurde nichts erfasst`, ebenfalls ohne Geisterkarte.
+Kein Medikament hinterlegt heißt leer — **keine Einnahme** hinterlegt heißt
+nicht leer: Dann zeigt die Tagesliste lauter Lücken, und genau das ist ihr
+Zweck. Die Leerzustände richten sich deshalb nach den Medikamenten, nicht nach
+den Einnahmen:
+
+- Kein Medikament hinterlegt: `EmptyState` mit Titel
+  `Noch keine Medikamente hinterlegt`.
+- Medikamente vorhanden, im gewählten Zeitraum war aber keines fällig:
+  `EmptyState` mit `In diesem Zeitraum war nichts fällig`.
+
+Beide mit `showGhost={false}` — hier entsteht durch Anlegen nichts, eine
+Formvorschau wäre ein falsches Versprechen.
 
 ## Was ausdrücklich nicht dazugehört
 
