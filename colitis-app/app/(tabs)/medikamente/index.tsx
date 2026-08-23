@@ -251,21 +251,11 @@ export default function MedikamenteScreen() {
   // Spalte ueber der Liste, waere von der Liste nur ein schmaler Streifen
   // uebrig -- die Vorsorge-Karte allein fuellt aufgeklappt den halben Schirm.
   const listHeader = (
-    <>
-      <ScreeningReminderCard
-        reminder={screeningReminder}
-        onSave={handleSaveScreeningReminder}
-        onDelete={handleDeleteScreeningReminder}
-      />
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Einnahme-Verlauf öffnen"
-        style={styles.historyLink}
-        onPress={() => router.push('/medikamente/verlauf')}
-      >
-        <Text style={styles.historyLinkText}>Einnahme-Verlauf ansehen</Text>
-      </Pressable>
-    </>
+    <ScreeningReminderCard
+      reminder={screeningReminder}
+      onSave={handleSaveScreeningReminder}
+      onDelete={handleDeleteScreeningReminder}
+    />
   );
 
   return (
@@ -288,6 +278,19 @@ export default function MedikamenteScreen() {
           {isExporting ? 'PDF wird erstellt …' : 'Medikamenten-Pass als PDF exportieren'}
         </Text>
       </Pressable>
+      {/* Chip statt voller Leiste, wie "Auswertung" und "Arztbesuche" im
+          Tagebuch. Als Leiste direkt unter der Vorsorge-Karte las er sich als
+          deren letzte Zeile -- beide auf derselben hellen Flaeche. */}
+      <View style={styles.chipRow}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Einnahme-Verlauf öffnen"
+          style={styles.chip}
+          onPress={() => router.push('/medikamente/verlauf')}
+        >
+          <Text style={styles.chipText}>Einnahme-Verlauf</Text>
+        </Pressable>
+      </View>
       <TodaySummaryLine summary={todaySummary} />
       <MedicationList
         header={listHeader}
@@ -340,17 +343,28 @@ function makeStyles(colors: ThemeColors) {
       fontWeight: tokens.typography.fontWeight.medium,
       textAlign: 'center',
     },
-    historyLink: {
+    chipRow: {
+      flexDirection: 'row',
+      gap: tokens.spacing.sm,
       backgroundColor: colors.surface,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
-      padding: tokens.spacing.md,
+      paddingHorizontal: tokens.spacing.md,
+      paddingVertical: tokens.spacing.sm,
     },
-    historyLinkText: {
+    chip: {
+      flex: 1,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: tokens.radius.pill,
+      paddingVertical: tokens.spacing.sm,
+      paddingHorizontal: tokens.spacing.md,
+    },
+    chipText: {
       color: colors.primary,
       fontSize: tokens.typography.fontSize.sm,
       fontWeight: tokens.typography.fontWeight.medium,
-      textAlign: 'center',
     },
     addButton: {
       position: 'absolute',
