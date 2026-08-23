@@ -5,7 +5,10 @@ import { isMedicationActive, formatLocalDate } from '../medicationStatus';
 import { expectedDosesPerDay, formatTakenButtonLabel, isMedicationDueOn } from '../adherence';
 import { Card } from '../../../components/ui/Card';
 import { EmptyState } from '../../../components/ui/EmptyState';
+import { SkeletonList } from '../../../components/ui/SkeletonList';
+import { FAB_CLEARANCE } from '../../../components/ui/floatingActionButton';
 import { SwipeableRow } from '../../../components/swipe/SwipeableRow';
+import type { ReactElement } from 'react';
 import type { Medication } from '../types';
 import type { ThemeColors } from '../../../theme/types';
 
@@ -19,6 +22,13 @@ interface MedicationListProps {
   onDelete: (medicationId: number) => void;
   onCreate: () => void;
   hiddenId: number | null;
+  /**
+   * Was oberhalb der Karten steht und mitscrollen soll. Der Bildschirm ist
+   * sonst eine feste Spalte, in der nur diese Liste scrollt -- steht viel
+   * darueber, bleibt fuer sie ein schmaler Streifen uebrig.
+   */
+  header?: ReactElement | null;
+  isLoading?: boolean;
 }
 
 export function MedicationList({
@@ -31,29 +41,41 @@ export function MedicationList({
   onDelete,
   onCreate,
   hiddenId,
+  header = null,
+  isLoading = false,
 }: MedicationListProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
-  if (medications.filter((medication) => medication.id !== hiddenId).length === 0 && hiddenId === null) {
-    return (
-      <EmptyState
-        title="Noch keine Medikamente hinterlegt"
-        description="Trage ein, was du nimmst — Dosis, Zeitplan und Erinnerungszeiten. Die App meldet sich dann von selbst zur richtigen Zeit."
-        action={{ label: 'Erstes Medikament anlegen', onPress: onCreate }}
-      />
-    );
-  }
-
   const activeMedications = medications.filter((medication) => isMedicationActive(medication.endDate, today));
   const endedMedications = medications.filter((medication) => !isMedicationActive(medication.endDate, today));
+  const visibleMedications = isLoading
+    ? []
+    : [...activeMedications, ...endedMedications].filter((medication) => medication.id !== hiddenId);
 
   return (
     <FlatList
       style={styles.list}
       contentContainerStyle={styles.listContent}
-      data={[...activeMedications, ...endedMedications].filter((medication) => medication.id !== hiddenId)}
+      data={visibleMedications}
       keyExtractor={(medication) => String(medication.id)}
+      ListHeaderComponent={header}
+      // Der Kopfbereich bleibt auch ohne Karten stehen: Sonst waeren
+      // Vorsorge-Block, PDF-Ausgabe und Verlauf ohne ein einziges Medikament
+      // nicht mehr erreichbar. Waehrend des Rueckgaengig-Fensters bleibt der
+      // Leerzustand aus -- er widerspraeche dem Streifen, der die Zeile
+      // gerade noch zurueckholen kann.
+      ListEmptyComponent={
+        isLoading ? (
+          <SkeletonList count={3} lines={2} />
+        ) : hiddenId === null ? (
+          <EmptyState
+            title="Noch keine Medikamente hinterlegt"
+            description="Trage ein, was du nimmst — Dosis, Zeitplan und Erinnerungszeiten. Die App meldet sich dann von selbst zur richtigen Zeit."
+            action={{ label: 'Erstes Medikament anlegen', onPress: onCreate }}
+          />
+        ) : null
+      }
       renderItem={({ item }) => {
         const isActive = isMedicationActive(item.endDate, today);
         const isDueToday = isMedicationDueOn(item, formatLocalDate(today));
@@ -61,8 +83,9 @@ export function MedicationList({
         const takenToday = takenTodayCounts.get(item.id) ?? 0;
         const isTakenToday = takenToday >= expectedToday;
         return (
-          <SwipeableRow onDelete={() => onDelete(item.id)}>
-            <Card accent={isActive ? 'good' : 'neutral'} isMuted={!isActive}>
+          <View style={styles.rowWrapper}>
+            <SwipeableRow onDelete={() => onDelete(item.id)}>
+              <Card accent={isActive ? 'good' : 'neutral'} isMuted={!isActive}>
               <Text style={styles.cardName}>{item.name}</Text>
               <Text style={styles.cardDetail}>
                 {item.dose} · {item.schedule}
@@ -131,8 +154,9 @@ export function MedicationList({
                   <Text style={styles.deleteButtonText}>Löschen</Text>
                 </Pressable>
               </View>
-            </Card>
-          </SwipeableRow>
+              </Card>
+            </SwipeableRow>
+          </View>
         );
       }}
     />
@@ -142,7 +166,20 @@ export function MedicationList({
 function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
     list: { flex: 1, backgroundColor: colors.background },
-    listContent: { padding: tokens.spacing.lg, gap: tokens.spacing.md },
+    listContent: {
+      // Kein seitlicher Rand am Inhaltsbehaelter: Der Kopfbereich bringt seine
+      // eigenen Abstaende mit -- die Vorsorge-Karte einen Rand, die beiden
+      // Links gehen bewusst ueber die volle Breite. Die Karten bekommen ihren
+      // Rand deshalb einzeln.
+      // Oben kein Abstand: Das erste Element des Kopfbereichs bringt seinen
+      // eigenen mit.
+      paddingTop: 0,
+      // Haelt die letzte Karte ueber dem "+"-Knopf, der sie sonst verdeckt.
+      paddingBottom: FAB_CLEARANCE,
+      gap: tokens.spacing.md,
+      flexGrow: 1,
+    },
+    rowWrapper: { paddingHorizontal: tokens.spacing.lg },
     cardName: {
       color: colors.textPrimary,
       fontSize: tokens.typography.fontSize.md,

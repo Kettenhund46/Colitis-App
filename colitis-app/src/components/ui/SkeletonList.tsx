@@ -34,7 +34,10 @@ export function SkeletonList({ count = DEFAULT_COUNT, lines = 2 }: SkeletonListP
 function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: {
-      flex: 1,
+      // flexGrow statt flex: flex hiesse flexBasis 0, und in einem Container
+      // ohne freien Platz -- etwa als Leerkomponente einer Liste -- fiele der
+      // Block auf Hoehe null zusammen. Dieselbe Falle wie bei EmptyState.
+      flexGrow: 1,
       padding: tokens.spacing.lg,
       gap: tokens.spacing.md,
       backgroundColor: colors.background,

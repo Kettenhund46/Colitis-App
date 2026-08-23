@@ -34,7 +34,6 @@ import { exportMedicationPass } from '../../../src/features/medications/medicati
 import { MedicationList } from '../../../src/features/medications/components/MedicationList';
 import { ScreeningReminderCard } from '../../../src/features/medications/components/ScreeningReminderCard';
 import { SwipeableTabScreen } from '../../../src/components/SwipeableTabScreen';
-import { SkeletonList } from '../../../src/components/ui/SkeletonList';
 import { UndoBar } from '../../../src/components/ui/UndoBar';
 import { usePendingDeletion } from '../../../src/features/deletion/usePendingDeletion';
 import { useTheme } from '../../../src/theme/ThemeContext';
@@ -248,14 +247,11 @@ export default function MedikamenteScreen() {
     }
   }
 
-  return (
-    <SwipeableTabScreen tab="medikamente" style={styles.container}>
-      {error && (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
-      <TodaySummaryLine summary={todaySummary} />
+  // Wandert als Kopfbereich in die Liste und scrollt mit. Bliebe es eine feste
+  // Spalte ueber der Liste, waere von der Liste nur ein schmaler Streifen
+  // uebrig -- die Vorsorge-Karte allein fuellt aufgeklappt den halben Schirm.
+  const listHeader = (
+    <>
       <ScreeningReminderCard
         reminder={screeningReminder}
         onSave={handleSaveScreeningReminder}
@@ -281,21 +277,30 @@ export default function MedikamenteScreen() {
       >
         <Text style={styles.historyLinkText}>Einnahme-Verlauf ansehen</Text>
       </Pressable>
-      {isLoading ? (
-        <SkeletonList count={3} lines={2} />
-      ) : (
-        <MedicationList
-          onCreate={() => router.push('/medikamente/neu')}
-          medications={medications}
-          today={new Date()}
-          takenTodayCounts={takenTodayCounts}
-          onTakenToday={handleTakenToday}
-          onEnd={handleEnd}
-          onEdit={(medicationId) => router.push(`/medikamente/${medicationId}`)}
-          onDelete={handleDelete}
-          hiddenId={pending === null ? null : pending.id}
-        />
+    </>
+  );
+
+  return (
+    <SwipeableTabScreen tab="medikamente" style={styles.container}>
+      {error && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
       )}
+      <TodaySummaryLine summary={todaySummary} />
+      <MedicationList
+        header={listHeader}
+        isLoading={isLoading}
+        onCreate={() => router.push('/medikamente/neu')}
+        medications={medications}
+        today={new Date()}
+        takenTodayCounts={takenTodayCounts}
+        onTakenToday={handleTakenToday}
+        onEnd={handleEnd}
+        onEdit={(medicationId) => router.push(`/medikamente/${medicationId}`)}
+        onDelete={handleDelete}
+        hiddenId={pending === null ? null : pending.id}
+      />
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Neues Medikament anlegen"

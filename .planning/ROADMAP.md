@@ -309,6 +309,23 @@ ein Testaufräumer schrieb die Zeichenkette `"undefined"` in `process.env.TZ`.
 - Während des Rückgängig-Fensters eine *andere* Einnahme zu löschen lässt die
   erste kurz wieder auftauchen. Stammt aus `usePendingDeletion` (Phase 3) und
   beträfe Tagebuch und Arztbesuche gleichermaßen — dort zu beheben, nicht hier.
+- Die Listen in Tagebuch und Arztbesuche enden mit `padding: tokens.spacing.lg`
+  und schieben ihre letzte Karte damit unter den „+"-Knopf. Im
+  Medikamente-Tab ist das mit `FAB_CLEARANCE` behoben; die Konstante steht
+  jetzt in `src/components/ui/floatingActionButton.ts` und wartet dort auf die
+  übrigen Listen.
+
+**Nachtrag 2026-08-23 — Gerätetest.** Zählung, Zusammenfassungszeile und
+Verlauf samt Rückgängig verhalten sich wie entworfen. Ein Layoutfehler kam
+dabei ans Licht: Der Medikamente-Tab war eine feste Spalte, in der nur die
+Medikamentenliste scrollte. Die aufgeklappte Vorsorge-Karte füllt den halben
+Schirm, sodass für die Liste ein schmaler Streifen blieb; der zweite Link
+(„Einnahme-Verlauf ansehen") machte es sichtbar, verursachte es aber nicht.
+Behoben, indem Vorsorge-Karte und beide Links als `ListHeaderComponent` in die
+Liste gewandert sind — der Tab ist jetzt ein einziger Scrollbereich. Die
+Zusammenfassungszeile bleibt oben stehen. Der Leerzustand ist dabei von einer
+vorzeitigen Rückgabe zu `ListEmptyComponent` geworden, damit der Kopfbereich
+auch ohne ein einziges Medikament erreichbar bleibt.
 
 ---
 
