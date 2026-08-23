@@ -314,6 +314,47 @@ describe('visitSummary', () => {
     it('returns nothing when no run is long enough', () => {
       expect(findNotablePhases([goodDay(1, 5), goodDay(2, 6)], PERIOD_AUGUST)).toEqual([]);
     });
+
+    it('prefers the more recent phase when two are equally long', () => {
+      // Drei Strecken zu je drei betroffenen Tagen. Genommen werden die beiden
+      // juengeren, ausgegeben in zeitlicher Folge.
+      const entries = [
+        badDay(1, 2), badDay(2, 3), badDay(3, 4),
+        goodDay(4, 5),
+        badDay(5, 7), badDay(6, 8), badDay(7, 9),
+        goodDay(8, 10),
+        badDay(9, 12), badDay(10, 13), badDay(11, 14),
+      ];
+      const phases = findNotablePhases(entries, PERIOD_AUGUST);
+      expect(phases.map((phase) => phase.fromDate)).toEqual(['2026-08-07', '2026-08-12']);
+    });
+
+    it('finds a phase that runs to the last day of the period', () => {
+      const phases = findNotablePhases([badDay(1, 18), badDay(2, 19), badDay(3, 20)], PERIOD_AUGUST);
+      expect(phases).toHaveLength(1);
+      expect(phases[0].fromDate).toBe('2026-08-18');
+      expect(phases[0].toDate).toBe('2026-08-20');
+    });
+
+    it('finds a phase that starts on the first day of the period', () => {
+      const phases = findNotablePhases([badDay(1, 1), badDay(2, 2), badDay(3, 3)], PERIOD_AUGUST);
+      expect(phases[0].fromDate).toBe('2026-08-01');
+    });
+
+    it('folds several entries of one day into a single rated day', () => {
+      // Vier Stuehle plus vier Stuehle ergeben acht -- der Tag ist damit
+      // schub-verdaechtig, obwohl kein einzelner Eintrag es waere.
+      const entries = [
+        entry({ id: 1, occurredAt: localIso(2026, 8, 5, 9), stoolFrequency: 4 }),
+        entry({ id: 2, occurredAt: localIso(2026, 8, 5, 18), stoolFrequency: 4 }),
+        badDay(3, 6),
+        badDay(4, 7),
+      ];
+      const phases = findNotablePhases(entries, PERIOD_AUGUST);
+      expect(phases).toHaveLength(1);
+      expect(phases[0].fromDate).toBe('2026-08-05');
+      expect(phases[0].affectedDays).toBe(3);
+    });
   });
 
   describe('labels', () => {
@@ -351,6 +392,17 @@ describe('visitSummary', () => {
         daysWithBlood: 0,
       });
       expect(label).toBe('03.07.2026 – 05.07.2026: an 3 von 3 Tagen mittel oder schub-verdächtig.');
+    });
+
+    it('formatPhaseLabel uses the singular for a single day with blood', () => {
+      const label = formatPhaseLabel({
+        fromDate: '2026-07-03',
+        toDate: '2026-07-05',
+        spanDays: 3,
+        affectedDays: 3,
+        daysWithBlood: 1,
+      });
+      expect(label).toBe('03.07.2026 – 05.07.2026: an 3 von 3 Tagen mittel oder schub-verdächtig, an 1 Tag Blut vermerkt.');
     });
 
     it('formatSparseDataLabel names both numbers', () => {

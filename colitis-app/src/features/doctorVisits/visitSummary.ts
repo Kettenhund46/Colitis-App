@@ -108,18 +108,26 @@ export function entriesInPeriod(
   });
 }
 
+/** Die Eintraege des Zeitraums, nach lokalem Kalendertag gebuendelt. */
+export function daysWithEntriesInPeriod(
+  entries: DiaryEntryWithTriggers[],
+  period: SummaryPeriod
+): Map<string, DiaryEntryWithTriggers[]> {
+  return groupEntriesByDay(entriesInPeriod(entries, period));
+}
+
 export function countDaysWithEntries(
   entries: DiaryEntryWithTriggers[],
   period: SummaryPeriod
 ): number {
-  return groupEntriesByDay(entriesInPeriod(entries, period)).size;
+  return daysWithEntriesInPeriod(entries, period).size;
 }
 
 export function computeFigures(
   entries: DiaryEntryWithTriggers[],
   period: SummaryPeriod
 ): SummaryFigures | null {
-  const byDay = groupEntriesByDay(entriesInPeriod(entries, period));
+  const byDay = daysWithEntriesInPeriod(entries, period);
   if (byDay.size < MIN_DAYS_FOR_FIGURES) {
     return null;
   }
@@ -164,7 +172,7 @@ export function findNotablePhases(
   entries: DiaryEntryWithTriggers[],
   period: SummaryPeriod
 ): NotablePhase[] {
-  const byDay = groupEntriesByDay(entriesInPeriod(entries, period));
+  const byDay = daysWithEntriesInPeriod(entries, period);
   const found: NotablePhase[] = [];
 
   let startDate: string | null = null;
@@ -228,8 +236,9 @@ export function formatRatingLabel(figures: SummaryFigures): string {
 
 export function formatPhaseLabel(phase: NotablePhase): string {
   const range = `${formatGermanDate(phase.fromDate)} – ${formatGermanDate(phase.toDate)}`;
+  const bloodDayWord = phase.daysWithBlood === 1 ? 'Tag' : 'Tagen';
   const blood =
-    phase.daysWithBlood > 0 ? `, an ${phase.daysWithBlood} Tagen Blut vermerkt` : '';
+    phase.daysWithBlood > 0 ? `, an ${phase.daysWithBlood} ${bloodDayWord} Blut vermerkt` : '';
   return `${range}: an ${phase.affectedDays} von ${phase.spanDays} Tagen mittel oder schub-verdächtig${blood}.`;
 }
 
