@@ -259,18 +259,6 @@ export default function MedikamenteScreen() {
       />
       <Pressable
         accessibilityRole="button"
-        accessibilityState={{ disabled: isExporting || medications.length === 0 }}
-        accessibilityLabel="Medikamenten-Pass als PDF exportieren"
-        disabled={isExporting || medications.length === 0}
-        style={[styles.exportLink, (isExporting || medications.length === 0) && styles.exportLinkDisabled]}
-        onPress={handleExportPass}
-      >
-        <Text style={styles.exportLinkText}>
-          {isExporting ? 'PDF wird erstellt …' : 'Medikamenten-Pass als PDF exportieren'}
-        </Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
         accessibilityLabel="Einnahme-Verlauf öffnen"
         style={styles.historyLink}
         onPress={() => router.push('/medikamente/verlauf')}
@@ -287,6 +275,19 @@ export default function MedikamenteScreen() {
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
+      {/* Steht fest oben, wie die PDF-Ausgabe im Arztbesuche-Bildschirm. */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: isExporting || medications.length === 0 }}
+        accessibilityLabel="Medikamenten-Pass als PDF exportieren"
+        disabled={isExporting || medications.length === 0}
+        style={[styles.exportLink, (isExporting || medications.length === 0) && styles.exportLinkDisabled]}
+        onPress={handleExportPass}
+      >
+        <Text style={styles.exportLinkText}>
+          {isExporting ? 'PDF wird erstellt …' : 'Medikamenten-Pass als PDF exportieren'}
+        </Text>
+      </Pressable>
       <TodaySummaryLine summary={todaySummary} />
       <MedicationList
         header={listHeader}
