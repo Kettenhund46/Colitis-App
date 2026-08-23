@@ -3,6 +3,10 @@ import { formatGermanDate } from './doctorVisitPassBuilder';
 import type { DoctorVisit } from './types';
 import { groupEntriesByDay, rateDayTotals, sumDayTotals } from '../diary/calendarLogic';
 import type { DiaryEntryWithTriggers } from '../diary/types';
+import { computeTriggerPatterns } from '../diary/analysis';
+import { labelFor, TRIGGER_CATEGORY_OPTIONS } from '../diary/constants';
+import { isMedicationDueOn, localDateOf } from '../medications/adherence';
+import type { Medication, MedicationIntake, ScreeningReminder } from '../medications/types';
 
 /** Zeitraum, wenn noch kein Arztbesuch erfasst ist. */
 export const DEFAULT_PERIOD_DAYS = 90;
@@ -244,4 +248,130 @@ export function formatPhaseLabel(phase: NotablePhase): string {
 
 export function formatSparseDataLabel(daysWithEntries: number, dayCount: number): string {
   return `An ${daysWithEntries} von ${dayCount} Tagen wurde etwas erfasst — zu wenig für eine Auswertung des Zeitraums.`;
+}
+
+/** Wie viele Ausloeser hoechstens genannt werden. */
+export const MAX_TRIGGERS = 3;
+
+export interface TriggerShare {
+  label: string;
+  /** Anteil der Eintraege im Zeitraum, die diesen Ausloeser nannten. */
+  percent: number;
+}
+
+export interface MedicationSummaryLine {
+  name: string;
+  dose: string;
+  schedule: string;
+  startDate: string;
+  endDate: string | null;
+  /** Tage des Zeitraums, an denen das Medikament lief. Nenner der Angabe. */
+  dueDays: number;
+  daysWithIntake: number;
+  totalIntakes: number;
+}
+
+export interface VisitSummary {
+  period: SummaryPeriod;
+  /** Auch dann gesetzt, wenn figures null ist -- der Hinweis nennt die Zahl. */
+  daysWithEntries: number;
+  /** null, wenn weniger als MIN_DAYS_FOR_FIGURES Tage mit Eintrag vorliegen. */
+  figures: SummaryFigures | null;
+  phases: NotablePhase[];
+  triggers: TriggerShare[];
+  medications: MedicationSummaryLine[];
+  nextScreeningDate: string | null;
+  /** Kein Eintrag und kein Medikament im Zeitraum. */
+  isEmpty: boolean;
+}
+
+export interface VisitSummaryInput {
+  entries: DiaryEntryWithTriggers[];
+  medications: Medication[];
+  intakes: MedicationIntake[];
+  visits: DoctorVisit[];
+  screening: ScreeningReminder | null;
+  /** Heutiger Kalendertag, YYYY-MM-DD lokal. */
+  today: string;
+}
+
+export function computeTriggerShares(entries: DiaryEntryWithTriggers[]): TriggerShare[] {
+  if (entries.length === 0) {
+    return [];
+  }
+
+  return computeTriggerPatterns(entries)
+    .map((stat) => ({
+      label: labelFor(TRIGGER_CATEGORY_OPTIONS, stat.category),
+      percent: Math.round((stat.entryCount / entries.length) * 100),
+    }))
+    .sort((a, b) => b.percent - a.percent)
+    .slice(0, MAX_TRIGGERS);
+}
+
+export function buildMedicationLines(
+  medications: Medication[],
+  intakes: MedicationIntake[],
+  period: SummaryPeriod
+): MedicationSummaryLine[] {
+  const periodDays = eachDayInclusive(period.fromDate, period.toDate);
+  const lines: MedicationSummaryLine[] = [];
+
+  for (const medication of medications) {
+    const dueDays = periodDays.filter((date) => isMedicationDueOn(medication, date));
+    if (dueDays.length === 0) {
+      // Lief in diesem Zeitraum gar nicht -- gehoert nicht ins Dokument.
+      continue;
+    }
+
+    const dueDaySet = new Set(dueDays);
+    const relevantDays: string[] = [];
+    for (const intake of intakes) {
+      if (intake.medicationId !== medication.id) {
+        continue;
+      }
+      const day = localDateOf(intake.takenAt);
+      if (dueDaySet.has(day)) {
+        relevantDays.push(day);
+      }
+    }
+
+    lines.push({
+      name: medication.name,
+      dose: medication.dose,
+      schedule: medication.schedule,
+      startDate: medication.startDate,
+      endDate: medication.endDate,
+      dueDays: dueDays.length,
+      daysWithIntake: new Set(relevantDays).size,
+      totalIntakes: relevantDays.length,
+    });
+  }
+
+  return lines;
+}
+
+export function formatMedicationIntakeLabel(line: MedicationSummaryLine): string {
+  return `An ${line.daysWithIntake} von ${line.dueDays} Tagen erfasst, ${line.totalIntakes} Einnahmen`;
+}
+
+export function buildVisitSummary(input: VisitSummaryInput): VisitSummary {
+  const period = determinePeriod(input.visits, input.today);
+  const entries = entriesInPeriod(input.entries, period);
+  const daysWithEntries = countDaysWithEntries(input.entries, period);
+  const figures = computeFigures(input.entries, period);
+  const medications = buildMedicationLines(input.medications, input.intakes, period);
+
+  // Die drei haengen zusammen: Ist die Datenlage zu duenn fuer Kennzahlen, ist
+  // sie es auch fuer Phasen und Ausloeser.
+  return {
+    period,
+    daysWithEntries,
+    figures,
+    phases: figures === null ? [] : findNotablePhases(input.entries, period),
+    triggers: figures === null ? [] : computeTriggerShares(entries),
+    medications,
+    nextScreeningDate: input.screening === null ? null : input.screening.nextDueDate,
+    isEmpty: daysWithEntries === 0 && medications.length === 0,
+  };
 }

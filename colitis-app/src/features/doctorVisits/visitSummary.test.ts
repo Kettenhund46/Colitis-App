@@ -7,9 +7,14 @@ import {
   formatRatingLabel,
   formatPhaseLabel,
   formatSparseDataLabel,
+  computeTriggerShares,
+  buildMedicationLines,
+  formatMedicationIntakeLabel,
+  buildVisitSummary,
 } from './visitSummary';
 import type { DoctorVisit } from './types';
 import type { DiaryEntryWithTriggers } from '../diary/types';
+import type { Medication, MedicationIntake } from '../medications/types';
 
 function visit(overrides: Partial<DoctorVisit> & { id: number; visitDate: string }): DoctorVisit {
   return {
@@ -48,6 +53,24 @@ const PERIOD_AUGUST = {
   dayCount: 20,
   sinceVisitLabel: null,
 };
+
+function medication(
+  overrides: Partial<Medication> & { id: number; name: string }
+): Medication {
+  return {
+    dose: '500 mg',
+    schedule: '3x täglich',
+    startDate: '2026-08-01',
+    endDate: null,
+    sideEffectsNote: null,
+    reminderTimes: [],
+    ...overrides,
+  };
+}
+
+function intake(id: number, medicationId: number, day: number, hour = 9): MedicationIntake {
+  return { id, medicationId, takenAt: localIso(2026, 8, day, hour) };
+}
 
 describe('visitSummary', () => {
   let originalTz: string | undefined;
@@ -409,6 +432,185 @@ describe('visitSummary', () => {
       expect(formatSparseDataLabel(4, 103)).toBe(
         'An 4 von 103 Tagen wurde etwas erfasst — zu wenig für eine Auswertung des Zeitraums.'
       );
+    });
+  });
+
+  describe('computeTriggerShares', () => {
+    it('states the share of entries that named the trigger', () => {
+      const entries = [
+        entry({ id: 1, occurredAt: localIso(2026, 8, 1), triggerCategories: ['stress'] }),
+        entry({ id: 2, occurredAt: localIso(2026, 8, 2), triggerCategories: ['stress'] }),
+        entry({ id: 3, occurredAt: localIso(2026, 8, 3), triggerCategories: ['schlaf'] }),
+        entry({ id: 4, occurredAt: localIso(2026, 8, 4) }),
+      ];
+      expect(computeTriggerShares(entries)).toEqual([
+        { label: 'Stress', percent: 50 },
+        { label: 'Schlaf', percent: 25 },
+      ]);
+    });
+
+    it('returns at most three, highest first', () => {
+      const entries = [
+        entry({
+          id: 1,
+          occurredAt: localIso(2026, 8, 1),
+          triggerCategories: ['stress', 'schlaf', 'ernaehrung', 'sonstiges'],
+        }),
+        entry({ id: 2, occurredAt: localIso(2026, 8, 2), triggerCategories: ['stress'] }),
+      ];
+      const shares = computeTriggerShares(entries);
+      expect(shares).toHaveLength(3);
+      expect(shares[0].label).toBe('Stress');
+      expect(shares[0].percent).toBe(100);
+    });
+
+    it('returns nothing without entries', () => {
+      expect(computeTriggerShares([])).toEqual([]);
+    });
+  });
+
+  describe('buildMedicationLines', () => {
+    it('skips a medication that did not run in the period', () => {
+      const older = medication({ id: 1, name: 'Prednisolon', startDate: '2026-01-01', endDate: '2026-02-01' });
+      expect(buildMedicationLines([older], [], PERIOD_AUGUST)).toEqual([]);
+    });
+
+    it('uses the days it actually ran as the denominator', () => {
+      // Laeuft vom 1. bis zum 10., der Zeitraum geht bis zum 20.
+      const ended = medication({ id: 1, name: 'Prednisolon', startDate: '2026-08-01', endDate: '2026-08-10' });
+      const lines = buildMedicationLines([ended], [], PERIOD_AUGUST);
+      expect(lines[0].dueDays).toBe(10);
+    });
+
+    it('counts a day with intake once, however many intakes it has', () => {
+      const running = medication({ id: 1, name: 'Mesalazin' });
+      const intakes = [intake(1, 1, 3, 8), intake(2, 1, 3, 13), intake(3, 1, 3, 19)];
+      const lines = buildMedicationLines([running], intakes, PERIOD_AUGUST);
+      expect(lines[0].daysWithIntake).toBe(1);
+      expect(lines[0].totalIntakes).toBe(3);
+    });
+
+    it('ignores intakes of another medication', () => {
+      const running = medication({ id: 1, name: 'Mesalazin' });
+      const lines = buildMedicationLines([running], [intake(1, 2, 3)], PERIOD_AUGUST);
+      expect(lines[0].totalIntakes).toBe(0);
+    });
+
+    it('ignores intakes outside the period', () => {
+      const running = medication({ id: 1, name: 'Mesalazin' });
+      const outside: MedicationIntake = {
+        id: 9,
+        medicationId: 1,
+        takenAt: new Date(2026, 6, 15, 9).toISOString(),
+      };
+      expect(buildMedicationLines([running], [outside], PERIOD_AUGUST)[0].totalIntakes).toBe(0);
+    });
+
+    it('carries dose, schedule and end date', () => {
+      const ended = medication({
+        id: 1,
+        name: 'Prednisolon',
+        dose: '20 mg',
+        schedule: 'morgens',
+        endDate: '2026-08-10',
+      });
+      const line = buildMedicationLines([ended], [], PERIOD_AUGUST)[0];
+      expect(line.name).toBe('Prednisolon');
+      expect(line.dose).toBe('20 mg');
+      expect(line.schedule).toBe('morgens');
+      expect(line.endDate).toBe('2026-08-10');
+    });
+  });
+
+  describe('formatMedicationIntakeLabel', () => {
+    it('names days with intake and the total', () => {
+      const label = formatMedicationIntakeLabel({
+        name: 'Mesalazin',
+        dose: '500 mg',
+        schedule: '3x täglich',
+        startDate: '2026-05-04',
+        endDate: null,
+        dueDays: 103,
+        daysWithIntake: 96,
+        totalIntakes: 268,
+      });
+      expect(label).toBe('An 96 von 103 Tagen erfasst, 268 Einnahmen');
+    });
+  });
+
+  describe('buildVisitSummary', () => {
+    const sevenGoodDays = [1, 2, 3, 4, 5, 6, 7].map((day) =>
+      entry({ id: day, occurredAt: localIso(2026, 8, day), triggerCategories: ['stress'] })
+    );
+
+    it('assembles period, figures, triggers and medications', () => {
+      const summary = buildVisitSummary({
+        entries: sevenGoodDays,
+        medications: [medication({ id: 1, name: 'Mesalazin' })],
+        intakes: [intake(1, 1, 3)],
+        visits: [visit({ id: 1, visitDate: '2026-08-01', doctorName: 'Dr. Weber' })],
+        screening: null,
+        today: '2026-08-20',
+      });
+
+      expect(summary.period.fromDate).toBe('2026-08-01');
+      expect(summary.daysWithEntries).toBe(7);
+      expect(summary.figures).not.toBeNull();
+      expect(summary.triggers[0].label).toBe('Stress');
+      expect(summary.medications).toHaveLength(1);
+      expect(summary.isEmpty).toBe(false);
+    });
+
+    it('drops figures, phases and triggers when the period is too sparse', () => {
+      const summary = buildVisitSummary({
+        entries: sevenGoodDays.slice(0, 3),
+        medications: [],
+        intakes: [],
+        visits: [visit({ id: 1, visitDate: '2026-08-01' })],
+        screening: null,
+        today: '2026-08-20',
+      });
+
+      expect(summary.figures).toBeNull();
+      expect(summary.phases).toEqual([]);
+      expect(summary.triggers).toEqual([]);
+      expect(summary.daysWithEntries).toBe(3);
+    });
+
+    it('is empty without entries and without medications', () => {
+      const summary = buildVisitSummary({
+        entries: [],
+        medications: [],
+        intakes: [],
+        visits: [visit({ id: 1, visitDate: '2026-08-01' })],
+        screening: null,
+        today: '2026-08-20',
+      });
+      expect(summary.isEmpty).toBe(true);
+    });
+
+    it('is not empty when only a medication is present', () => {
+      const summary = buildVisitSummary({
+        entries: [],
+        medications: [medication({ id: 1, name: 'Mesalazin' })],
+        intakes: [],
+        visits: [visit({ id: 1, visitDate: '2026-08-01' })],
+        screening: null,
+        today: '2026-08-20',
+      });
+      expect(summary.isEmpty).toBe(false);
+    });
+
+    it('carries the next screening date', () => {
+      const summary = buildVisitSummary({
+        entries: [],
+        medications: [],
+        intakes: [],
+        visits: [],
+        screening: { id: 1, intervalMonths: 12, nextDueDate: '2027-01-15', note: null, notificationId: null },
+        today: '2026-08-20',
+      });
+      expect(summary.nextScreeningDate).toBe('2027-01-15');
     });
   });
 });
