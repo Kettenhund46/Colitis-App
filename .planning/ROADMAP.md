@@ -32,7 +32,7 @@ bekommen.
 | 2 | Die App sieht nach Gestaltung aus, nicht nach Formular | done |
 | 3 | Löschen geht per Wischen und die Bedienung fühlt sich spürbar an | done |
 | 4 | Medikamenteneinnahme lässt sich abhaken und nachvollziehen | done |
-| 5 | Ein Arzttermin lässt sich mit einer Zusammenfassung vorbereiten | todo |
+| 5 | Ein Arzttermin lässt sich mit einer Zusammenfassung vorbereiten | in_progress |
 | 6 | Die App ist auf Deutsch und Englisch bedienbar | todo |
 
 ---
@@ -368,6 +368,57 @@ einzeln durchzugehen.
 - Sie lässt sich als PDF teilen oder ausdrucken
 
 **Depends on:** Phase 4 (der Medikamentenstand gehört in die Zusammenfassung)
+
+**Stand am 2026-08-23:** Fünf Aufgaben umgesetzt, 629 Tests grün (vorher 538),
+Typprüfung sauber. Die Phase gilt erst als abgeschlossen, wenn der
+Gerätedurchgang durch ist.
+
+Entwurf: `docs/superpowers/specs/2026-08-23-colitis-app-arztbesuch-vorbereiten-design.md`
+Plan: `docs/superpowers/plans/2026-08-23-colitis-app-arztbesuch-vorbereiten.md`
+
+**Die vier Entscheidungen des Entwurfs.** Der Zeitraum ergibt sich selbst —
+jüngster erfasster Besuch bis heute, sonst die letzten 90 Tage; kein
+Eingabefeld. Der Aufbau setzt die Zahlen nach oben. Es gibt einen Bildschirm
+zum Lesen, nicht nur ein PDF: Das Ziel der Phase beschreibt jemanden, der sich
+selbst einen Überblick verschafft, und dafür ist ein PDF am Handy der
+umständlichste Weg. Und beim Medikamentenstand stehen **Einnahmetage und
+Gesamtzahl statt „X von Y Dosen"** — siehe unten.
+
+**Der Vorbehalt aus Phase 4 ist damit umschifft, nicht gelöst.** Die Rückschau
+kennt für vergangene Tage nur den heutigen Zeitplan eines Medikaments; eine
+Dosis-Sollmenge wäre rückwirkend erfunden. Das Dokument nennt deshalb „An 96
+von 103 Tagen erfasst, 268 Einnahmen" — beide Zahlen sind unabhängig vom
+Zeitplan wahr, weil sie zählen, was passiert ist, statt es gegen ein
+unbekanntes Soll zu halten. Die klinische Frage „nimmt er es regelmäßig?" ist
+damit beantwortet. **Die Historisierung der Zeitpläne bleibt als eigener
+Vorschlag offen** (neue Tabelle, echter Schemawechsel); erst danach dürfte eine
+Dosisgenauigkeit ins Dokument.
+
+**Nebenbei aufgeräumt:** `formatDateKey`, `formatLocalDate`, `parseLocalDate`
+und `addDays` lagen zeichengleich in drei Feature-Modulen. Sie liegen jetzt in
+`src/lib/localDate.ts`; die beiden alten Namen bleiben als Weitergabe, ihre
+rund zwanzig Aufrufer sind unangetastet. Ohne das wäre in dieser Phase die
+vierte Kopie entstanden.
+
+**Die Schlussdurchsicht fand einen kritischen Punkt**, behoben in `bf2cbf0`:
+Beide Darstellungen prüften `endDate !== null` und schrieben dann „beendet am".
+Der übrige Baum prüft `isMedicationActive`, also `endDate >= today` — ein
+Enddatum in der Zukunft heißt aktiv, und das Formular lässt eines zu. Wer ein
+Präparat mit geplantem Ausschleich-Ende einträgt, hätte es im
+Medikamenten-Pass als aktiv und im Arztdokument als abgesetzt gesehen. Jetzt
+entscheidet ein `hasEnded` im reinen Modul, und die Formulierung
+unterscheidet „beendet am" von „geplantes Ende".
+
+Dazu drei wichtige Punkte, alle behoben: Die Auslöser wurden nach dem
+*gerundeten* Prozentwert sortiert und geschnitten — bei vielen Einträgen fiel
+damit der häufigste aus den ersten dreien heraus. Zwei Zeilen wurden noch in
+beiden Darstellungen getrennt formuliert, obwohl kein Test ein Auseinanderlaufen
+bemerken kann. Und „Schmerz von 10" verschwieg, dass es ein Tagesmittel ist.
+
+**Kleinere Befunde, bewusst offengelassen:**
+- Der Bildschirm nennt kein Erstellungsdatum, das PDF schon; und bleibt der Bildschirm über Mitternacht offen, trägt das PDF ein Datum einen Tag nach dem Zeitraumende
+- `buildVisitSummary` läuft viermal über dieselben Einträge, statt die Gruppierung einmal zu bauen und durchzureichen
+- Einnahmen an Tagen außerhalb der Laufzeit eines Medikaments zählen nicht mit; das ist gewollt (sonst „an 12 von 10 Tagen"), steht aber nur als Kommentar
 
 ---
 
