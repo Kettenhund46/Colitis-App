@@ -437,6 +437,38 @@ describe('visitSummary', () => {
       );
     });
 
+    it('formatSparseDataLabel uses the singular for a single day', () => {
+      expect(formatSparseDataLabel(1, 1)).toBe(
+        'An 1 von 1 Tag wurde etwas erfasst — zu wenig für eine Auswertung des Zeitraums.'
+      );
+    });
+
+    it('formatMedicationIntakeLabel uses the singular for one day and one intake', () => {
+      const label = formatMedicationIntakeLabel({
+        medicationId: 1,
+        name: 'Mesalazin',
+        dose: '500 mg',
+        schedule: '1-0-1',
+        startDate: '2026-08-23',
+        endDate: null,
+        hasEnded: false,
+        dueDays: 1,
+        daysWithIntake: 1,
+        totalIntakes: 1,
+      });
+      expect(label).toBe('An 1 von 1 Tag erfasst, 1 Einnahme');
+    });
+
+    it('formatPeriodLabel shows a single-day period without a repeated date', () => {
+      const label = formatPeriodLabel({
+        fromDate: '2026-08-23',
+        toDate: '2026-08-23',
+        dayCount: 1,
+        sinceVisitLabel: 'seit dem Besuch am 23.08.2026',
+      });
+      expect(label).toBe('23.08.2026 · 1 Tag · seit dem Besuch am 23.08.2026');
+    });
+
     it('formatTriggerListLabel joins the shares with a middle dot', () => {
       expect(
         formatTriggerListLabel([

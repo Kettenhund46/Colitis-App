@@ -63,14 +63,39 @@ export function determinePeriod(visits: DoctorVisit[], today: string): SummaryPe
   };
 }
 
+/**
+ * Zaehlwort im Nominativ: "1 Tag", "104 Tage". Ein Zeitraum kann einen
+ * einzigen Tag umfassen -- ein Besuch, der heute erfasst wurde --, und
+ * "1 Tage" faellt in einem Dokument fuer den Arzt sofort auf.
+ */
+export function formatDayCount(count: number): string {
+  return count === 1 ? `${count} Tag` : `${count} Tage`;
+}
+
+/** Zaehlwort im Dativ: "an 1 Tag", "an 104 Tagen". */
+export function formatDayCountDative(count: number): string {
+  return count === 1 ? `${count} Tag` : `${count} Tagen`;
+}
+
+/** Zaehlwort fuer erfasste Einnahmen: "1 Einnahme", "268 Einnahmen". */
+export function formatIntakeCount(count: number): string {
+  return count === 1 ? `${count} Einnahme` : `${count} Einnahmen`;
+}
+
 export function formatPeriodLabel(period: SummaryPeriod): string {
-  const range = `${formatGermanDate(period.fromDate)} – ${formatGermanDate(period.toDate)}`;
+  // Faellt ein Zeitraum auf einen einzigen Tag, waere "23.08.2026 – 23.08.2026"
+  // nur Verdopplung.
+  const range =
+    period.fromDate === period.toDate
+      ? formatGermanDate(period.fromDate)
+      : `${formatGermanDate(period.fromDate)} – ${formatGermanDate(period.toDate)}`;
+
   if (period.sinceVisitLabel === null) {
-    return `${range} · letzte ${period.dayCount} Tage`;
+    return `${range} · letzte ${formatDayCount(period.dayCount)}`;
   }
   // Getrennt gesetzt, damit die Zahl nicht als vergangene Zeit gelesen wird:
   // dayCount zaehlt beide Enden mit, "104 Tage seit dem Besuch" waere einer zu viel.
-  return `${range} · ${period.dayCount} Tage · ${period.sinceVisitLabel}`;
+  return `${range} · ${formatDayCount(period.dayCount)} · ${period.sinceVisitLabel}`;
 }
 
 /** Mindestzahl betroffener Tage, damit eine Strecke genannt wird. */
@@ -241,14 +266,15 @@ export function formatRatingLabel(figures: SummaryFigures): string {
 
 export function formatPhaseLabel(phase: NotablePhase): string {
   const range = `${formatGermanDate(phase.fromDate)} – ${formatGermanDate(phase.toDate)}`;
-  const bloodDayWord = phase.daysWithBlood === 1 ? 'Tag' : 'Tagen';
   const blood =
-    phase.daysWithBlood > 0 ? `, an ${phase.daysWithBlood} ${bloodDayWord} Blut vermerkt` : '';
-  return `${range}: an ${phase.affectedDays} von ${phase.spanDays} Tagen mittel oder schub-verdächtig${blood}.`;
+    phase.daysWithBlood > 0
+      ? `, an ${formatDayCountDative(phase.daysWithBlood)} Blut vermerkt`
+      : '';
+  return `${range}: an ${phase.affectedDays} von ${formatDayCountDative(phase.spanDays)} mittel oder schub-verdächtig${blood}.`;
 }
 
 export function formatSparseDataLabel(daysWithEntries: number, dayCount: number): string {
-  return `An ${daysWithEntries} von ${dayCount} Tagen wurde etwas erfasst — zu wenig für eine Auswertung des Zeitraums.`;
+  return `An ${daysWithEntries} von ${formatDayCountDative(dayCount)} wurde etwas erfasst — zu wenig für eine Auswertung des Zeitraums.`;
 }
 
 /** Wie viele Ausloeser hoechstens genannt werden. */
@@ -377,7 +403,7 @@ export function buildMedicationLines(
 }
 
 export function formatMedicationIntakeLabel(line: MedicationSummaryLine): string {
-  return `An ${line.daysWithIntake} von ${line.dueDays} Tagen erfasst, ${line.totalIntakes} Einnahmen`;
+  return `An ${line.daysWithIntake} von ${formatDayCountDative(line.dueDays)} erfasst, ${formatIntakeCount(line.totalIntakes)}`;
 }
 
 export function formatTriggerListLabel(triggers: TriggerShare[]): string {
