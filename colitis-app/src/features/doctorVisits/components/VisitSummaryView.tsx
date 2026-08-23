@@ -1,10 +1,12 @@
 import { ScrollView, Text, View, StyleSheet } from 'react-native';
 import {
+  formatDecimal,
   formatMedicationIntakeLabel,
   formatPeriodLabel,
   formatPhaseLabel,
   formatRatingLabel,
   formatSparseDataLabel,
+  formatTriggerListLabel,
 } from '../visitSummary';
 import { formatGermanDate } from '../doctorVisitPassBuilder';
 import { SectionHeading } from '../../../components/ui/SectionHeading';
@@ -12,11 +14,6 @@ import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import type { VisitSummary } from '../visitSummary';
 import type { ThemeColors } from '../../../theme/types';
-
-/** Deutsche Schreibweise mit Komma statt Punkt. */
-function formatDecimal(value: number): string {
-  return value.toFixed(1).replace('.', ',');
-}
 
 interface VisitSummaryViewProps {
   summary: VisitSummary;
@@ -77,9 +74,7 @@ export function VisitSummaryView({ summary }: VisitSummaryViewProps) {
           {summary.triggers.length > 0 && (
             <>
               <SectionHeading>Häufigste Auslöser</SectionHeading>
-              <Text style={styles.bodyText}>
-                {summary.triggers.map((share) => `${share.label} (${share.percent} %)`).join(' · ')}
-              </Text>
+              <Text style={styles.bodyText}>{formatTriggerListLabel(summary.triggers)}</Text>
             </>
           )}
         </>
@@ -90,7 +85,7 @@ export function VisitSummaryView({ summary }: VisitSummaryViewProps) {
         <Text style={styles.bodyText}>Im Zeitraum war kein Medikament hinterlegt.</Text>
       ) : (
         summary.medications.map((line) => (
-          <View key={line.name} style={[styles.medication, line.endDate !== null && styles.medicationEnded]}>
+          <View key={line.medicationId} style={[styles.medication, line.endDate !== null && styles.medicationEnded]}>
             <Text style={styles.medicationName}>{line.name}</Text>
             <Text style={styles.medicationDetail}>
               {line.dose} · {line.schedule} · seit {formatGermanDate(line.startDate)}

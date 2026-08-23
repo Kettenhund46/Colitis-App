@@ -1,17 +1,14 @@
 import { escapeHtml, formatGermanDate } from './doctorVisitPassBuilder';
 import {
+  formatDecimal,
   formatMedicationIntakeLabel,
   formatPeriodLabel,
   formatPhaseLabel,
   formatRatingLabel,
   formatSparseDataLabel,
+  formatTriggerListLabel,
 } from './visitSummary';
 import type { MedicationSummaryLine, VisitSummary } from './visitSummary';
-
-/** Deutsche Schreibweise mit Komma statt Punkt. */
-function formatDecimal(value: number): string {
-  return value.toFixed(1).replace('.', ',');
-}
 
 function buildFiguresSection(summary: VisitSummary): string {
   if (summary.figures === null) {
@@ -48,10 +45,7 @@ function buildTriggersSection(summary: VisitSummary): string {
   if (summary.figures === null || summary.triggers.length === 0) {
     return '';
   }
-  const list = summary.triggers
-    .map((share) => `${escapeHtml(share.label)} (${share.percent} %)`)
-    .join(' · ');
-  return `<h2>Häufigste Auslöser</h2><p>${list}</p>`;
+  return `<h2>Häufigste Auslöser</h2><p>${escapeHtml(formatTriggerListLabel(summary.triggers))}</p>`;
 }
 
 function buildMedicationSection(line: MedicationSummaryLine): string {

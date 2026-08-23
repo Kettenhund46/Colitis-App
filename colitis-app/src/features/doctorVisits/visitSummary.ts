@@ -260,6 +260,9 @@ export interface TriggerShare {
 }
 
 export interface MedicationSummaryLine {
+  /** Kennung des Medikaments -- der Name ist nicht eindeutig, ein beendetes und
+   *  ein neu angesetztes Praeparat koennen gleich heissen. */
+  medicationId: number;
   name: string;
   dose: string;
   schedule: string;
@@ -337,6 +340,7 @@ export function buildMedicationLines(
     }
 
     lines.push({
+      medicationId: medication.id,
       name: medication.name,
       dose: medication.dose,
       schedule: medication.schedule,
@@ -353,6 +357,15 @@ export function buildMedicationLines(
 
 export function formatMedicationIntakeLabel(line: MedicationSummaryLine): string {
   return `An ${line.daysWithIntake} von ${line.dueDays} Tagen erfasst, ${line.totalIntakes} Einnahmen`;
+}
+
+export function formatTriggerListLabel(triggers: TriggerShare[]): string {
+  return triggers.map((share) => `${share.label} (${share.percent} %)`).join(' · ');
+}
+
+/** Deutsche Schreibweise mit Komma statt Punkt. */
+export function formatDecimal(value: number): string {
+  return value.toFixed(1).replace('.', ',');
 }
 
 export function buildVisitSummary(input: VisitSummaryInput): VisitSummary {

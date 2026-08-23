@@ -7,6 +7,8 @@ import {
   formatRatingLabel,
   formatPhaseLabel,
   formatSparseDataLabel,
+  formatTriggerListLabel,
+  formatDecimal,
   computeTriggerShares,
   buildMedicationLines,
   formatMedicationIntakeLabel,
@@ -433,6 +435,24 @@ describe('visitSummary', () => {
         'An 4 von 103 Tagen wurde etwas erfasst — zu wenig für eine Auswertung des Zeitraums.'
       );
     });
+
+    it('formatTriggerListLabel joins the shares with a middle dot', () => {
+      expect(
+        formatTriggerListLabel([
+          { label: 'Stress', percent: 61 },
+          { label: 'Schlaf', percent: 38 },
+        ])
+      ).toBe('Stress (61 %) · Schlaf (38 %)');
+    });
+
+    it('formatTriggerListLabel yields an empty string without shares', () => {
+      expect(formatTriggerListLabel([])).toBe('');
+    });
+
+    it('formatDecimal writes one decimal place with a comma', () => {
+      expect(formatDecimal(3.24)).toBe('3,2');
+      expect(formatDecimal(4)).toBe('4,0');
+    });
   });
 
   describe('computeTriggerShares', () => {
@@ -520,11 +540,19 @@ describe('visitSummary', () => {
       expect(line.schedule).toBe('morgens');
       expect(line.endDate).toBe('2026-08-10');
     });
+
+    it('carries the medication id so that two medications of the same name stay apart', () => {
+      const first = medication({ id: 1, name: 'Prednisolon', startDate: '2026-08-01', endDate: '2026-08-05' });
+      const second = medication({ id: 2, name: 'Prednisolon', startDate: '2026-08-10' });
+      const lines = buildMedicationLines([first, second], [], PERIOD_AUGUST);
+      expect(lines.map((line) => line.medicationId)).toEqual([1, 2]);
+    });
   });
 
   describe('formatMedicationIntakeLabel', () => {
     it('names days with intake and the total', () => {
       const label = formatMedicationIntakeLabel({
+        medicationId: 1,
         name: 'Mesalazin',
         dose: '500 mg',
         schedule: '3x täglich',

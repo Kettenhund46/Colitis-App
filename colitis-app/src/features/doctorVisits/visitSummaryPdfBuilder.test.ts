@@ -85,6 +85,7 @@ describe('buildVisitSummaryHtml', () => {
       summary({
         medications: [
           {
+            medicationId: 1,
             name: 'Mesalazin',
             dose: '500 mg',
             schedule: '3x täglich',
@@ -107,6 +108,7 @@ describe('buildVisitSummaryHtml', () => {
       summary({
         medications: [
           {
+            medicationId: 1,
             name: 'Prednisolon',
             dose: '20 mg',
             schedule: 'morgens',
@@ -135,6 +137,7 @@ describe('buildVisitSummaryHtml', () => {
       summary({
         medications: [
           {
+            medicationId: 1,
             name: '<script>alert(1)</script>',
             dose: '1',
             schedule: '1',
