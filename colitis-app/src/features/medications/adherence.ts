@@ -1,4 +1,5 @@
 import { formatLocalDate } from './medicationStatus';
+import { parseLocalDate, addDays } from '../../lib/localDate';
 import type { Medication, MedicationIntake } from './types';
 
 export interface MedicationDayStatus {
@@ -23,19 +24,6 @@ export type HistoryPeriod = '30' | '90' | 'alles';
 const WEEKDAY_LABELS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 const DAYS_BY_PERIOD: Record<'30' | '90', number> = { '30': 30, '90': 90 };
 const UNKNOWN_MEDICATION_NAME = 'Unbekanntes Medikament';
-
-/**
- * Ein Kalenderdatum als lokalen Tag lesen. new Date('2026-08-21') waere UTC
- * und wuerde den Tag in oestlichen Zeitzonen verschieben.
- */
-export function parseLocalDate(date: string): Date {
-  const [year, month, day] = date.split('-').map(Number);
-  return new Date(year, month - 1, day);
-}
-
-export function addDays(date: Date, days: number): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
-}
 
 /**
  * Der Zeitstempel im Protokoll ist UTC, der Kalendertag des Nutzers ist lokal.
