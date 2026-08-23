@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { Alert, Pressable, ScrollView, Text, TextInput, View, StyleSheet } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, Text, TextInput, View, StyleSheet } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { createEncryptedDb } from '../../../src/db/client';
 import { isAppLockEnabled, setPin, disableAppLock } from '../../../src/features/appLock/pinAuth';
@@ -38,7 +38,10 @@ import {
   setBackupReminderIntervalDays,
   getLastBackupAt,
   setLastBackupAt,
+  getCommunityDisclaimerSeen,
+  setCommunityDisclaimerSeen,
 } from '../../../src/features/settings/settingsStorage';
+import { COMMUNITY_INVITE_URL } from '../../../src/features/community/constants';
 import { resolveBackupReminderEnabled } from '../../../src/features/backup/reminderScheduling';
 import { rescheduleBackupReminder } from '../../../src/features/backup/scheduleBackupReminder';
 import { tokens } from '../../../src/styles/tokens';
@@ -85,6 +88,43 @@ export default function EinstellungenScreen() {
   const [backupReminderEnabled, setBackupReminderEnabledState] = useState(false);
   const [backupReminderIntervalDays, setBackupReminderIntervalDaysState] = useState(30);
   const [lastBackupAt, setLastBackupAtState] = useState<string | null>(null);
+  const [communityMessage, setCommunityMessage] = useState<string | null>(null);
+
+  async function openCommunityLink() {
+    try {
+      await Linking.openURL(COMMUNITY_INVITE_URL);
+      setCommunityMessage(null);
+    } catch (linkError: unknown) {
+      console.error('[Einstellungen] Community-Link konnte nicht geöffnet werden:', linkError);
+      setCommunityMessage('Community-Link konnte nicht geöffnet werden.');
+    }
+  }
+
+  async function confirmCommunityDisclaimer() {
+    await setCommunityDisclaimerSeen(true);
+    await openCommunityLink();
+  }
+
+  // Der Hinweis kommt nur beim ersten Mal. Wer ihn einmal bestaetigt hat,
+  // landet danach direkt auf dem Server.
+  async function handleCommunityPress() {
+    const alreadySeen = await getCommunityDisclaimerSeen();
+    if (alreadySeen) {
+      await openCommunityLink();
+      return;
+    }
+    Alert.alert(
+      'Du verlässt die App',
+      'Der Discord-Server ist eine externe Plattform mit eigenen Datenschutzbestimmungen. Inhalte dort werden nicht von dieser App moderiert.',
+      [
+        { text: 'Abbrechen', style: 'cancel' },
+        {
+          text: 'Verstanden, weiter',
+          onPress: () => void confirmCommunityDisclaimer(),
+        },
+      ]
+    );
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -441,6 +481,23 @@ export default function EinstellungenScreen() {
           />
         </View>
 
+        <SectionHeading>Community</SectionHeading>
+        <Text style={styles.sectionHint}>
+          Der Austausch mit anderen Betroffenen läuft über einen Discord-Server — eine externe Plattform
+          außerhalb dieser App.
+        </Text>
+        {communityMessage && <Text style={styles.backupMessage}>{communityMessage}</Text>}
+        <View style={styles.buttonRow}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Community beitreten"
+            style={styles.submitButton}
+            onPress={() => void handleCommunityPress()}
+          >
+            <Text style={styles.submitButtonText}>Community beitreten</Text>
+          </Pressable>
+        </View>
+
         <SectionHeading>Backup</SectionHeading>
         {backupMessage && <Text style={styles.backupMessage}>{backupMessage}</Text>}
 
@@ -601,6 +658,12 @@ function makeStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       fontSize: tokens.typography.fontSize.sm,
       marginBottom: tokens.spacing.sm,
+    },
+    sectionHint: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      lineHeight: 20,
+      marginBottom: tokens.spacing.xs,
     },
     buttonRow: {
       flexDirection: 'row',

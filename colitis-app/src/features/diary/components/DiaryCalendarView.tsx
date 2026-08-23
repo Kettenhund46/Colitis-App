@@ -16,6 +16,16 @@ interface DiaryCalendarViewProps {
 
 const WEEKDAY_LABELS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
+/**
+ * Hoehe einer Kalenderzelle. Vorher quadratisch (aspectRatio 1), also so hoch
+ * wie ein Siebtel der Bildschirmbreite -- auf einem 393dp breiten Geraet rund
+ * 49dp. Sechs Reihen kosteten damit fast 300dp, waehrend Zahl und
+ * Bewertungspunkt zusammen nur etwa 27dp brauchen. Die untere Haelfte jeder
+ * Zelle blieb leer und der ausgewaehlte Tag darunter wurde abgeschnitten.
+ * 44dp bleibt oberhalb der ueblichen Mindestgroesse fuer Tippziele.
+ */
+const CELL_HEIGHT = 44;
+
 function formatMonthTitle(year: number, month: number): string {
   return new Date(year, month, 1).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
 }
@@ -133,13 +143,17 @@ function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      padding: tokens.spacing.lg,
+      paddingHorizontal: tokens.spacing.lg,
+      paddingTop: tokens.spacing.md,
+      // Unten kein Abstand: Die Liste des ausgewaehlten Tages bringt ihren
+      // eigenen mit, und jeder Punkt hier fehlt ihr.
+      paddingBottom: 0,
     },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: tokens.spacing.md,
+      marginBottom: tokens.spacing.sm,
     },
     navButton: {
       paddingVertical: tokens.spacing.xs,
@@ -172,7 +186,7 @@ function makeStyles(colors: ThemeColors) {
     },
     cell: {
       flexBasis: '14.28%',
-      aspectRatio: 1,
+      height: CELL_HEIGHT,
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: tokens.radius.sm,
@@ -193,7 +207,7 @@ function makeStyles(colors: ThemeColors) {
       color: colors.textSecondary,
     },
     legend: {
-      marginTop: tokens.spacing.sm,
+      marginTop: tokens.spacing.xs,
       alignItems: 'center',
     },
     legendText: {
@@ -201,8 +215,9 @@ function makeStyles(colors: ThemeColors) {
       fontSize: tokens.typography.fontSize.sm,
     },
     selectedDayList: {
+      // Kein eigener Abstand nach oben: Die Liste setzt selbst einen Rand von
+      // tokens.spacing.lg, und der Platz wird hier unten gebraucht.
       flex: 1,
-      marginTop: tokens.spacing.md,
     },
   });
 }
