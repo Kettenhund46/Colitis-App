@@ -1,6 +1,8 @@
 import { addDays, eachDayInclusive, formatLocalDateKey, parseLocalDate } from '../../lib/localDate';
 import { formatGermanDate } from './doctorVisitPassBuilder';
 import type { DoctorVisit } from './types';
+import { groupEntriesByDay, rateDayTotals, sumDayTotals } from '../diary/calendarLogic';
+import type { DiaryEntryWithTriggers } from '../diary/types';
 
 /** Zeitraum, wenn noch kein Arztbesuch erfasst ist. */
 export const DEFAULT_PERIOD_DAYS = 90;
@@ -64,4 +66,173 @@ export function formatPeriodLabel(period: SummaryPeriod): string {
       ? `letzte ${period.dayCount} Tage`
       : `${period.dayCount} Tage ${period.sinceVisitLabel}`;
   return `${range} · ${since}`;
+}
+
+/** Mindestzahl betroffener Tage, damit eine Strecke genannt wird. */
+export const MIN_PHASE_DAYS = 3;
+
+/** Wie viele Strecken hoechstens genannt werden. */
+export const MAX_PHASES = 2;
+
+export interface SummaryFigures {
+  stoolsPerDay: number;
+  daysWithBlood: number;
+  averagePainLevel: number;
+  goodDays: number;
+  mediumDays: number;
+  badDays: number;
+}
+
+export interface NotablePhase {
+  /** Erster und letzter betroffener Tag -- nie ein nicht erfasster. */
+  fromDate: string;
+  toDate: string;
+  /** Kalendertage von fromDate bis toDate, beide eingeschlossen. */
+  spanDays: number;
+  /** Davon Tage mit Bewertung medium oder bad. Der Rest wurde nicht erfasst. */
+  affectedDays: number;
+  daysWithBlood: number;
+}
+
+function roundToOne(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+export function entriesInPeriod(
+  entries: DiaryEntryWithTriggers[],
+  period: SummaryPeriod
+): DiaryEntryWithTriggers[] {
+  return entries.filter((entry) => {
+    const day = formatLocalDateKey(new Date(entry.occurredAt));
+    return day >= period.fromDate && day <= period.toDate;
+  });
+}
+
+export function countDaysWithEntries(
+  entries: DiaryEntryWithTriggers[],
+  period: SummaryPeriod
+): number {
+  return groupEntriesByDay(entriesInPeriod(entries, period)).size;
+}
+
+export function computeFigures(
+  entries: DiaryEntryWithTriggers[],
+  period: SummaryPeriod
+): SummaryFigures | null {
+  const byDay = groupEntriesByDay(entriesInPeriod(entries, period));
+  if (byDay.size < MIN_DAYS_FOR_FIGURES) {
+    return null;
+  }
+
+  let totalStools = 0;
+  let totalWorstPain = 0;
+  let daysWithBlood = 0;
+  let goodDays = 0;
+  let mediumDays = 0;
+  let badDays = 0;
+
+  for (const dayEntries of byDay.values()) {
+    const totals = sumDayTotals(dayEntries);
+    totalStools += totals.totalStoolFrequency;
+    totalWorstPain += totals.worstPainLevel;
+    if (totals.hasBlood) {
+      daysWithBlood += 1;
+    }
+    const rating = rateDayTotals(totals);
+    if (rating === 'good') {
+      goodDays += 1;
+    } else if (rating === 'medium') {
+      mediumDays += 1;
+    } else {
+      badDays += 1;
+    }
+  }
+
+  // Geteilt wird durch die Tage MIT Eintrag, nicht durch die Kalendertage.
+  // Sonst drueckt jede Erfassungsluecke den Schnitt und taeuscht Besserung vor.
+  return {
+    stoolsPerDay: roundToOne(totalStools / byDay.size),
+    daysWithBlood,
+    averagePainLevel: roundToOne(totalWorstPain / byDay.size),
+    goodDays,
+    mediumDays,
+    badDays,
+  };
+}
+
+export function findNotablePhases(
+  entries: DiaryEntryWithTriggers[],
+  period: SummaryPeriod
+): NotablePhase[] {
+  const byDay = groupEntriesByDay(entriesInPeriod(entries, period));
+  const found: NotablePhase[] = [];
+
+  let startDate: string | null = null;
+  let lastAffectedDate: string | null = null;
+  let affectedDays = 0;
+  let daysWithBlood = 0;
+
+  function closeRun() {
+    if (startDate !== null && lastAffectedDate !== null && affectedDays >= MIN_PHASE_DAYS) {
+      found.push({
+        fromDate: startDate,
+        toDate: lastAffectedDate,
+        spanDays: eachDayInclusive(startDate, lastAffectedDate).length,
+        affectedDays,
+        daysWithBlood,
+      });
+    }
+    startDate = null;
+    lastAffectedDate = null;
+    affectedDays = 0;
+    daysWithBlood = 0;
+  }
+
+  for (const date of eachDayInclusive(period.fromDate, period.toDate)) {
+    const dayEntries = byDay.get(date);
+    if (dayEntries === undefined) {
+      // Ein nicht erfasster Tag unterbricht die Strecke nicht. Er verlaengert
+      // sie auch nicht von sich aus -- die Spannweite ergibt sich am Ende aus
+      // erstem und letztem betroffenen Tag.
+      continue;
+    }
+
+    const totals = sumDayTotals(dayEntries);
+    if (rateDayTotals(totals) === 'good') {
+      closeRun();
+      continue;
+    }
+
+    if (startDate === null) {
+      startDate = date;
+    }
+    lastAffectedDate = date;
+    affectedDays += 1;
+    if (totals.hasBlood) {
+      daysWithBlood += 1;
+    }
+  }
+  closeRun();
+
+  // Ausgewaehlt wird nach betroffenen Tagen, ausgegeben in zeitlicher Folge.
+  const chosen = [...found]
+    .sort((a, b) => b.affectedDays - a.affectedDays || b.fromDate.localeCompare(a.fromDate))
+    .slice(0, MAX_PHASES);
+
+  return chosen.sort((a, b) => a.fromDate.localeCompare(b.fromDate));
+}
+
+export function formatRatingLabel(figures: SummaryFigures): string {
+  return `${figures.goodDays} gut · ${figures.mediumDays} mittel · ${figures.badDays} schub-verdächtig`;
+}
+
+export function formatPhaseLabel(phase: NotablePhase): string {
+  const range = `${formatGermanDate(phase.fromDate)} – ${formatGermanDate(phase.toDate)}`;
+  const blood =
+    phase.daysWithBlood > 0 ? `, an ${phase.daysWithBlood} Tagen Blut vermerkt` : '';
+  return `${range}: an ${phase.affectedDays} von ${phase.spanDays} Tagen mittel oder schub-verdächtig${blood}.`;
+}
+
+export function formatSparseDataLabel(daysWithEntries: number, dayCount: number): string {
+  return `An ${daysWithEntries} von ${dayCount} Tagen wurde etwas erfasst — zu wenig für eine Auswertung des Zeitraums.`;
 }
