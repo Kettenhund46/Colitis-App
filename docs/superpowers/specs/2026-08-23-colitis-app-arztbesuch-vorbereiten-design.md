@@ -168,7 +168,6 @@ export interface SummaryPeriod {
 }
 
 export interface SummaryFigures {
-  daysWithEntries: number;
   stoolsPerDay: number;
   daysWithBlood: number;
   averagePainLevel: number;
@@ -178,10 +177,14 @@ export interface SummaryFigures {
 }
 
 export interface NotablePhase {
+  /** Erster und letzter *betroffener* Tag -- eine Strecke beginnt und endet nie
+   *  auf einem nicht erfassten Tag. */
   fromDate: string;
   toDate: string;
-  affectedDays: number;      // Tage mit Bewertung medium oder bad
-  ratedDays: number;         // Tage mit Eintrag in der Strecke
+  /** Kalendertage von fromDate bis toDate, beide eingeschlossen. */
+  spanDays: number;
+  /** Davon Tage mit Bewertung medium oder bad. Der Rest wurde nicht erfasst. */
+  affectedDays: number;
   daysWithBlood: number;
 }
 
@@ -196,12 +199,16 @@ export interface MedicationSummaryLine {
   schedule: string;
   startDate: string;
   endDate: string | null;
+  /** Tage des Zeitraums, an denen das Medikament lief. Nenner der Angabe. */
+  dueDays: number;
   daysWithIntake: number;
   totalIntakes: number;
 }
 
 export interface VisitSummary {
   period: SummaryPeriod;
+  /** Auch dann gesetzt, wenn figures null ist -- der Hinweis nennt die Zahl. */
+  daysWithEntries: number;
   /** null, wenn weniger als sieben Tage mit Eintrag vorliegen. */
   figures: SummaryFigures | null;
   phases: NotablePhase[];
