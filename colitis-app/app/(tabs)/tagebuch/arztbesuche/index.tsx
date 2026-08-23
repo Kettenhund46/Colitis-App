@@ -98,6 +98,14 @@ export default function ArztbesucheScreen() {
           {isExporting ? 'PDF wird erstellt …' : 'Arztbesuch-Übersicht als PDF exportieren'}
         </Text>
       </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Für den nächsten Termin vorbereiten"
+        style={styles.prepareLink}
+        onPress={() => router.push('/tagebuch/arztbesuche/zusammenfassung')}
+      >
+        <Text style={styles.prepareLinkText}>Für den nächsten Termin vorbereiten</Text>
+      </Pressable>
       {isLoading ? (
         <SkeletonList count={3} lines={2} />
       ) : (
@@ -142,6 +150,18 @@ function makeStyles(colors: ThemeColors) {
       opacity: 0.5,
     },
     exportLinkText: {
+      color: colors.primary,
+      fontSize: tokens.typography.fontSize.sm,
+      fontWeight: tokens.typography.fontWeight.medium,
+      textAlign: 'center',
+    },
+    prepareLink: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      padding: tokens.spacing.md,
+    },
+    prepareLinkText: {
       color: colors.primary,
       fontSize: tokens.typography.fontSize.sm,
       fontWeight: tokens.typography.fontWeight.medium,
