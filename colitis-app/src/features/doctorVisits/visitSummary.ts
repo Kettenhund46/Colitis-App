@@ -65,11 +65,12 @@ export function determinePeriod(visits: DoctorVisit[], today: string): SummaryPe
 
 export function formatPeriodLabel(period: SummaryPeriod): string {
   const range = `${formatGermanDate(period.fromDate)} – ${formatGermanDate(period.toDate)}`;
-  const since =
-    period.sinceVisitLabel === null
-      ? `letzte ${period.dayCount} Tage`
-      : `${period.dayCount} Tage ${period.sinceVisitLabel}`;
-  return `${range} · ${since}`;
+  if (period.sinceVisitLabel === null) {
+    return `${range} · letzte ${period.dayCount} Tage`;
+  }
+  // Getrennt gesetzt, damit die Zahl nicht als vergangene Zeit gelesen wird:
+  // dayCount zaehlt beide Enden mit, "104 Tage seit dem Besuch" waere einer zu viel.
+  return `${range} · ${period.dayCount} Tage · ${period.sinceVisitLabel}`;
 }
 
 /** Mindestzahl betroffener Tage, damit eine Strecke genannt wird. */
@@ -268,6 +269,12 @@ export interface MedicationSummaryLine {
   schedule: string;
   startDate: string;
   endDate: string | null;
+  /**
+   * Ob das Medikament am Ende des Zeitraums bereits abgesetzt war. Ein
+   * Enddatum in der Zukunft heisst geplant, nicht beendet -- genauso wie
+   * isMedicationActive es im uebrigen Projekt handhabt.
+   */
+  hasEnded: boolean;
   /** Tage des Zeitraums, an denen das Medikament lief. Nenner der Angabe. */
   dueDays: number;
   daysWithIntake: number;
@@ -299,17 +306,26 @@ export interface VisitSummaryInput {
 }
 
 export function computeTriggerShares(entries: DiaryEntryWithTriggers[]): TriggerShare[] {
+  // Bleibt stehen, obwohl computeTriggerPatterns fuer eine leere Liste ohnehin
+  // [] liefert: Sie macht sichtbar, dass der Nenner unten nie null wird.
   if (entries.length === 0) {
     return [];
   }
 
+  // Sortiert und geschnitten wird auf der Anzahl, nicht auf dem gerundeten
+  // Prozentwert. Bei vielen Eintraegen runden mehrere Ausloeser auf dieselbe
+  // Zahl, und der haeufigste fiele aus den ersten dreien heraus.
   return computeTriggerPatterns(entries)
+    .slice()
+    .sort((a, b) => b.entryCount - a.entryCount)
+    .slice(0, MAX_TRIGGERS)
     .map((stat) => ({
       label: labelFor(TRIGGER_CATEGORY_OPTIONS, stat.category),
       percent: Math.round((stat.entryCount / entries.length) * 100),
     }))
-    .sort((a, b) => b.percent - a.percent)
-    .slice(0, MAX_TRIGGERS);
+    // Wer auf 0 % rundet, ist kein haeufiger Ausloeser -- die Angabe wuerde
+    // sich selbst widerlegen.
+    .filter((share) => share.percent > 0);
 }
 
 export function buildMedicationLines(
@@ -329,6 +345,10 @@ export function buildMedicationLines(
 
     const dueDaySet = new Set(dueDays);
     const relevantDays: string[] = [];
+    // Gezaehlt werden nur Einnahmen an Tagen, an denen das Medikament lief.
+    // Sonst koennte daysWithIntake groesser als dueDays werden -- "an 12 von 10
+    // Tagen erfasst" waere im Arztdokument nicht erklaerbar. Einnahmen ausserhalb
+    // der Laufzeit bleiben im Protokoll, nur nicht in dieser Zeile.
     for (const intake of intakes) {
       if (intake.medicationId !== medication.id) {
         continue;
@@ -346,6 +366,7 @@ export function buildMedicationLines(
       schedule: medication.schedule,
       startDate: medication.startDate,
       endDate: medication.endDate,
+      hasEnded: medication.endDate !== null && medication.endDate < period.toDate,
       dueDays: dueDays.length,
       daysWithIntake: new Set(relevantDays).size,
       totalIntakes: relevantDays.length,
@@ -361,6 +382,29 @@ export function formatMedicationIntakeLabel(line: MedicationSummaryLine): string
 
 export function formatTriggerListLabel(triggers: TriggerShare[]): string {
   return triggers.map((share) => `${share.label} (${share.percent} %)`).join(' · ');
+}
+
+export const KPI_LABEL_STOOLS = 'Stühle pro Tag';
+export const KPI_LABEL_BLOOD = 'Tage mit Blut';
+export const KPI_LABEL_PAIN = 'Schmerz im Mittel von 10';
+export const KPI_LABEL_RECORDED = 'Tagen erfasst';
+export const NO_NOTABLE_PHASE_TEXT = 'Keine zusammenhängende auffällige Phase.';
+export const NO_MEDICATION_TEXT = 'Im Zeitraum war kein Medikament hinterlegt.';
+export const ORIGIN_NOTE_TEXT = 'Die Angaben stammen aus einem selbstgeführten Tagebuch.';
+
+export function formatRecordedDaysLabel(summary: VisitSummary): string {
+  return `${summary.daysWithEntries} von ${summary.period.dayCount}`;
+}
+
+export function formatMedicationDetailLabel(line: MedicationSummaryLine): string {
+  const base = `${line.dose} · ${line.schedule} · seit ${formatGermanDate(line.startDate)}`;
+  if (line.endDate === null) {
+    return base;
+  }
+  const ending = line.hasEnded
+    ? `beendet am ${formatGermanDate(line.endDate)}`
+    : `geplantes Ende ${formatGermanDate(line.endDate)}`;
+  return `${base} · ${ending}`;
 }
 
 /** Deutsche Schreibweise mit Komma statt Punkt. */

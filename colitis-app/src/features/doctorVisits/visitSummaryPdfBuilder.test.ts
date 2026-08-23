@@ -33,7 +33,7 @@ function summary(overrides: Partial<VisitSummary> = {}): VisitSummary {
 describe('buildVisitSummaryHtml', () => {
   it('names the period', () => {
     const html = buildVisitSummaryHtml(summary(), TODAY);
-    expect(html).toContain('12.05.2026 – 23.08.2026 · 104 Tage seit dem Besuch bei Dr. Weber');
+    expect(html).toContain('12.05.2026 – 23.08.2026 · 104 Tage · seit dem Besuch bei Dr. Weber');
   });
 
   it('shows the four figures', () => {
@@ -91,6 +91,7 @@ describe('buildVisitSummaryHtml', () => {
             schedule: '3x täglich',
             startDate: '2026-05-04',
             endDate: null,
+            hasEnded: false,
             dueDays: 104,
             daysWithIntake: 96,
             totalIntakes: 268,
@@ -114,6 +115,7 @@ describe('buildVisitSummaryHtml', () => {
             schedule: 'morgens',
             startDate: '2026-05-04',
             endDate: '2026-08-08',
+            hasEnded: true,
             dueDays: 88,
             daysWithIntake: 88,
             totalIntakes: 88,
@@ -123,6 +125,40 @@ describe('buildVisitSummaryHtml', () => {
       TODAY
     );
     expect(html).toContain('beendet am 08.08.2026');
+  });
+
+  it('says so when no medication was stored in the period', () => {
+    const html = buildVisitSummaryHtml(summary(), TODAY);
+    expect(html).toContain('Im Zeitraum war kein Medikament hinterlegt.');
+  });
+
+  it('omits the trigger section when no trigger was named', () => {
+    const html = buildVisitSummaryHtml(summary(), TODAY);
+    expect(html).not.toContain('Häufigste Auslöser');
+  });
+
+  it('marks a planned end as planned, not as ended', () => {
+    const html = buildVisitSummaryHtml(
+      summary({
+        medications: [
+          {
+            medicationId: 1,
+            name: 'Prednisolon',
+            dose: '20 mg',
+            schedule: 'morgens',
+            startDate: '2026-05-04',
+            endDate: '2026-09-30',
+            hasEnded: false,
+            dueDays: 104,
+            daysWithIntake: 100,
+            totalIntakes: 100,
+          },
+        ],
+      }),
+      TODAY
+    );
+    expect(html).toContain('geplantes Ende 30.09.2026');
+    expect(html).not.toContain('beendet am');
   });
 
   it('shows the screening date only when one is stored', () => {
@@ -143,6 +179,7 @@ describe('buildVisitSummaryHtml', () => {
             schedule: '1',
             startDate: '2026-05-04',
             endDate: null,
+            hasEnded: false,
             dueDays: 1,
             daysWithIntake: 1,
             totalIntakes: 1,

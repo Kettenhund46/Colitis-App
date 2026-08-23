@@ -1,12 +1,21 @@
 import { escapeHtml, formatGermanDate } from './doctorVisitPassBuilder';
 import {
   formatDecimal,
+  formatMedicationDetailLabel,
   formatMedicationIntakeLabel,
   formatPeriodLabel,
   formatPhaseLabel,
   formatRatingLabel,
+  formatRecordedDaysLabel,
   formatSparseDataLabel,
   formatTriggerListLabel,
+  KPI_LABEL_BLOOD,
+  KPI_LABEL_PAIN,
+  KPI_LABEL_RECORDED,
+  KPI_LABEL_STOOLS,
+  NO_MEDICATION_TEXT,
+  NO_NOTABLE_PHASE_TEXT,
+  ORIGIN_NOTE_TEXT,
 } from './visitSummary';
 import type { MedicationSummaryLine, VisitSummary } from './visitSummary';
 
@@ -20,10 +29,10 @@ function buildFiguresSection(summary: VisitSummary): string {
   const figures = summary.figures;
   return `
     <div class="kpis">
-      <div class="kpi"><span class="n">${formatDecimal(figures.stoolsPerDay)}</span><span class="l">Stühle pro Tag</span></div>
-      <div class="kpi"><span class="n">${figures.daysWithBlood}</span><span class="l">Tage mit Blut</span></div>
-      <div class="kpi"><span class="n">${formatDecimal(figures.averagePainLevel)}</span><span class="l">Schmerz von 10</span></div>
-      <div class="kpi"><span class="n">${summary.daysWithEntries} von ${summary.period.dayCount}</span><span class="l">Tagen erfasst</span></div>
+      <div class="kpi"><span class="n">${formatDecimal(figures.stoolsPerDay)}</span><span class="l">${escapeHtml(KPI_LABEL_STOOLS)}</span></div>
+      <div class="kpi"><span class="n">${figures.daysWithBlood}</span><span class="l">${escapeHtml(KPI_LABEL_BLOOD)}</span></div>
+      <div class="kpi"><span class="n">${formatDecimal(figures.averagePainLevel)}</span><span class="l">${escapeHtml(KPI_LABEL_PAIN)}</span></div>
+      <div class="kpi"><span class="n">${escapeHtml(formatRecordedDaysLabel(summary))}</span><span class="l">${escapeHtml(KPI_LABEL_RECORDED)}</span></div>
     </div>
     <h2>Tagesbewertung</h2>
     <p>${escapeHtml(formatRatingLabel(figures))}</p>
@@ -36,7 +45,7 @@ function buildPhasesSection(summary: VisitSummary): string {
   }
   const body =
     summary.phases.length === 0
-      ? '<p>Keine zusammenhängende auffällige Phase.</p>'
+      ? `<p>${escapeHtml(NO_NOTABLE_PHASE_TEXT)}</p>`
       : summary.phases.map((phase) => `<p>${escapeHtml(formatPhaseLabel(phase))}</p>`).join('\n');
   return `<h2>Auffällige Phasen</h2>${body}`;
 }
@@ -49,11 +58,10 @@ function buildTriggersSection(summary: VisitSummary): string {
 }
 
 function buildMedicationSection(line: MedicationSummaryLine): string {
-  const ended = line.endDate === null ? '' : ` · beendet am ${formatGermanDate(line.endDate)}`;
   return `
-    <div class="med${line.endDate === null ? '' : ' ended'}">
+    <div class="med${line.hasEnded ? ' ended' : ''}">
       <p class="med-name">${escapeHtml(line.name)}</p>
-      <p class="med-detail">${escapeHtml(line.dose)} · ${escapeHtml(line.schedule)} · seit ${formatGermanDate(line.startDate)}${ended}</p>
+      <p class="med-detail">${escapeHtml(formatMedicationDetailLabel(line))}</p>
       <p class="med-detail">${escapeHtml(formatMedicationIntakeLabel(line))}</p>
     </div>
   `;
@@ -61,7 +69,7 @@ function buildMedicationSection(line: MedicationSummaryLine): string {
 
 function buildMedicationsSection(summary: VisitSummary): string {
   if (summary.medications.length === 0) {
-    return '<h2>Medikamente</h2><p>Im Zeitraum war kein Medikament hinterlegt.</p>';
+    return `<h2>Medikamente</h2><p>${escapeHtml(NO_MEDICATION_TEXT)}</p>`;
   }
   return `<h2>Medikamente</h2>${summary.medications.map(buildMedicationSection).join('\n')}`;
 }
@@ -70,7 +78,7 @@ function buildScreeningSection(summary: VisitSummary): string {
   if (summary.nextScreeningDate === null) {
     return '';
   }
-  return `<p class="screening">Nächste Vorsorge-Koloskopie: ${formatGermanDate(summary.nextScreeningDate)}</p>`;
+  return `<p class="screening">Nächste Vorsorge-Koloskopie: ${escapeHtml(formatGermanDate(summary.nextScreeningDate))}</p>`;
 }
 
 export function buildVisitSummaryHtml(summary: VisitSummary, today: Date): string {
@@ -110,7 +118,7 @@ export function buildVisitSummaryHtml(summary: VisitSummary, today: Date): strin
         ${buildTriggersSection(summary)}
         ${buildMedicationsSection(summary)}
         ${buildScreeningSection(summary)}
-        <p class="footer">Erstellt am ${day}.${month}.${year} · Die Angaben stammen aus einem selbstgeführten Tagebuch.</p>
+        <p class="footer">Erstellt am ${day}.${month}.${year} · ${escapeHtml(ORIGIN_NOTE_TEXT)}</p>
       </body>
     </html>
   `;

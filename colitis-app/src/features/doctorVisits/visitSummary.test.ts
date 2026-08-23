@@ -12,6 +12,7 @@ import {
   computeTriggerShares,
   buildMedicationLines,
   formatMedicationIntakeLabel,
+  formatMedicationDetailLabel,
   buildVisitSummary,
 } from './visitSummary';
 import type { DoctorVisit } from './types';
@@ -170,7 +171,7 @@ describe('visitSummary', () => {
         dayCount: 104,
         sinceVisitLabel: 'seit dem Besuch bei Dr. Weber',
       });
-      expect(label).toBe('12.05.2026 – 23.08.2026 · 104 Tage seit dem Besuch bei Dr. Weber');
+      expect(label).toBe('12.05.2026 – 23.08.2026 · 104 Tage · seit dem Besuch bei Dr. Weber');
     });
 
     it('names the fallback range without a visit', () => {
@@ -453,6 +454,54 @@ describe('visitSummary', () => {
       expect(formatDecimal(3.24)).toBe('3,2');
       expect(formatDecimal(4)).toBe('4,0');
     });
+
+    it('formatMedicationDetailLabel names a planned end as planned', () => {
+      const label = formatMedicationDetailLabel({
+        medicationId: 1,
+        name: 'Prednisolon',
+        dose: '20 mg',
+        schedule: 'morgens',
+        startDate: '2026-08-01',
+        endDate: '2026-09-30',
+        hasEnded: false,
+        dueDays: 20,
+        daysWithIntake: 20,
+        totalIntakes: 20,
+      });
+      expect(label).toBe('20 mg · morgens · seit 01.08.2026 · geplantes Ende 30.09.2026');
+    });
+
+    it('formatMedicationDetailLabel names a past end as ended', () => {
+      const label = formatMedicationDetailLabel({
+        medicationId: 1,
+        name: 'Prednisolon',
+        dose: '20 mg',
+        schedule: 'morgens',
+        startDate: '2026-08-01',
+        endDate: '2026-08-10',
+        hasEnded: true,
+        dueDays: 10,
+        daysWithIntake: 10,
+        totalIntakes: 10,
+      });
+      expect(label).toBe('20 mg · morgens · seit 01.08.2026 · beendet am 10.08.2026');
+    });
+
+    it('formatMedicationDetailLabel omits the ending without an end date', () => {
+      const label = formatMedicationDetailLabel({
+        medicationId: 1,
+        name: 'Mesalazin',
+        dose: '500 mg',
+        schedule: '3x täglich',
+        startDate: '2026-08-01',
+        endDate: null,
+        hasEnded: false,
+        dueDays: 20,
+        daysWithIntake: 20,
+        totalIntakes: 60,
+      });
+      expect(label).toBe('500 mg · 3x täglich · seit 01.08.2026');
+    });
   });
 
   describe('computeTriggerShares', () => {
@@ -486,6 +535,37 @@ describe('visitSummary', () => {
 
     it('returns nothing without entries', () => {
       expect(computeTriggerShares([])).toEqual([]);
+    });
+
+    it('keeps the most frequent trigger even when several round to the same percent', () => {
+      // 100 Eintraege: Ernaehrung 9, Stress 9, Schlaf 9, Sonstiges 10.
+      // Gerundet sind das 9, 9, 9 und 10 Prozent -- entscheidend ist die Anzahl.
+      const entries = [
+        ...Array.from({ length: 9 }, (_, index) =>
+          entry({ id: 100 + index, occurredAt: localIso(2026, 8, 1), triggerCategories: ['ernaehrung'] })
+        ),
+        ...Array.from({ length: 9 }, (_, index) =>
+          entry({ id: 200 + index, occurredAt: localIso(2026, 8, 2), triggerCategories: ['stress'] })
+        ),
+        ...Array.from({ length: 9 }, (_, index) =>
+          entry({ id: 300 + index, occurredAt: localIso(2026, 8, 3), triggerCategories: ['schlaf'] })
+        ),
+        ...Array.from({ length: 10 }, (_, index) =>
+          entry({ id: 400 + index, occurredAt: localIso(2026, 8, 4), triggerCategories: ['sonstiges'] })
+        ),
+      ];
+      expect(computeTriggerShares(entries)[0].label).toBe('Sonstiges');
+    });
+
+    it('drops a trigger that rounds down to zero percent', () => {
+      const entries = [
+        entry({ id: 1, occurredAt: localIso(2026, 8, 1), triggerCategories: ['sonstiges'] }),
+        ...Array.from({ length: 300 }, (_, index) =>
+          entry({ id: 100 + index, occurredAt: localIso(2026, 8, 2), triggerCategories: ['stress'] })
+        ),
+      ];
+      const shares = computeTriggerShares(entries);
+      expect(shares.map((share) => share.label)).toEqual(['Stress']);
     });
   });
 
@@ -547,6 +627,29 @@ describe('visitSummary', () => {
       const lines = buildMedicationLines([first, second], [], PERIOD_AUGUST);
       expect(lines.map((line) => line.medicationId)).toEqual([1, 2]);
     });
+
+    it('treats an end date in the future as still running', () => {
+      const planned = medication({ id: 1, name: 'Prednisolon', startDate: '2026-08-01', endDate: '2026-09-30' });
+      expect(buildMedicationLines([planned], [], PERIOD_AUGUST)[0].hasEnded).toBe(false);
+    });
+
+    it('treats an end date on the last day of the period as still running', () => {
+      const ending = medication({ id: 1, name: 'Prednisolon', startDate: '2026-08-01', endDate: '2026-08-20' });
+      expect(buildMedicationLines([ending], [], PERIOD_AUGUST)[0].hasEnded).toBe(false);
+    });
+
+    it('treats an end date before the end of the period as ended', () => {
+      const ended = medication({ id: 1, name: 'Prednisolon', startDate: '2026-08-01', endDate: '2026-08-10' });
+      expect(buildMedicationLines([ended], [], PERIOD_AUGUST)[0].hasEnded).toBe(true);
+    });
+
+    it('ignores an intake on a day the medication was not running', () => {
+      // Beendet am 10., aber am 12. noch protokolliert.
+      const ended = medication({ id: 1, name: 'Prednisolon', startDate: '2026-08-01', endDate: '2026-08-10' });
+      const line = buildMedicationLines([ended], [intake(1, 1, 12)], PERIOD_AUGUST)[0];
+      expect(line.daysWithIntake).toBe(0);
+      expect(line.totalIntakes).toBe(0);
+    });
   });
 
   describe('formatMedicationIntakeLabel', () => {
@@ -558,6 +661,7 @@ describe('visitSummary', () => {
         schedule: '3x täglich',
         startDate: '2026-05-04',
         endDate: null,
+        hasEnded: false,
         dueDays: 103,
         daysWithIntake: 96,
         totalIntakes: 268,

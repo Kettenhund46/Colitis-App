@@ -1,12 +1,21 @@
 import { ScrollView, Text, View, StyleSheet } from 'react-native';
 import {
   formatDecimal,
+  formatMedicationDetailLabel,
   formatMedicationIntakeLabel,
   formatPeriodLabel,
   formatPhaseLabel,
   formatRatingLabel,
+  formatRecordedDaysLabel,
   formatSparseDataLabel,
   formatTriggerListLabel,
+  KPI_LABEL_BLOOD,
+  KPI_LABEL_PAIN,
+  KPI_LABEL_RECORDED,
+  KPI_LABEL_STOOLS,
+  NO_MEDICATION_TEXT,
+  NO_NOTABLE_PHASE_TEXT,
+  ORIGIN_NOTE_TEXT,
 } from '../visitSummary';
 import { formatGermanDate } from '../doctorVisitPassBuilder';
 import { SectionHeading } from '../../../components/ui/SectionHeading';
@@ -37,23 +46,21 @@ export function VisitSummaryView({ summary }: VisitSummaryViewProps) {
           <View style={styles.kpiRow}>
             <View style={styles.kpi}>
               <Text style={styles.kpiNumber}>{formatDecimal(figures.stoolsPerDay)}</Text>
-              <Text style={styles.kpiLabel}>Stühle pro Tag</Text>
+              <Text style={styles.kpiLabel}>{KPI_LABEL_STOOLS}</Text>
             </View>
             <View style={styles.kpi}>
               <Text style={styles.kpiNumber}>{figures.daysWithBlood}</Text>
-              <Text style={styles.kpiLabel}>Tage mit Blut</Text>
+              <Text style={styles.kpiLabel}>{KPI_LABEL_BLOOD}</Text>
             </View>
           </View>
           <View style={styles.kpiRow}>
             <View style={styles.kpi}>
               <Text style={styles.kpiNumber}>{formatDecimal(figures.averagePainLevel)}</Text>
-              <Text style={styles.kpiLabel}>Schmerz von 10</Text>
+              <Text style={styles.kpiLabel}>{KPI_LABEL_PAIN}</Text>
             </View>
             <View style={styles.kpi}>
-              <Text style={styles.kpiNumber}>
-                {summary.daysWithEntries} von {summary.period.dayCount}
-              </Text>
-              <Text style={styles.kpiLabel}>Tagen erfasst</Text>
+              <Text style={styles.kpiNumber}>{formatRecordedDaysLabel(summary)}</Text>
+              <Text style={styles.kpiLabel}>{KPI_LABEL_RECORDED}</Text>
             </View>
           </View>
 
@@ -62,7 +69,7 @@ export function VisitSummaryView({ summary }: VisitSummaryViewProps) {
 
           <SectionHeading>Auffällige Phasen</SectionHeading>
           {summary.phases.length === 0 ? (
-            <Text style={styles.bodyText}>Keine zusammenhängende auffällige Phase.</Text>
+            <Text style={styles.bodyText}>{NO_NOTABLE_PHASE_TEXT}</Text>
           ) : (
             summary.phases.map((phase) => (
               <Text key={phase.fromDate} style={styles.bodyText}>
@@ -82,15 +89,12 @@ export function VisitSummaryView({ summary }: VisitSummaryViewProps) {
 
       <SectionHeading>Medikamente</SectionHeading>
       {summary.medications.length === 0 ? (
-        <Text style={styles.bodyText}>Im Zeitraum war kein Medikament hinterlegt.</Text>
+        <Text style={styles.bodyText}>{NO_MEDICATION_TEXT}</Text>
       ) : (
         summary.medications.map((line) => (
-          <View key={line.medicationId} style={[styles.medication, line.endDate !== null && styles.medicationEnded]}>
+          <View key={line.medicationId} style={[styles.medication, line.hasEnded && styles.medicationEnded]}>
             <Text style={styles.medicationName}>{line.name}</Text>
-            <Text style={styles.medicationDetail}>
-              {line.dose} · {line.schedule} · seit {formatGermanDate(line.startDate)}
-              {line.endDate === null ? '' : ` · beendet am ${formatGermanDate(line.endDate)}`}
-            </Text>
+            <Text style={styles.medicationDetail}>{formatMedicationDetailLabel(line)}</Text>
             <Text style={styles.medicationDetail}>{formatMedicationIntakeLabel(line)}</Text>
           </View>
         ))
@@ -102,7 +106,7 @@ export function VisitSummaryView({ summary }: VisitSummaryViewProps) {
         </Text>
       )}
 
-      <Text style={styles.footerText}>Die Angaben stammen aus einem selbstgeführten Tagebuch.</Text>
+      <Text style={styles.footerText}>{ORIGIN_NOTE_TEXT}</Text>
     </ScrollView>
   );
 }
