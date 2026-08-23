@@ -227,11 +227,19 @@ export function formatDateKey(date: Date): string {
 }
 ```
 
-ersetzen durch eine Weiterreichung. Ganz oben in der Datei, zu den übrigen Importen:
+ersetzen durch einen Import unter eigenem Namen plus dessen Weitergabe. Ganz oben in der Datei, zu den übrigen Importen:
 
 ```ts
-export { formatLocalDateKey as formatDateKey } from '../../lib/localDate';
+import { formatLocalDateKey as formatDateKey } from '../../lib/localDate';
 ```
+
+und im Rumpf, an der Stelle der gelöschten Funktion:
+
+```ts
+export { formatDateKey };
+```
+
+**Beide Zeilen sind nötig, nicht eine davon.** `groupEntriesByDay` in derselben Datei ruft `formatDateKey` selbst auf; eine reine `export … from`-Weiterleitung bindet aber keinen lokalen Namen und würde diesen Aufruf brechen.
 
 In `colitis-app/src/features/medications/medicationStatus.ts` genauso: die Funktion
 
@@ -247,14 +255,16 @@ export function formatLocalDate(date: Date): string {
 ersetzen durch
 
 ```ts
-export { formatLocalDateKey as formatLocalDate } from '../../lib/localDate';
-```
-
-`isMedicationActive` in derselben Datei ruft `formatLocalDate` auf. Damit das weiter geht, braucht die Datei zusätzlich den normalen Import:
-
-```ts
 import { formatLocalDateKey as formatLocalDate } from '../../lib/localDate';
 ```
+
+und im Rumpf
+
+```ts
+export { formatLocalDate };
+```
+
+Auch hier aus demselben Grund beides: `isMedicationActive` in derselben Datei ruft `formatLocalDate` auf.
 
 In `colitis-app/src/features/medications/adherence.ts` die beiden Funktionen `parseLocalDate` und `addDays` samt ihrer Kommentare **löschen** und stattdessen importieren:
 
