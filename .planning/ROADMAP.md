@@ -31,7 +31,7 @@ bekommen.
 | 1 | Ans Eintragen erinnert werden und den Schweregrad beim Scrollen sehen | done |
 | 2 | Die App sieht nach Gestaltung aus, nicht nach Formular | done |
 | 3 | Löschen geht per Wischen und die Bedienung fühlt sich spürbar an | done |
-| 4 | Medikamenteneinnahme lässt sich abhaken und nachvollziehen | in_progress |
+| 4 | Medikamenteneinnahme lässt sich abhaken und nachvollziehen | done |
 | 5 | Ein Arzttermin lässt sich mit einer Zusammenfassung vorbereiten | todo |
 | 6 | Die App ist auf Deutsch und Englisch bedienbar | todo |
 
@@ -321,11 +321,38 @@ dabei ans Licht: Der Medikamente-Tab war eine feste Spalte, in der nur die
 Medikamentenliste scrollte. Die aufgeklappte Vorsorge-Karte füllt den halben
 Schirm, sodass für die Liste ein schmaler Streifen blieb; der zweite Link
 („Einnahme-Verlauf ansehen") machte es sichtbar, verursachte es aber nicht.
-Behoben, indem Vorsorge-Karte und beide Links als `ListHeaderComponent` in die
-Liste gewandert sind — der Tab ist jetzt ein einziger Scrollbereich. Die
-Zusammenfassungszeile bleibt oben stehen. Der Leerzustand ist dabei von einer
-vorzeitigen Rückgabe zu `ListEmptyComponent` geworden, damit der Kopfbereich
-auch ohne ein einziges Medikament erreichbar bleibt.
+Behoben, indem die Vorsorge-Karte als `ListHeaderComponent` in die Liste
+gewandert ist — der Tab ist jetzt ein einziger Scrollbereich. Der Leerzustand
+ist dabei von einer vorzeitigen Rückgabe zu `ListEmptyComponent` geworden,
+damit der Kopfbereich auch ohne ein einziges Medikament erreichbar bleibt.
+
+Vier weitere Runden am Gerät folgten, alle Layout:
+- Die PDF-Ausgabe scrollte weg und landete mitten im Bild; sie sitzt jetzt
+  fest unter dem Titel, wie im Arztbesuche-Bildschirm.
+- „Einnahme-Verlauf ansehen" saß als volle Leiste direkt unter der
+  Vorsorge-Karte und las sich als deren letzte Zeile — beide auf derselben
+  hellen Fläche. Jetzt ein Chip oben, wie „Auswertung" und „Arztbesuche" im
+  Tagebuch.
+- Im Tagebuch-Kalender waren die Zellen quadratisch (`aspectRatio: 1`), also
+  rund 49dp hoch, während Zahl und Bewertungspunkt nur 27dp brauchen. Sechs
+  Reihen kosteten fast 300dp und schnitten den ausgewählten Tag ab. Feste
+  Zellenhöhe von 44dp plus knappere Abstände geben rund 90dp zurück.
+- Der Community-Knopf ist aus dem Wissen-Tab in die Einstellungen gewandert,
+  als eigener Abschnitt im Stil des Backup-Blocks.
+
+**Die Zusammenfassungszeile ist wieder entfallen** (Entscheidung des Nutzers
+nach dem Gerätetest): Die Karten zeigen den Zählstand ohnehin je Medikament,
+der Verlauf zeigt ihn je Tag. Mit ihr fielen `buildTodaySummary`,
+`formatTodaySummaryLabel` und sechs Tests — 538 statt 544. Damit ist von den
+vier Entscheidungen des Entwurfs die dritte zurückgenommen; die Rechnung
+selbst blieb unangetastet.
+
+**Offen geblieben:** Sind weder ein Medikament noch ein Vorsorge-Termin
+hinterlegt, füllt das aufgeklappte Vorsorge-Formular den Schirm so weit, dass
+„Erstes Medikament anlegen" erst nach einem Stück Scrollen auftaucht. Betrifft
+nur diesen einen Zustand. Drei Wege wurden dem Nutzer vorgelegt
+(Vorsorge-Block nach unten, Formular einklappen, so lassen) und nicht
+entschieden.
 
 ---
 
