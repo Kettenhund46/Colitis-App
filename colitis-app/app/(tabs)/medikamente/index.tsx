@@ -11,12 +11,10 @@ import {
 } from '../../../src/features/medications/db/medicationsRepository';
 import { formatLocalDate } from '../../../src/features/medications/medicationStatus';
 import {
-  buildTodaySummary,
   countByMedication,
   intakesOnDate,
   queryLowerBoundIso,
 } from '../../../src/features/medications/adherence';
-import { TodaySummaryLine } from '../../../src/features/medications/components/TodaySummaryLine';
 import {
   getScreeningReminder,
   upsertScreeningReminder,
@@ -170,21 +168,9 @@ export default function MedikamenteScreen() {
     }
   });
 
-  // Das schwebend geloeschte Medikament faellt schon vor der Rechnung heraus,
-  // damit die Zeile nicht etwas als offen nennt, dessen Karte bereits weg ist.
-  const visibleMedications = useMemo(
-    () => (pending === null ? medications : medications.filter((entry) => entry.id !== pending.id)),
-    [medications, pending]
-  );
-
   const takenTodayCounts = useMemo(
     () => countByMedication(intakesOnDate(intakes, formatLocalDate(new Date()))),
     [intakes]
-  );
-
-  const todaySummary = useMemo(
-    () => buildTodaySummary(visibleMedications, intakes, formatLocalDate(new Date())),
-    [visibleMedications, intakes]
   );
 
   function handleDelete(medicationId: number) {
@@ -291,7 +277,6 @@ export default function MedikamenteScreen() {
           <Text style={styles.chipText}>Einnahme-Verlauf</Text>
         </Pressable>
       </View>
-      <TodaySummaryLine summary={todaySummary} />
       <MedicationList
         header={listHeader}
         isLoading={isLoading}

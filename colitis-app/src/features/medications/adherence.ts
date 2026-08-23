@@ -18,17 +18,6 @@ export interface DaySummary {
   isComplete: boolean;
 }
 
-export interface OpenMedication {
-  medicationId: number;
-  name: string;
-  missing: number;
-}
-
-export interface TodaySummary {
-  open: OpenMedication[];
-  hasActiveMedications: boolean;
-}
-
 export type HistoryPeriod = '30' | '90' | 'alles';
 
 const WEEKDAY_LABELS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
@@ -131,38 +120,6 @@ export function buildDaySummaries(
   }
 
   return summaries;
-}
-
-export function buildTodaySummary(
-  medications: Medication[],
-  intakes: MedicationIntake[],
-  today: string
-): TodaySummary {
-  const due = medications.filter((medication) => isMedicationDueOn(medication, today));
-  const counts = countByMedication(intakesOnDate(intakes, today));
-
-  const open: OpenMedication[] = [];
-  for (const medication of due) {
-    const missing = expectedDosesPerDay(medication) - (counts.get(medication.id) ?? 0);
-    if (missing > 0) {
-      open.push({ medicationId: medication.id, name: medication.name, missing });
-    }
-  }
-
-  return { open, hasActiveMedications: due.length > 0 };
-}
-
-export function formatTodaySummaryLabel(summary: TodaySummary): string | null {
-  if (!summary.hasActiveMedications) {
-    return null;
-  }
-  if (summary.open.length === 0) {
-    return 'Heute ist alles genommen';
-  }
-  const parts = summary.open.map((entry) =>
-    entry.missing > 1 ? `${entry.name} (${entry.missing})` : entry.name
-  );
-  return `Heute noch offen: ${parts.join(', ')}`;
 }
 
 export function formatDaySummaryLabel(summary: DaySummary): string {

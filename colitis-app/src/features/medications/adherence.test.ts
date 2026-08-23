@@ -6,8 +6,6 @@ import {
   intakesOnDate,
   countByMedication,
   buildDaySummaries,
-  buildTodaySummary,
-  formatTodaySummaryLabel,
   formatDaySummaryLabel,
   formatDayHeading,
   formatIntakeTime,
@@ -190,66 +188,6 @@ describe('adherence', () => {
 
     it('returns nothing when the range is inverted', () => {
       expect(buildDaySummaries([mesalazin], [], '2026-08-20', '2026-08-18')).toEqual([]);
-    });
-  });
-
-  describe('buildTodaySummary', () => {
-    const mesalazin = medication({
-      id: 10,
-      name: 'Mesalazin',
-      reminderTimes: reminderTimesFor(['08:00', '13:00', '19:00']),
-    });
-    const azathioprin = medication({ id: 11, name: 'Azathioprin' });
-
-    it('reports how many doses are still missing', () => {
-      const intakes = [intake(1, 10, localIso(2026, 8, 22, 8, 0))];
-      const summary = buildTodaySummary([mesalazin, azathioprin], intakes, '2026-08-22');
-      expect(summary.open).toEqual([
-        { medicationId: 10, name: 'Mesalazin', missing: 2 },
-        { medicationId: 11, name: 'Azathioprin', missing: 1 },
-      ]);
-      expect(summary.hasActiveMedications).toBe(true);
-    });
-
-    it('reports nothing open once every dose is taken', () => {
-      const intakes = [
-        intake(1, 10, localIso(2026, 8, 22, 8, 0)),
-        intake(2, 10, localIso(2026, 8, 22, 13, 0)),
-        intake(3, 10, localIso(2026, 8, 22, 19, 0)),
-      ];
-      const summary = buildTodaySummary([mesalazin], intakes, '2026-08-22');
-      expect(summary.open).toEqual([]);
-      expect(summary.hasActiveMedications).toBe(true);
-    });
-
-    it('reports no active medications when none is due today', () => {
-      const ended = medication({ id: 12, name: 'Prednisolon', endDate: '2026-08-08' });
-      const summary = buildTodaySummary([ended], [], '2026-08-22');
-      expect(summary.hasActiveMedications).toBe(false);
-      expect(summary.open).toEqual([]);
-    });
-  });
-
-  describe('formatTodaySummaryLabel', () => {
-    it('says nothing without active medications', () => {
-      expect(formatTodaySummaryLabel({ open: [], hasActiveMedications: false })).toBeNull();
-    });
-
-    it('confirms a complete day', () => {
-      expect(formatTodaySummaryLabel({ open: [], hasActiveMedications: true })).toBe(
-        'Heute ist alles genommen'
-      );
-    });
-
-    it('names what is open and adds the count only above one', () => {
-      const label = formatTodaySummaryLabel({
-        open: [
-          { medicationId: 10, name: 'Mesalazin', missing: 2 },
-          { medicationId: 11, name: 'Azathioprin', missing: 1 },
-        ],
-        hasActiveMedications: true,
-      });
-      expect(label).toBe('Heute noch offen: Mesalazin (2), Azathioprin');
     });
   });
 
