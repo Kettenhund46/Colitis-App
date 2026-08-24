@@ -5,7 +5,7 @@ import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import { Card } from '../../../components/ui/Card';
 import { isValidCalendarDate } from '../dateValidation';
-import { deleteFeedback } from '../../../lib/haptics';
+import { deleteFeedback, saveFeedback } from '../../../lib/haptics';
 import type { ScreeningReminder, NewScreeningReminderInput } from '../types';
 import type { ThemeColors } from '../../../theme/types';
 
@@ -59,6 +59,7 @@ export function ScreeningReminderCard({ reminder, onSave, onDelete }: ScreeningR
           note: note.trim().length > 0 ? note.trim() : null,
         })
       );
+      saveFeedback();
       setIsEditing(false);
     } finally {
       setIsSaving(false);

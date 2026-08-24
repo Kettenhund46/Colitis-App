@@ -12,15 +12,24 @@ export interface MedicationFormState {
   reminderTimes: string[];
 }
 
-export const INITIAL_MEDICATION_FORM_STATE: MedicationFormState = {
-  name: '',
-  dose: '',
-  schedule: '',
-  startDate: formatLocalDate(new Date()),
-  endDate: '',
-  sideEffectsNote: '',
-  reminderTimes: [],
-};
+/**
+ * Frischer Formularzustand mit dem heutigen Tag als Startdatum.
+ *
+ * Bewusst eine Funktion und keine Konstante: Eine Konstante wird einmal beim
+ * Laden des Moduls ausgewertet. Bleibt die App ueber Mitternacht im Speicher --
+ * bei einer Tagebuch-App der Normalfall --, schluege sie danach den Vortag vor.
+ */
+export function buildInitialMedicationFormState(): MedicationFormState {
+  return {
+    name: '',
+    dose: '',
+    schedule: '',
+    startDate: formatLocalDate(new Date()),
+    endDate: '',
+    sideEffectsNote: '',
+    reminderTimes: [],
+  };
+}
 
 const REMINDER_TIME_PATTERN = /^([0-1]\d|2[0-3]):([0-5]\d)$/;
 

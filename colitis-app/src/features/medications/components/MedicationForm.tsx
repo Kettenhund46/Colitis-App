@@ -3,7 +3,7 @@ import { Pressable, ScrollView, Text, TextInput, View, StyleSheet } from 'react-
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import {
-  INITIAL_MEDICATION_FORM_STATE,
+  buildInitialMedicationFormState,
   addReminderTime,
   removeReminderTime,
   buildMedicationInput,
@@ -22,7 +22,11 @@ interface MedicationFormProps {
 export function MedicationForm({ initialState, onSubmit, submitLabel }: MedicationFormProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
-  const [formState, setFormState] = useState<MedicationFormState>(initialState ?? INITIAL_MEDICATION_FORM_STATE);
+  // Traege Auswertung: Der Vorgabezustand wird nur beim ersten Rendern
+  // gebraucht, und er soll den Tag treffen, an dem das Formular aufgeht.
+  const [formState, setFormState] = useState<MedicationFormState>(
+    () => initialState ?? buildInitialMedicationFormState()
+  );
   const [newReminderTime, setNewReminderTime] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);

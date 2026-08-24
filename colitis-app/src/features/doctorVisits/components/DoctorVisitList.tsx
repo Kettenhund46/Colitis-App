@@ -4,6 +4,7 @@ import { tokens } from '../../../styles/tokens';
 import { formatGermanDate } from '../doctorVisitPassBuilder';
 import { Card } from '../../../components/ui/Card';
 import { EmptyState } from '../../../components/ui/EmptyState';
+import { FAB_CLEARANCE } from '../../../components/ui/floatingActionButton';
 import { SwipeableRow } from '../../../components/swipe/SwipeableRow';
 import type { DoctorVisit } from '../types';
 import type { ThemeColors } from '../../../theme/types';
@@ -73,7 +74,12 @@ export function DoctorVisitList({ visits, onEdit, onDelete, onCreate, hiddenId }
 function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
     list: { flex: 1, backgroundColor: colors.background },
-    listContent: { padding: tokens.spacing.lg, gap: tokens.spacing.md },
+    listContent: {
+      padding: tokens.spacing.lg,
+      // Haelt die letzte Karte ueber dem "+"-Knopf, der sie sonst verdeckt.
+      paddingBottom: FAB_CLEARANCE,
+      gap: tokens.spacing.md,
+    },
     cardDate: {
       color: colors.textPrimary,
       fontSize: tokens.typography.fontSize.md,

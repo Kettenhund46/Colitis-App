@@ -233,10 +233,11 @@ export default function MedikamenteScreen() {
     }
   }
 
-  // Wandert als Kopfbereich in die Liste und scrollt mit. Bliebe es eine feste
-  // Spalte ueber der Liste, waere von der Liste nur ein schmaler Streifen
-  // uebrig -- die Vorsorge-Karte allein fuellt aufgeklappt den halben Schirm.
-  const listHeader = (
+  // Wandert als Fussbereich in die Liste und scrollt mit. Unter den Karten,
+  // nicht darueber: Der Tab heisst Medikamente, und die Vorsorge-Karte fuellt
+  // aufgeklappt den halben Schirm -- oben haette sie den Leerzustand samt
+  // "Erstes Medikament anlegen" unter den Rand geschoben.
+  const listFooter = (
     <ScreeningReminderCard
       reminder={screeningReminder}
       onSave={handleSaveScreeningReminder}
@@ -278,7 +279,7 @@ export default function MedikamenteScreen() {
         </Pressable>
       </View>
       <MedicationList
-        header={listHeader}
+        footer={listFooter}
         isLoading={isLoading}
         onCreate={() => router.push('/medikamente/neu')}
         medications={medications}

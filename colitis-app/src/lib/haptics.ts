@@ -16,3 +16,13 @@ export function saveFeedback(): void {
 export function deleteFeedback(): void {
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => undefined);
 }
+
+/**
+ * Ticken nach dem Zuruecknehmen eines Loeschvorgangs. Bewusst leichter als
+ * deleteFeedback: Das Loeschen ist das Ereignis, das Zuruecknehmen nur die
+ * Bestaetigung, dass es nicht stattfindet. Eigene Funktion trotz gleicher
+ * Staerke wie saveFeedback, damit die Aufrufstelle sagt, was gemeint ist.
+ */
+export function undoFeedback(): void {
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+}

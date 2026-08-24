@@ -6,6 +6,7 @@ import { seedKnowledgeArticles, listKnowledgeArticles } from '../../../src/featu
 import { listFavoriteSlugs } from '../../../src/features/knowledge/db/knowledgeFavoritesRepository';
 import { filterKnowledgeArticles, filterFavoriteArticles } from '../../../src/features/knowledge/search';
 import { KnowledgeArticleList } from '../../../src/features/knowledge/components/KnowledgeArticleList';
+import type { KnowledgeEmptyVariant } from '../../../src/features/knowledge/components/KnowledgeArticleList';
 import { SkeletonList } from '../../../src/components/ui/SkeletonList';
 import { SwipeableTabScreen } from '../../../src/components/SwipeableTabScreen';
 import { useTheme } from '../../../src/theme/ThemeContext';
@@ -61,6 +62,15 @@ export default function WissenScreen() {
       };
     }, [])
   );
+
+  // Ohne eingegebenen Suchbegriff waere "Versuch es mit einem anderen
+  // Suchbegriff" ein Rat zu etwas, das der Nutzer gar nicht getan hat.
+  function emptyVariant(): KnowledgeEmptyVariant {
+    if (viewFilter === 'favorites') {
+      return 'favorites';
+    }
+    return query.trim().length > 0 ? 'search' : 'none';
+  }
 
   const searchedArticles = filterKnowledgeArticles(articles, query);
   const visibleArticles =
@@ -119,7 +129,7 @@ export default function WissenScreen() {
         <KnowledgeArticleList
           articles={visibleArticles}
           onSelect={(slug) => router.push(`/wissen/${slug}`)}
-          emptyVariant={viewFilter === 'favorites' ? 'favorites' : 'search'}
+          emptyVariant={emptyVariant()}
         />
       )}
     </SwipeableTabScreen>

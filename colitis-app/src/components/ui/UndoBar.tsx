@@ -22,7 +22,12 @@ export function UndoBar({ label, onUndo, avoidsFloatingButton = true }: UndoBarP
   return (
     <View
       style={[styles.bar, !avoidsFloatingButton && styles.barWithoutFloatingButton]}
-      accessibilityRole="alert">
+      accessibilityRole="alert"
+      // Ohne liveRegion sagt TalkBack den Streifen nicht an. Er ist nach acht
+      // Sekunden weg -- wer ihn nicht sieht, erfuehre sonst nie, dass es ihn
+      // gab. "assertive" statt "polite", weil die Frist laeuft.
+      accessibilityLiveRegion="assertive"
+    >
       <Text style={styles.text}>{label} gelöscht</Text>
       <Pressable
         accessibilityRole="button"

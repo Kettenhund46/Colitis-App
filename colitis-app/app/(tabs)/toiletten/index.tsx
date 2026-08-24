@@ -31,6 +31,7 @@ import {
 import { replaceCachedToilets, listCachedToilets } from '../../../src/features/toilets/db/cachedToiletsRepository';
 import { SwipeableTabScreen } from '../../../src/components/SwipeableTabScreen';
 import { usePendingDeletion } from '../../../src/features/deletion/usePendingDeletion';
+import { saveFeedback } from '../../../src/lib/haptics';
 import { UndoBar } from '../../../src/components/ui/UndoBar';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
@@ -218,6 +219,7 @@ export default function ToilettenScreen() {
       } else {
         await createSavedPlace(db, input);
       }
+      saveFeedback();
       setPlaceError(null);
       setFormState(null);
       await reloadSavedPlaces();

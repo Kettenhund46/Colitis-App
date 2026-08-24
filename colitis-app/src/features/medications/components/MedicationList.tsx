@@ -23,11 +23,13 @@ interface MedicationListProps {
   onCreate: () => void;
   hiddenId: number | null;
   /**
-   * Was oberhalb der Karten steht und mitscrollen soll. Der Bildschirm ist
-   * sonst eine feste Spalte, in der nur diese Liste scrollt -- steht viel
-   * darueber, bleibt fuer sie ein schmaler Streifen uebrig.
+   * Was unterhalb der Karten steht und mitscrollen soll -- der Vorsorge-Block.
+   * Er steht bewusst unter der Liste: Der Tab heisst Medikamente, und sein
+   * aufgeklapptes Formular fuellt den halben Schirm. Darueber gesetzt haette
+   * es den Leerzustand samt "Erstes Medikament anlegen" unter den Rand
+   * geschoben, solange noch nichts hinterlegt ist.
    */
-  header?: ReactElement | null;
+  footer?: ReactElement | null;
   isLoading?: boolean;
 }
 
@@ -41,7 +43,7 @@ export function MedicationList({
   onDelete,
   onCreate,
   hiddenId,
-  header = null,
+  footer = null,
   isLoading = false,
 }: MedicationListProps) {
   const { colors } = useTheme();
@@ -59,12 +61,11 @@ export function MedicationList({
       contentContainerStyle={styles.listContent}
       data={visibleMedications}
       keyExtractor={(medication) => String(medication.id)}
-      ListHeaderComponent={header}
-      // Der Kopfbereich bleibt auch ohne Karten stehen: Sonst waeren
-      // Vorsorge-Block, PDF-Ausgabe und Verlauf ohne ein einziges Medikament
-      // nicht mehr erreichbar. Waehrend des Rueckgaengig-Fensters bleibt der
-      // Leerzustand aus -- er widerspraeche dem Streifen, der die Zeile
-      // gerade noch zurueckholen kann.
+      ListFooterComponent={footer}
+      // Der Vorsorge-Block bleibt auch ohne Karten stehen: Sonst waere er ohne
+      // ein einziges Medikament nicht mehr erreichbar. Waehrend des
+      // Rueckgaengig-Fensters bleibt der Leerzustand aus -- er widerspraeche
+      // dem Streifen, der die Zeile gerade noch zurueckholen kann.
       ListEmptyComponent={
         isLoading ? (
           <SkeletonList count={3} lines={2} />
@@ -171,9 +172,7 @@ function makeStyles(colors: ThemeColors) {
       // eigenen Abstaende mit -- die Vorsorge-Karte einen Rand, die beiden
       // Links gehen bewusst ueber die volle Breite. Die Karten bekommen ihren
       // Rand deshalb einzeln.
-      // Oben kein Abstand: Das erste Element des Kopfbereichs bringt seinen
-      // eigenen mit.
-      paddingTop: 0,
+      paddingTop: tokens.spacing.md,
       // Haelt die letzte Karte ueber dem "+"-Knopf, der sie sonst verdeckt.
       paddingBottom: FAB_CLEARANCE,
       gap: tokens.spacing.md,

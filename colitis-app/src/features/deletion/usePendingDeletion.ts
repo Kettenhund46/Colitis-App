@@ -5,7 +5,7 @@ import {
   undoDeletion,
   commitDeletion,
 } from './pendingDeletion';
-import { deleteFeedback } from '../../lib/haptics';
+import { deleteFeedback, undoFeedback } from '../../lib/haptics';
 import type { DeletionState, PendingDeletion } from './pendingDeletion';
 
 /** Wie lange ein Loeschvorgang rueckgaengig gemacht werden kann. */
@@ -73,6 +73,9 @@ export function usePendingDeletion<TId>(onCommit: (id: TId) => Promise<void>) {
   );
 
   const undo = useCallback(() => {
+    // Wie beim Loeschen gehoert das Ticken hierher und nicht in den Streifen:
+    // Beide Wege sollen sich gleich anfuehlen, egal wer den Hook nutzt.
+    undoFeedback();
     clearTimer();
     const outcome = undoDeletion(stateRef.current);
     stateRef.current = outcome.state;

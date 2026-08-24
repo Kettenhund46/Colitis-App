@@ -7,6 +7,7 @@ import { buildDayRatings, formatDateKey, accentForRating } from '../calendarLogi
 import { RatingIndicator, RATING_LABELS } from './RatingIndicator';
 import { Card } from '../../../components/ui/Card';
 import { EmptyState } from '../../../components/ui/EmptyState';
+import { FAB_CLEARANCE } from '../../../components/ui/floatingActionButton';
 import { SwipeableRow } from '../../../components/swipe/SwipeableRow';
 import type { DiaryEntryWithTriggers } from '../types';
 import type { DayRating } from '../calendarLogic';
@@ -110,6 +111,8 @@ function makeStyles(colors: ThemeColors) {
     },
     listContent: {
       padding: tokens.spacing.lg,
+      // Haelt die letzte Karte ueber dem "+"-Knopf, der sie sonst verdeckt.
+      paddingBottom: FAB_CLEARANCE,
       gap: tokens.spacing.md,
     },
     cardHeader: {
