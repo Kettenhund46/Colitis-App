@@ -33,7 +33,7 @@ bekommen.
 | 3 | Löschen geht per Wischen und die Bedienung fühlt sich spürbar an | done |
 | 4 | Medikamenteneinnahme lässt sich abhaken und nachvollziehen | done |
 | 5 | Ein Arzttermin lässt sich mit einer Zusammenfassung vorbereiten | done |
-| 6 | Die App ist auf Deutsch und Englisch bedienbar | todo |
+| 6 | Die App ist auf Deutsch und Englisch bedienbar | zurückgestellt |
 
 ---
 
@@ -430,7 +430,7 @@ bemerken kann. Und „Schmerz von 10" verschwieg, dass es ein Tagesmittel ist.
 
 ---
 
-### Phase 6 — Mehrsprachigkeit
+### Phase 6 — Mehrsprachigkeit *(zurückgestellt am 2026-08-23)*
 
 **Goal:** Die App lässt sich auf Deutsch und Englisch bedienen.
 
@@ -441,11 +441,36 @@ bemerken kann. Und „Schmerz von 10" verschwieg, dass es ein Tagesmittel ist.
 
 **Depends on:** Phasen 1–5 (erfasst deren Texte in einem Durchgang mit)
 
-**Vorarbeit vorhanden:** Spec und Umsetzungsplan wurden am 2026-08-07 geschrieben
-und liegen unter `docs/superpowers/specs/2026-08-07-colitis-app-mehrsprachigkeit-design.md`
-und `docs/superpowers/plans/2026-08-07-colitis-app-mehrsprachigkeit.md`. Beide
-müssen vor der Umsetzung gegen den dann aktuellen Stand geprüft werden — sie
-kennen weder die Texte aus den Phasen 1 bis 5 noch den Schnell-Eintrag.
+**Entscheidung des Nutzers am 2026-08-23: zurückgestellt, die App bleibt auf
+Deutsch.** Das Praktikum läuft bis zum 11.09., und in dieser Zeit kommen
+voraussichtlich weitere Funktionen dazu. Mehrsprachigkeit ist ausgerechnet die
+Phase, die jeden sichtbaren Text anfasst — jetzt umgesetzt, müsste sie nach
+jeder neuen Idee nachgezogen werden. Sie gehört ans Ende eines stehenden
+Funktionsumfangs oder gar nicht.
+
+**Vorarbeit vorhanden:** Spec und Umsetzungsplan wurden am 2026-08-07
+geschrieben und liegen unter
+`docs/superpowers/specs/2026-08-07-colitis-app-mehrsprachigkeit-design.md` und
+`docs/superpowers/plans/2026-08-07-colitis-app-mehrsprachigkeit.md`.
+
+**Bestandsaufnahme am 2026-08-23**, falls die Phase später wieder aufgenommen
+wird. Die Spezifikation trägt noch: Architektur (`LanguageContext` neben
+`ThemeProvider`, eigene Dictionaries statt Bibliothek, `t()` mit Punktpfaden)
+ist unberührt, und sie hat sich damals ausdrücklich geweigert, eine Dateiliste
+festzuschreiben. **Der Plan ist veraltet** — 3845 Zeilen gegen den Codebestand
+vom 7. August. Heute enthalten 56 Dateien deutschen Text, davon 22 reine Module.
+
+Drei Fragen, die die alte Spezifikation nicht kennen konnte:
+- **Die reinen Module bauen inzwischen ganze Sätze** (`visitSummary.ts`,
+  `adherence.ts`, die drei PDF-Bauer). `t()` hängt am React-Kontext, den ein
+  reines Modul nicht erreicht. Entweder bekommen die Module den Übersetzer als
+  Parameter, oder sie liefern Bausteine und die Hüllen formulieren — beides mit
+  Folgen für die teuer erkaufte Testbarkeit.
+- **Pluralisierung steht in den Nicht-Zielen**, steckt aber seit `3f81c0b` im
+  Code (`formatDayCount`, `formatDayCountDative`, `formatIntakeCount`).
+- **Drei PDF-Dokumente entstehen komplett auf Deutsch.** Folgen sie der
+  App-Sprache? Ein deutscher Patient mit englischer App sitzt trotzdem einem
+  deutschen Arzt gegenüber.
 
 ---
 
