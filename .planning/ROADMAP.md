@@ -32,7 +32,7 @@ bekommen.
 | 2 | Die App sieht nach Gestaltung aus, nicht nach Formular | done |
 | 3 | Löschen geht per Wischen und die Bedienung fühlt sich spürbar an | done |
 | 4 | Medikamenteneinnahme lässt sich abhaken und nachvollziehen | done |
-| 5 | Ein Arzttermin lässt sich mit einer Zusammenfassung vorbereiten | in_progress |
+| 5 | Ein Arzttermin lässt sich mit einer Zusammenfassung vorbereiten | done |
 | 6 | Die App ist auf Deutsch und Englisch bedienbar | todo |
 
 ---
@@ -369,9 +369,17 @@ einzeln durchzugehen.
 
 **Depends on:** Phase 4 (der Medikamentenstand gehört in die Zusammenfassung)
 
-**Stand am 2026-08-23:** Fünf Aufgaben umgesetzt, 629 Tests grün (vorher 538),
-Typprüfung sauber. Die Phase gilt erst als abgeschlossen, wenn der
-Gerätedurchgang durch ist.
+**Stand am 2026-08-23:** Fünf Aufgaben umgesetzt, 632 Tests grün (vorher 538),
+Typprüfung sauber. **Gerätedurchgang bestanden — die Phase ist abgeschlossen.**
+
+**Nachtrag aus dem Gerätetest.** Ein Zeitraum von einem einzigen Tag brachte
+vier Einzahl-Fehler ans Licht: „1 Tage", „An 1 von 1 Tagen wurde etwas
+erfasst", „An 1 von 1 Tagen erfasst", und „1 Einnahmen" wäre gefolgt. Die
+Einzahl war nur beim Blut-Zusatz behandelt. Keiner der 629 Tests traf den
+Fall, weil in jedem Beispiel mehrere Tage standen — behoben in `3f81c0b` über
+drei geteilte Zählwort-Funktionen (Nominativ, Dativ, Einnahmen) und drei neue
+Tests. Dabei fällt ein Ein-Tages-Zeitraum jetzt nicht mehr als „23.08.2026 –
+23.08.2026" aus, sondern nennt das Datum einmal.
 
 Entwurf: `docs/superpowers/specs/2026-08-23-colitis-app-arztbesuch-vorbereiten-design.md`
 Plan: `docs/superpowers/plans/2026-08-23-colitis-app-arztbesuch-vorbereiten.md`
