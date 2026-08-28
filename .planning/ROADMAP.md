@@ -514,14 +514,64 @@ auftauchte. Der Tab heißt Medikamente; die Liste steht jetzt oben.
   Aufräumrunde. Dazu gehört, dass ein pausiertes und wieder aufgenommenes
   Medikament sich als eine lange Versäumnisstrecke liest. **Bis dahin darf die
   Einnahme-Auswertung nicht in den Medikamenten-Pass.**
-- **Gruppe C — Robustheit und Rechenaufwand.** `buildDayRatings` läuft bei
-  jedem Render; `buildVisitSummary` viermal über dieselben Einträge; vier Wege
-  in einen stillen Fehlzustand bei den Erinnerungen (Phase 1);
-  `medicationStatus.test.ts` schreibt die Zeichenkette `"undefined"` in
-  `process.env.TZ`.
+- ~~**Gruppe C — Robustheit und Rechenaufwand.**~~ Erledigt am 2026-08-28,
+  siehe unten.
 - **Gruppe D — Sichtbares Kleinzeug.** Ausgefranster linker Rand im
   Neuigkeiten-Feed; die neutrale Kartenkante ist im dunklen Theme womöglich
   unsichtbar; `GhostCard` trägt eine tote `hasHeaderBadge`-Eigenschaft.
+
+---
+
+## Aufräumrunde C — stille Ausfälle bei den Erinnerungen
+
+**Stand am 2026-08-28: umgesetzt in `b2a6dc3`.** 642 Tests grün (vorher 632),
+Typprüfung sauber, Prüfung auf tote Importe sauber.
+
+Vier Wege, auf denen eine Erinnerung ausfällt, ohne dass der Nutzer es
+erfährt — der eigentliche Grund dieser Runde:
+
+- **Beim Wiederherstellen einer Sicherung** liefen die drei Erinnerungsarten
+  als eine Kette aus drei `await`. Warf die erste, wurde die Tagebuch-
+  Erinnerung nie geplant — ausgerechnet die, die der Nutzer täglich bemerkt.
+  Jetzt läuft jede für sich, in `src/features/backup/rescheduleAfterRestore.ts`,
+  und die Rückmeldung nennt beim Namen, was nicht geplant werden konnte.
+- **Eine Benachrichtigung ohne bekannte Kennung.** Schlug das Hinterlegen der
+  Kennung nach erfolgreicher Planung fehl, lief die Benachrichtigung weiter
+  und ließ sich nicht mehr gezielt abbestellen — auch nicht durch Ausschalten.
+  `rememberScheduledReminder` im Benachrichtigungsdienst storniert sie jetzt
+  und reicht den Fehler weiter. Betraf vier Stellen: Tagebuch, Sicherung,
+  Medikamenten-Zeiten und Vorsorge.
+- **Der Fehlschlag beim App-Start schaltete dauerhaft ab.** Ein
+  vorübergehender Fehler warf damit den Wunsch des Nutzers weg, lautlos. Die
+  Einstellung bleibt jetzt an — der nächste Start plant erneut — und der
+  Einstellungen-Block zeigt den Zustand „eingeschaltet, aber nicht
+  eingerichtet" als eigenen Hinweis in Warnfarbe an, nicht in Rot: Der Nutzer
+  hat nichts falsch gemacht und muss auch nichts tun. Nur die verweigerte
+  Berechtigung schaltet weiterhin ab, denn die ist nicht vorübergehend.
+- **Der Bedienblock blieb nach dem Wiederherstellen stehen.** Der Vorgang
+  läuft auf dem sichtbaren Einstellungen-Bildschirm, der Fokus-Effekt lief
+  also nicht erneut. Ein Zähler (`reloadKey`) lässt beide neu lesen. Dabei
+  musste das Verwerfen der Sicherungs-Rückmeldung in einen eigenen Effekt
+  wandern — sonst hätte der Aufräumer genau die Meldung gelöscht, die der
+  Vorgang eben gesetzt hatte.
+
+Dazu der Rechenaufwand und ein Testaufräumer:
+
+- `buildDayRatings` lief bei jedem Rendern der Tagebuch-Liste über alle
+  Einträge, auch beim bloßen Wischen einer einzelnen Zeile. Jetzt `useMemo`.
+- `buildVisitSummary` filterte und gruppierte dieselben Einträge viermal.
+  Jetzt einmal; die Auswertungen bekommen das Ergebnis gereicht. Die
+  geprüften Funktionen `computeFigures` und `findNotablePhases` bleiben als
+  Hüllen bestehen, ihre Tests sind unangetastet.
+- `medicationStatus.test.ts` schrieb beim Aufräumen die Zeichenkette
+  `"undefined"` in `process.env.TZ`, wie die drei Nachbardateien es richtig
+  machen.
+
+**Offen geblieben, bewusst:** Wirft das Planen einer einzelnen
+Medikamenten-Erinnerung, bricht `rescheduleAllReminders` ab und die übrigen
+Zeiten dieses Durchgangs bleiben ungeplant. Die Trennung eine Ebene darüber
+fängt das für die anderen Erinnerungsarten auf; eine Vereinzelung auch
+innerhalb der Schleife wäre eine eigene Entscheidung.
 
 ---
 
