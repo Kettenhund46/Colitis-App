@@ -19,8 +19,10 @@ import {
 import { writeAndShareBackup, pickBackupFileContent } from '../../../src/features/backup/backupFileService';
 import { BackupPasswordForm } from '../../../src/features/backup/components/BackupPasswordForm';
 import { DiaryReminderSettings } from '../../../src/features/diary/components/DiaryReminderSettings';
-import { rescheduleDiaryReminder } from '../../../src/features/diary/scheduleDiaryReminder';
-import { rescheduleAllReminders } from '../../../src/features/backup/rescheduleReminders';
+import {
+  rescheduleAllAfterRestore,
+  formatRestoreResultMessage,
+} from '../../../src/features/backup/rescheduleAfterRestore';
 import { BACKUP_FORMAT_VERSION, type BackupData, type BackupEnvelope } from '../../../src/features/backup/types';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { SectionHeading } from '../../../src/components/ui/SectionHeading';
@@ -89,6 +91,9 @@ export default function EinstellungenScreen() {
   const [backupReminderIntervalDays, setBackupReminderIntervalDaysState] = useState(30);
   const [lastBackupAt, setLastBackupAtState] = useState<string | null>(null);
   const [communityMessage, setCommunityMessage] = useState<string | null>(null);
+  // Zaehler, der die Einstellungen erneut lesen laesst, ohne dass der
+  // Bildschirm gewechselt werden muss.
+  const [reloadKey, setReloadKey] = useState(0);
 
   async function openCommunityLink() {
     try {
@@ -161,6 +166,16 @@ export default function EinstellungenScreen() {
         });
       return () => {
         isActive = false;
+      };
+    }, [reloadKey])
+  );
+
+  // Getrennt vom Lesen der Einstellungen: Die Rueckmeldung zur Sicherung soll
+  // beim Verlassen des Bildschirms verschwinden, aber nicht schon dann, wenn
+  // der Zaehler oben die Einstellungen neu lesen laesst.
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
         setBackupMessage(null);
       };
     }, [])
@@ -317,15 +332,14 @@ export default function EinstellungenScreen() {
           setBackupFormMode(null);
           setPendingImportContent(null);
 
-          try {
-            await rescheduleAllReminders(db, data);
-            await rescheduleBackupReminder();
-            await rescheduleDiaryReminder();
-            setBackupMessage('Backup erfolgreich wiederhergestellt.');
-          } catch (error: unknown) {
-            console.error('[Einstellungen] Erinnerungen konnten nicht neu geplant werden:', error);
-            setBackupMessage('Daten wiederhergestellt. Erinnerungen konnten nicht neu geplant werden.');
-          }
+          const failed = await rescheduleAllAfterRestore(db, data);
+          setBackupMessage(formatRestoreResultMessage(failed));
+
+          // Das Neuplanen kann Einstellungen aendern -- verweigert das System
+          // die Benachrichtigungserlaubnis, schaltet sich die Tagebuch-
+          // Erinnerung dabei ab. Der Bildschirm bleibt waehrenddessen sichtbar,
+          // also muessen die Bedienelemente neu lesen, was jetzt gilt.
+          setReloadKey((key) => key + 1);
         },
       },
     ]);
@@ -400,7 +414,7 @@ export default function EinstellungenScreen() {
           />
         </View>
 
-        <DiaryReminderSettings />
+        <DiaryReminderSettings reloadKey={reloadKey} />
 
         <SectionHeading>App-Sperre</SectionHeading>
         <View style={styles.row}>

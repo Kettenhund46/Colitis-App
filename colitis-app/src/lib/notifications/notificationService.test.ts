@@ -20,6 +20,7 @@ import {
   scheduleScreeningReminder,
   scheduleDateReminder,
   cancelScheduledReminder,
+  rememberScheduledReminder,
 } from './notificationService';
 
 beforeEach(() => {
@@ -112,5 +113,34 @@ describe('cancelScheduledReminder', () => {
   it('logs and does not throw when cancellation fails', async () => {
     cancelScheduledNotificationAsync.mockRejectedValueOnce(new Error('not found'));
     await expect(cancelScheduledReminder('unknown-id')).resolves.toBeUndefined();
+  });
+});
+
+describe('rememberScheduledReminder', () => {
+  it('stores the id and leaves the notification in place', async () => {
+    const remember = vi.fn(() => Promise.resolve());
+
+    await rememberScheduledReminder('notif-id-123', remember);
+
+    expect(remember).toHaveBeenCalledWith('notif-id-123');
+    expect(cancelScheduledNotificationAsync).not.toHaveBeenCalled();
+  });
+
+  it('cancels the notification and rethrows when storing the id fails', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const remember = vi.fn(() => Promise.reject(new Error('Speicher voll')));
+
+    await expect(rememberScheduledReminder('notif-id-123', remember)).rejects.toThrow('Speicher voll');
+    expect(cancelScheduledNotificationAsync).toHaveBeenCalledWith('notif-id-123');
+
+    consoleError.mockRestore();
+  });
+
+  it('cancels nothing when no notification was scheduled', async () => {
+    const remember = vi.fn(() => Promise.reject(new Error('Speicher voll')));
+
+    await expect(rememberScheduledReminder(null, remember)).rejects.toThrow('Speicher voll');
+    expect(remember).toHaveBeenCalledWith(null);
+    expect(cancelScheduledNotificationAsync).not.toHaveBeenCalled();
   });
 });

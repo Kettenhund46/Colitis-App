@@ -9,6 +9,7 @@ import { resolveBackupReminderEnabled, buildBackupReminderTrigger } from './remi
 import {
   requestNotificationPermission,
   cancelScheduledReminder,
+  rememberScheduledReminder,
   scheduleDateReminder,
 } from '../../lib/notifications/notificationService';
 
@@ -45,5 +46,5 @@ export async function rescheduleBackupReminder(now: Date = new Date()): Promise<
   }
 
   const notificationId = await scheduleDateReminder(triggerDate, BACKUP_REMINDER_CONTENT);
-  await setBackupReminderNotificationId(notificationId);
+  await rememberScheduledReminder(notificationId, setBackupReminderNotificationId);
 }

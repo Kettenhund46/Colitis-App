@@ -9,6 +9,7 @@ import { isValidReminderTime } from '../medications/reminderScheduling';
 import {
   requestNotificationPermission,
   cancelScheduledReminder,
+  rememberScheduledReminder,
   scheduleDailyReminder,
 } from '../../lib/notifications/notificationService';
 
@@ -49,12 +50,15 @@ export async function rescheduleDiaryReminder(): Promise<DiaryReminderResult> {
     }
 
     const notificationId = await scheduleDailyReminder(time, DIARY_REMINDER_CONTENT);
-    await setDiaryReminderNotificationId(notificationId);
+    await rememberScheduledReminder(notificationId, setDiaryReminderNotificationId);
     return 'scheduled';
   } catch (error: unknown) {
+    // Die Einstellung bleibt an. Ein Fehlschlag hier ist voruebergehend --
+    // beim naechsten Start der App wird erneut geplant. Frueher schaltete er
+    // die Erinnerung dauerhaft ab, ohne dass der Nutzer je davon erfuhr.
+    // Nur das Verweigern der Berechtigung schaltet ab; das ist oben geregelt.
     console.error('[Tagebuch] Erinnerung konnte nicht geplant werden:', error);
     await setDiaryReminderNotificationId(null).catch(() => undefined);
-    await setDiaryReminderEnabled(false).catch(() => undefined);
     return 'failed';
   }
 }

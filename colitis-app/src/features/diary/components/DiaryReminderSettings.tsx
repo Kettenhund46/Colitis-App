@@ -7,6 +7,7 @@ import {
   setDiaryReminderEnabled,
   getDiaryReminderTime,
   setDiaryReminderTime,
+  getDiaryReminderNotificationId,
   DEFAULT_DIARY_REMINDER_TIME,
 } from '../../settings/settingsStorage';
 import { isValidReminderTime } from '../../medications/reminderScheduling';
@@ -20,15 +21,32 @@ import type { ThemeColors } from '../../../theme/types';
 const ERROR_MESSAGES: Partial<Record<DiaryReminderResult, string>> = {
   'permission-denied': 'Ohne Benachrichtigungsberechtigung ist die Erinnerung nicht möglich.',
   'invalid-time': 'Bitte eine Uhrzeit im Format HH:MM angeben, zum Beispiel 20:00.',
-  failed: 'Erinnerung konnte nicht eingerichtet werden.',
 };
 
-export function DiaryReminderSettings() {
+/**
+ * Steht, wenn die Einstellung an ist, aber keine Benachrichtigung dahinter
+ * liegt. Die Einstellung bleibt absichtlich an -- der naechste Start versucht
+ * es erneut. Ohne diesen Hinweis waere das ein stiller Ausfall.
+ */
+const NOT_SCHEDULED_TEXT =
+  'Die Erinnerung ist eingeschaltet, konnte aber nicht eingerichtet werden. Beim nächsten Start der App wird es erneut versucht.';
+
+interface DiaryReminderSettingsProps {
+  /**
+   * Aendert sich dieser Wert, werden die Einstellungen erneut gelesen -- noetig
+   * nach dem Wiederherstellen einer Sicherung, weil der Bildschirm dabei
+   * sichtbar bleibt und der Fokus-Effekt sonst nicht erneut liefe.
+   */
+  reloadKey?: number;
+}
+
+export function DiaryReminderSettings({ reloadKey = 0 }: DiaryReminderSettingsProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const [isEnabled, setIsEnabled] = useState(false);
   const [timeText, setTimeText] = useState(DEFAULT_DIARY_REMINDER_TIME);
   const [error, setError] = useState<string | null>(null);
+  const [isNotScheduled, setIsNotScheduled] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
 
   const isMountedRef = useRef(true);
@@ -45,11 +63,16 @@ export function DiaryReminderSettings() {
     useCallback(() => {
       let isActive = true;
 
-      Promise.all([getDiaryReminderEnabled(), getDiaryReminderTime()])
-        .then(([enabled, time]) => {
+      Promise.all([
+        getDiaryReminderEnabled(),
+        getDiaryReminderTime(),
+        getDiaryReminderNotificationId(),
+      ])
+        .then(([enabled, time, notificationId]) => {
           if (isActive) {
             setIsEnabled(enabled);
             setTimeText(time);
+            setIsNotScheduled(enabled && notificationId === null);
           }
         })
         .catch((loadError: unknown) => {
@@ -60,34 +83,33 @@ export function DiaryReminderSettings() {
         isActive = false;
         setError(null);
       };
-    }, [])
+    }, [reloadKey])
   );
 
   async function runReschedule(): Promise<void> {
     try {
       const result = await rescheduleDiaryReminder();
-
-      if (result === 'permission-denied' || result === 'failed') {
-        if (isMountedRef.current) {
-          setIsEnabled(false);
-          setError(ERROR_MESSAGES[result] ?? null);
-        }
+      if (!isMountedRef.current) {
         return;
       }
 
-      if (isMountedRef.current) {
-        setError(result === 'invalid-time' ? ERROR_MESSAGES['invalid-time'] ?? null : null);
+      // Nur die verweigerte Berechtigung schaltet die Einstellung ab -- das tut
+      // das Modul, hier wird es nur nachgezogen. Ein sonstiger Fehlschlag laesst
+      // die Absicht stehen und zeigt stattdessen den Hinweis darunter.
+      if (result === 'permission-denied') {
+        setIsEnabled(false);
+        setIsNotScheduled(false);
+        setError(ERROR_MESSAGES['permission-denied'] ?? null);
+        return;
       }
+
+      setIsNotScheduled(result === 'failed');
+      setError(result === 'invalid-time' ? ERROR_MESSAGES['invalid-time'] ?? null : null);
     } catch (rescheduleError: unknown) {
       console.error('[Tagebuch] Erinnerung konnte nicht eingerichtet werden:', rescheduleError);
-      try {
-        await setDiaryReminderEnabled(false);
-      } catch (resetError: unknown) {
-        console.error('[Tagebuch] Einstellung konnte nicht zurueckgesetzt werden:', resetError);
-      }
       if (isMountedRef.current) {
-        setIsEnabled(false);
-        setError('Erinnerung konnte nicht eingerichtet werden.');
+        setIsNotScheduled(true);
+        setError(null);
       }
     }
   }
@@ -106,7 +128,9 @@ export function DiaryReminderSettings() {
     } catch (toggleError: unknown) {
       console.error('[Tagebuch] Erinnerung konnte nicht umgeschaltet werden:', toggleError);
       if (isMountedRef.current) {
-        setIsEnabled(false);
+        // Das Speichern hat nicht gegriffen, gespeichert ist also weiterhin der
+        // vorherige Wert -- der Schalter muss dorthin zurueck, nicht auf "aus".
+        setIsEnabled(!value);
         setError('Erinnerung konnte nicht eingerichtet werden.');
       }
     } finally {
@@ -156,6 +180,8 @@ export function DiaryReminderSettings() {
       <SectionHeading>Tägliche Erinnerung</SectionHeading>
 
       {error && <Text style={styles.errorText}>{error}</Text>}
+
+      {isEnabled && isNotScheduled && <Text style={styles.warningText}>{NOT_SCHEDULED_TEXT}</Text>}
 
       <View style={styles.row}>
         <Text style={styles.rowLabel}>Ans Eintragen erinnern</Text>
@@ -231,6 +257,12 @@ function makeStyles(colors: ThemeColors) {
     },
     errorText: {
       color: colors.danger,
+      fontSize: tokens.typography.fontSize.sm,
+      marginBottom: tokens.spacing.sm,
+    },
+    // Kein Rot: Der Nutzer hat nichts falsch gemacht und muss auch nichts tun.
+    warningText: {
+      color: colors.warning,
       fontSize: tokens.typography.fontSize.sm,
       marginBottom: tokens.spacing.sm,
     },

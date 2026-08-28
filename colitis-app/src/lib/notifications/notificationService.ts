@@ -52,6 +52,30 @@ export async function scheduleDateReminder(date: Date, content: ReminderContent)
   });
 }
 
+/**
+ * Hinterlegt die Kennung einer eben geplanten Benachrichtigung. Schlaegt das
+ * Hinterlegen fehl, wird die Benachrichtigung wieder storniert und der Fehler
+ * weitergereicht: Eine Benachrichtigung, deren Kennung niemand kennt, laesst
+ * sich spaeter nicht mehr gezielt abbestellen -- sie kaeme weiter, auch nachdem
+ * der Nutzer die Erinnerung ausgeschaltet hat.
+ *
+ * `null` heisst, dass gar nichts geplant wurde; dann gibt es auch nichts zu
+ * stornieren.
+ */
+export async function rememberScheduledReminder(
+  notificationId: string | null,
+  remember: (notificationId: string | null) => Promise<void>
+): Promise<void> {
+  try {
+    await remember(notificationId);
+  } catch (error: unknown) {
+    if (notificationId !== null) {
+      await cancelScheduledReminder(notificationId);
+    }
+    throw error;
+  }
+}
+
 export async function cancelScheduledReminder(notificationId: string): Promise<void> {
   try {
     await Notifications.cancelScheduledNotificationAsync(notificationId);

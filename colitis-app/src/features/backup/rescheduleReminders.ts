@@ -1,6 +1,7 @@
 import {
   cancelAllScheduledReminders,
   configureNotificationHandling,
+  rememberScheduledReminder,
   requestNotificationPermission,
   scheduleDailyReminder,
   scheduleScreeningReminder,
@@ -36,7 +37,9 @@ export async function rescheduleAllReminders(db: BackupDb, data: BackupData): Pr
       ? buildMedicationReminderContent(medication)
       : { title: 'Medikamenten-Erinnerung', body: 'Zeit für dein Medikament' };
     const notificationId = await scheduleDailyReminder(reminderTime.time, content);
-    await setReminderTimeNotificationId(db, reminderTime.id, notificationId);
+    await rememberScheduledReminder(notificationId, (id) =>
+      setReminderTimeNotificationId(db, reminderTime.id, id)
+    );
   }
 
   for (const screeningReminder of data.tables.screeningReminders) {
@@ -44,6 +47,8 @@ export async function rescheduleAllReminders(db: BackupDb, data: BackupData): Pr
       screeningReminder.nextDueDate,
       buildScreeningReminderContent(screeningReminder)
     );
-    await setScreeningReminderNotificationId(db, screeningReminder.id, notificationId);
+    await rememberScheduledReminder(notificationId, (id) =>
+      setScreeningReminderNotificationId(db, screeningReminder.id, id)
+    );
   }
 }

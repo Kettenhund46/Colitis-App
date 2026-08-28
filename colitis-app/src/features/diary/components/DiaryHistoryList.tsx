@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { FlatList, Pressable, Text, View, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
@@ -24,7 +25,10 @@ interface DiaryHistoryListProps {
 export function DiaryHistoryList({ entries, onDelete, onCreate, hiddenId }: DiaryHistoryListProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
-  const dayRatings = buildDayRatings(entries);
+  // Die Bewertung jedes Tages haengt allein an den Eintraegen. Ohne Merker
+  // liefe sie bei jedem Rendern erneut ueber die gesamte Liste -- auch beim
+  // blossen Wischen einer einzelnen Zeile.
+  const dayRatings = useMemo(() => buildDayRatings(entries), [entries]);
   const visibleEntries = entries.filter((entry) => entry.id !== hiddenId);
 
   if (visibleEntries.length === 0 && hiddenId === null) {

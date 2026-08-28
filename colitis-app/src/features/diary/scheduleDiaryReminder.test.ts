@@ -2,13 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const storeMock = new Map<string, string>();
 
+const setItemMock = vi.fn((key: string, value: string) => {
+  storeMock.set(key, value);
+  return Promise.resolve();
+});
+
 vi.mock('@react-native-async-storage/async-storage', () => ({
   default: {
     getItem: vi.fn((key: string) => Promise.resolve(storeMock.get(key) ?? null)),
-    setItem: vi.fn((key: string, value: string) => {
-      storeMock.set(key, value);
-      return Promise.resolve();
-    }),
+    setItem: (key: string, value: string) => setItemMock(key, value),
     removeItem: vi.fn((key: string) => {
       storeMock.delete(key);
       return Promise.resolve();
@@ -20,10 +22,27 @@ const cancelScheduledReminder = vi.fn();
 const scheduleDailyReminder = vi.fn();
 const requestNotificationPermission = vi.fn();
 
+// Nachbau von `rememberScheduledReminder`: Das Original haengt an
+// expo-notifications und ist in notificationService.test.ts geprueft. Hier
+// zaehlt nur, dass ein Fehlschlag beim Hinterlegen die Benachrichtigung
+// wieder storniert.
 vi.mock('../../lib/notifications/notificationService', () => ({
   cancelScheduledReminder: (notificationId: string) => cancelScheduledReminder(notificationId),
   scheduleDailyReminder: (time: string, content: unknown) => scheduleDailyReminder(time, content),
   requestNotificationPermission: () => requestNotificationPermission(),
+  rememberScheduledReminder: async (
+    notificationId: string | null,
+    remember: (notificationId: string | null) => Promise<void>
+  ) => {
+    try {
+      await remember(notificationId);
+    } catch (error: unknown) {
+      if (notificationId !== null) {
+        await cancelScheduledReminder(notificationId);
+      }
+      throw error;
+    }
+  },
 }));
 
 import { rescheduleDiaryReminder } from './scheduleDiaryReminder';
@@ -96,7 +115,7 @@ describe('rescheduleDiaryReminder', () => {
     expect(await getDiaryReminderEnabled()).toBe(false);
   });
 
-  it('clears the stored id when scheduling fails', async () => {
+  it('clears the stored id but keeps the setting on when scheduling fails', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     scheduleDailyReminder.mockRejectedValue(new Error('kaputt'));
     await setDiaryReminderNotificationId('alte-kennung');
@@ -107,7 +126,23 @@ describe('rescheduleDiaryReminder', () => {
 
     expect(result).toBe('failed');
     expect(await getDiaryReminderNotificationId()).toBeNull();
-    expect(await getDiaryReminderEnabled()).toBe(false);
+    // Der Wunsch des Nutzers bleibt stehen: Der naechste Start plant erneut.
+    expect(await getDiaryReminderEnabled()).toBe(true);
+
+    consoleError.mockRestore();
+  });
+
+  it('cancels the fresh notification when its id cannot be stored', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await setDiaryReminderEnabled(true);
+    await setDiaryReminderTime('20:00');
+    setItemMock.mockImplementationOnce(() => Promise.reject(new Error('Speicher voll')));
+
+    const result = await rescheduleDiaryReminder();
+
+    expect(result).toBe('failed');
+    // Sonst liefe eine Erinnerung, die niemand mehr abbestellen kann.
+    expect(cancelScheduledReminder).toHaveBeenCalledWith('neue-kennung');
 
     consoleError.mockRestore();
   });

@@ -10,7 +10,11 @@ describe('isMedicationActive', () => {
   });
 
   afterAll(() => {
-    process.env.TZ = originalTz;
+    if (originalTz === undefined) {
+      delete process.env.TZ;
+    } else {
+      process.env.TZ = originalTz;
+    }
   });
 
   const today = new Date(2026, 6, 12);

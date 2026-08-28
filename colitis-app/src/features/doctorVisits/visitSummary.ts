@@ -139,25 +139,28 @@ export function entriesInPeriod(
 }
 
 /** Die Eintraege des Zeitraums, nach lokalem Kalendertag gebuendelt. */
+export type DaysWithEntries = Map<string, DiaryEntryWithTriggers[]>;
+
 export function daysWithEntriesInPeriod(
   entries: DiaryEntryWithTriggers[],
   period: SummaryPeriod
-): Map<string, DiaryEntryWithTriggers[]> {
+): DaysWithEntries {
   return groupEntriesByDay(entriesInPeriod(entries, period));
-}
-
-export function countDaysWithEntries(
-  entries: DiaryEntryWithTriggers[],
-  period: SummaryPeriod
-): number {
-  return daysWithEntriesInPeriod(entries, period).size;
 }
 
 export function computeFigures(
   entries: DiaryEntryWithTriggers[],
   period: SummaryPeriod
 ): SummaryFigures | null {
-  const byDay = daysWithEntriesInPeriod(entries, period);
+  return figuresFromDays(daysWithEntriesInPeriod(entries, period));
+}
+
+/**
+ * Der Rechenteil ohne die Buendelung davor. `buildVisitSummary` buendelt
+ * einmal und reicht das Ergebnis an alle Auswertungen weiter, statt jede
+ * dieselben Eintraege erneut filtern und gruppieren zu lassen.
+ */
+function figuresFromDays(byDay: DaysWithEntries): SummaryFigures | null {
   if (byDay.size < MIN_DAYS_FOR_FIGURES) {
     return null;
   }
@@ -202,7 +205,11 @@ export function findNotablePhases(
   entries: DiaryEntryWithTriggers[],
   period: SummaryPeriod
 ): NotablePhase[] {
-  const byDay = daysWithEntriesInPeriod(entries, period);
+  return notablePhasesFromDays(daysWithEntriesInPeriod(entries, period), period);
+}
+
+/** Siehe `figuresFromDays`: derselbe Grund, dieselbe Aufteilung. */
+function notablePhasesFromDays(byDay: DaysWithEntries, period: SummaryPeriod): NotablePhase[] {
   const found: NotablePhase[] = [];
 
   let startDate: string | null = null;
@@ -440,9 +447,13 @@ export function formatDecimal(value: number): string {
 
 export function buildVisitSummary(input: VisitSummaryInput): VisitSummary {
   const period = determinePeriod(input.visits, input.today);
+  // Einmal filtern, einmal buendeln. Die einzelnen Auswertungen bekommen das
+  // Ergebnis gereicht -- frueher lief jede von ihnen erneut ueber alle
+  // Eintraege, bei einem Jahr Tagebuch vier Durchgaenge fuer dasselbe.
   const entries = entriesInPeriod(input.entries, period);
-  const daysWithEntries = countDaysWithEntries(input.entries, period);
-  const figures = computeFigures(input.entries, period);
+  const byDay = groupEntriesByDay(entries);
+  const daysWithEntries = byDay.size;
+  const figures = figuresFromDays(byDay);
   const medications = buildMedicationLines(input.medications, input.intakes, period);
 
   // Die drei haengen zusammen: Ist die Datenlage zu duenn fuer Kennzahlen, ist
@@ -451,7 +462,7 @@ export function buildVisitSummary(input: VisitSummaryInput): VisitSummary {
     period,
     daysWithEntries,
     figures,
-    phases: figures === null ? [] : findNotablePhases(input.entries, period),
+    phases: figures === null ? [] : notablePhasesFromDays(byDay, period),
     triggers: figures === null ? [] : computeTriggerShares(entries),
     medications,
     nextScreeningDate: input.screening === null ? null : input.screening.nextDueDate,
