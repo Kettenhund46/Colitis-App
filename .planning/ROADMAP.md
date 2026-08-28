@@ -474,6 +474,57 @@ Drei Fragen, die die alte Spezifikation nicht kennen konnte:
 
 ---
 
+## Aufräumrunde A — liegengebliebene Befunde aus den Phasen 1 bis 4
+
+**Stand am 2026-08-28: umgesetzt in `91c2e86`, Build `322323db`,
+Gerätedurchgang bestanden.** 632 Tests grün, Typprüfung sauber. Sechs Befunde,
+alle klein und in ihrer Ursache bekannt — deshalb direkt behoben statt über
+einen eigenen Entwurfs- und Plandurchgang.
+
+- Tagebuch- und Arztbesuche-Liste endeten mit `tokens.spacing.lg` und schoben
+  ihre letzte Karte unter den „+"-Knopf. Jetzt `FAB_CLEARANCE` aus
+  `src/components/ui/floatingActionButton.ts`, wie im Medikamente-Tab.
+- Das Speichern eines sicheren Orts und eines Vorsorge-Termins gab keine
+  Rückmeldung. Beide rufen jetzt `saveFeedback()`.
+- Rückgängig war das einzige der drei Ereignisse ohne Haptik. Neu:
+  `undoFeedback()` in `src/lib/haptics.ts`, bewusst leichter (Light) als das
+  Löschen (Medium).
+- Der Rückgängig-Streifen wurde von TalkBack nicht angesagt — acht Sekunden,
+  die ein blinder Nutzer nicht bemerkt. Jetzt
+  `accessibilityLiveRegion="assertive"`.
+- `INITIAL_MEDICATION_FORM_STATE` war eine beim Import ausgewertete Konstante:
+  Bleibt die App über Mitternacht im Speicher, schlug das Formular den Vortag
+  als Startdatum vor. Ersetzt durch `buildInitialMedicationFormState()`, träge
+  über `useState(() => …)` aufgerufen.
+- Der Wissen-Tab riet ohne eingegebenen Suchbegriff zu einem anderen
+  Suchbegriff. `KnowledgeEmptyVariant` kennt jetzt `'none'`.
+
+**Dabei mit entschieden:** Die Vorsorge-Karte im Medikamente-Tab ist von
+`ListHeaderComponent` zu `ListFooterComponent` gewandert. Das war der offene
+Punkt aus Phase 4 — ohne Medikament und ohne Termin füllte das aufgeklappte
+Formular den Schirm, sodass „Erstes Medikament anlegen" erst nach Scrollen
+auftauchte. Der Tab heißt Medikamente; die Liste steht jetzt oben.
+
+**Noch offen, nach Gewicht sortiert:**
+
+- **Gruppe B — Historisierung der Zeitpläne.** Die Rückschau bewertet jeden
+  vergangenen Tag mit der *heutigen* Zahl der Erinnerungszeiten. Die einzige
+  Stelle, an der ohne Fehlbedienung eine falsche Zahl entsteht. Braucht
+  `medication_schedule_history` samt Migration — eine eigene Phase, nicht eine
+  Aufräumrunde. Dazu gehört, dass ein pausiertes und wieder aufgenommenes
+  Medikament sich als eine lange Versäumnisstrecke liest. **Bis dahin darf die
+  Einnahme-Auswertung nicht in den Medikamenten-Pass.**
+- **Gruppe C — Robustheit und Rechenaufwand.** `buildDayRatings` läuft bei
+  jedem Render; `buildVisitSummary` viermal über dieselben Einträge; vier Wege
+  in einen stillen Fehlzustand bei den Erinnerungen (Phase 1);
+  `medicationStatus.test.ts` schreibt die Zeichenkette `"undefined"` in
+  `process.env.TZ`.
+- **Gruppe D — Sichtbares Kleinzeug.** Ausgefranster linker Rand im
+  Neuigkeiten-Feed; die neutrale Kartenkante ist im dunklen Theme womöglich
+  unsichtbar; `GhostCard` trägt eine tote `hasHeaderBadge`-Eigenschaft.
+
+---
+
 ## Abdeckungsprüfung
 
 Alle am 2026-08-20 vorgeschlagenen Verbesserungen sind genau einer Phase zugeordnet:
