@@ -181,7 +181,7 @@ function makeStyles(colors: ThemeColors) {
     rowWrapper: { paddingHorizontal: tokens.spacing.lg },
     cardName: {
       color: colors.textPrimary,
-      fontSize: tokens.typography.fontSize.md,
+      fontSize: tokens.typography.fontSize.lg,
       fontWeight: tokens.typography.fontWeight.bold,
       marginBottom: tokens.spacing.xs,
     },

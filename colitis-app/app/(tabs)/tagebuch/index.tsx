@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Alert, Pressable, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
 import { listDiaryEntries, deleteDiaryEntry } from '../../../src/features/diary/db/diaryRepository';
@@ -130,7 +130,7 @@ export default function TagebuchScreen() {
               style={[styles.headerButton, isExporting && styles.headerButtonDisabled]}
               onPress={handleOpenExportMenu}
             >
-              <Ionicons name="ellipsis-vertical" size={22} color={colors.textPrimary} />
+              <MaterialCommunityIcons name="dots-vertical" size={22} color={colors.textPrimary} />
             </Pressable>
           ),
         }}

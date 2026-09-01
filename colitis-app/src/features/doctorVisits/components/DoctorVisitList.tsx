@@ -82,7 +82,7 @@ function makeStyles(colors: ThemeColors) {
     },
     cardDate: {
       color: colors.textPrimary,
-      fontSize: tokens.typography.fontSize.md,
+      fontSize: tokens.typography.fontSize.lg,
       fontWeight: tokens.typography.fontWeight.bold,
       marginBottom: tokens.spacing.xs,
     },

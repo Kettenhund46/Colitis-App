@@ -59,7 +59,7 @@ function makeStyles(colors: ThemeColors) {
     },
     title: {
       color: colors.textPrimary,
-      fontSize: tokens.typography.fontSize.md,
+      fontSize: tokens.typography.fontSize.lg,
       fontWeight: tokens.typography.fontWeight.bold,
       textAlign: 'center',
       marginBottom: tokens.spacing.xs,

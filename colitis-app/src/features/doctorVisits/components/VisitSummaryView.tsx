@@ -73,21 +73,21 @@ export function VisitSummaryView({ summary }: VisitSummaryViewProps) {
         <>
           <View style={styles.kpiRow}>
             <View style={styles.kpi}>
-              <Text style={styles.kpiNumber}>{formatDecimal(figures.stoolsPerDay)}</Text>
+              <Text style={styles.kpiNumber} numberOfLines={1} adjustsFontSizeToFit>{formatDecimal(figures.stoolsPerDay)}</Text>
               <Text style={styles.kpiLabel}>{KPI_LABEL_STOOLS}</Text>
             </View>
             <View style={styles.kpi}>
-              <Text style={styles.kpiNumber}>{figures.daysWithBlood}</Text>
+              <Text style={styles.kpiNumber} numberOfLines={1} adjustsFontSizeToFit>{figures.daysWithBlood}</Text>
               <Text style={styles.kpiLabel}>{KPI_LABEL_BLOOD}</Text>
             </View>
           </View>
           <View style={styles.kpiRow}>
             <View style={styles.kpi}>
-              <Text style={styles.kpiNumber}>{formatDecimal(figures.averagePainLevel)}</Text>
+              <Text style={styles.kpiNumber} numberOfLines={1} adjustsFontSizeToFit>{formatDecimal(figures.averagePainLevel)}</Text>
               <Text style={styles.kpiLabel}>{KPI_LABEL_PAIN}</Text>
             </View>
             <View style={styles.kpi}>
-              <Text style={styles.kpiNumber}>{formatRecordedDaysLabel(summary)}</Text>
+              <Text style={styles.kpiNumber} numberOfLines={1} adjustsFontSizeToFit>{formatRecordedDaysLabel(summary)}</Text>
               <Text style={styles.kpiLabel}>{KPI_LABEL_RECORDED}</Text>
             </View>
           </View>
@@ -188,9 +188,11 @@ function makeStyles(colors: ThemeColors) {
       paddingVertical: tokens.spacing.md,
       alignItems: 'center',
     },
+    // Eine Stufe ueber der Abschnittsueberschrift: Die Zahlen sind der Grund,
+    // warum jemand diesen Bildschirm oeffnet.
     kpiNumber: {
       color: colors.textPrimary,
-      fontSize: tokens.typography.fontSize.lg,
+      fontSize: tokens.typography.fontSize.xl,
       fontWeight: tokens.typography.fontWeight.bold,
     },
     kpiLabel: {

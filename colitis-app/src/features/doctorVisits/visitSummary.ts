@@ -1,4 +1,5 @@
 import { addDays, eachDayInclusive, formatLocalDateKey, parseLocalDate } from '../../lib/localDate';
+import { formatDecimalComma } from '../../lib/formatNumber';
 import { formatGermanDate } from './doctorVisitPassBuilder';
 import type { DoctorVisit } from './types';
 import { groupEntriesByDay, hasBlood, rateDayTotals, sumDayTotals } from '../diary/calendarLogic';
@@ -477,7 +478,7 @@ export function formatMedicationDetailLabel(line: MedicationSummaryLine): string
 
 /** Deutsche Schreibweise mit Komma statt Punkt. */
 export function formatDecimal(value: number): string {
-  return value.toFixed(1).replace('.', ',');
+  return formatDecimalComma(value);
 }
 
 function buildActivitySummary(

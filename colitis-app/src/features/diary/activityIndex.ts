@@ -1,5 +1,6 @@
 import { groupEntriesByDay, sumDayTotals } from './calendarLogic';
 import { eachDayInclusive } from '../../lib/localDate';
+import { formatDecimalComma } from '../../lib/formatNumber';
 import type { DayTotals } from './calendarLogic';
 import type { DiaryEntryWithTriggers } from './types';
 
@@ -115,7 +116,7 @@ export function formatActivityIndexBreakdown(index: ActivityIndex): string {
 
 /** Deutsche Schreibweise mit Komma, wie in der Zusammenfassung. */
 export function formatActivityAverage(average: number): string {
-  return average.toFixed(1).replace('.', ',');
+  return formatDecimalComma(average);
 }
 
 export function formatNormalStoolsLabel(normalStools: number): string {

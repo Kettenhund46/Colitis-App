@@ -5,6 +5,7 @@ import { tokens } from '../../../styles/tokens';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { buildDailyTrend } from '../trendLogic';
 import { MAX_ACTIVITY_INDEX } from '../activityIndex';
+import { formatDecimalComma } from '../../../lib/formatNumber';
 import type { DailyTrendPoint, TrendRangeDays } from '../trendLogic';
 import type { DiaryEntryWithTriggers } from '../types';
 import type { ThemeColors } from '../../../theme/types';
@@ -24,13 +25,18 @@ const RANGE_OPTIONS: { value: TrendRangeDays; label: string }[] = [
 const BAR_WIDTH = 8;
 const BAR_GAP = 3;
 const BAR_RADIUS = 2;
-const CHART_HEIGHT = 80;
+const CHART_HEIGHT = 120;
 const MIN_STOOL_FREQUENCY_SCALE = 5;
 const PAIN_LEVEL_SCALE = 10;
 
 function formatShortDate(dateKey: string): string {
   const [, month, day] = dateKey.split('-');
   return `${day}.${month}.`;
+}
+
+/** "Mittel 3,4" -- wie in der Zusammenfassung. */
+function formatMeanLabel(mean: number): string {
+  return `Mittel ${formatDecimalComma(mean)}`;
 }
 
 function barHeight(value: number | null, maxValue: number): number {
@@ -69,6 +75,23 @@ const barRowStyles = StyleSheet.create({
     width: BAR_WIDTH,
     borderRadius: BAR_RADIUS,
   },
+  // Der letzte erfasste Wert ist der, um den es geht -- er bekommt volle
+  // Deckkraft, alles davor tritt zurueck.
+  barPast: { opacity: 0.55 },
+  plot: { position: 'relative' },
+  meanLine: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 1,
+    borderTopWidth: 1,
+    borderStyle: 'dashed',
+  },
+  scaleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 2,
+  },
 });
 
 interface BarRowProps {
@@ -76,21 +99,73 @@ interface BarRowProps {
   valueKey: 'worstPainLevel' | 'totalStoolFrequency' | 'activityIndex';
   maxValue: number;
   barColor: string;
+  /** Farbe der gestrichelten Mittelwert-Linie. */
+  meanColor: string;
+  /** Beschriftung fuer die Obergrenze der Achse. */
+  scaleLabelColor: string;
+  /** Wie der Mittelwert benannt wird, etwa "Mittel 3,4". */
+  formatMean: (mean: number) => string;
 }
 
-function BarRow({ days, valueKey, maxValue, barColor }: BarRowProps) {
+/** Mittel ueber die erfassten Tage; nicht erfasste zaehlen nicht mit. */
+function meanOf(days: DailyTrendPoint[], valueKey: BarRowProps['valueKey']): number | null {
+  const values = days.map((day) => day[valueKey]).filter((value): value is number => value !== null);
+  if (values.length === 0) {
+    return null;
+  }
+  return values.reduce((total, value) => total + value, 0) / values.length;
+}
+
+/** Der letzte Tag mit Wert -- alles danach wurde nicht erfasst. */
+function lastRecordedIndex(days: DailyTrendPoint[], valueKey: BarRowProps['valueKey']): number {
+  for (let index = days.length - 1; index >= 0; index--) {
+    if (days[index][valueKey] !== null) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+function BarRow({ days, valueKey, maxValue, barColor, meanColor, scaleLabelColor, formatMean }: BarRowProps) {
+  const mean = meanOf(days, valueKey);
+  const latestIndex = lastRecordedIndex(days, valueKey);
+
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-      <View style={barRowStyles.row}>
-        {days.map((day) => (
-          <View key={day.date} style={barRowStyles.barSlot}>
-            <View style={[barRowStyles.bar, { height: barHeight(day[valueKey], maxValue), backgroundColor: barColor }]} />
-          </View>
-        ))}
+    <View>
+      <View style={barRowStyles.scaleRow}>
+        <Text style={[chartLabelStyle, { color: scaleLabelColor }]}>
+          {mean === null ? '' : formatMean(mean)}
+        </Text>
+        <Text style={[chartLabelStyle, { color: scaleLabelColor }]}>{maxValue}</Text>
       </View>
-    </ScrollView>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={[barRowStyles.row, barRowStyles.plot]}>
+          {mean !== null && (
+            <View
+              style={[
+                barRowStyles.meanLine,
+                { bottom: barHeight(mean, maxValue), borderTopColor: meanColor },
+              ]}
+            />
+          )}
+          {days.map((day, index) => (
+            <View key={day.date} style={barRowStyles.barSlot}>
+              <View
+                style={[
+                  barRowStyles.bar,
+                  index !== latestIndex && barRowStyles.barPast,
+                  { height: barHeight(day[valueKey], maxValue), backgroundColor: barColor },
+                ]}
+              />
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
+
+const chartLabelStyle = { fontSize: tokens.typography.fontSize.sm };
 
 export function DiaryTrendChart({ entries, normalStoolFrequency = null }: DiaryTrendChartProps) {
   const { colors } = useTheme();
@@ -124,10 +199,26 @@ export function DiaryTrendChart({ entries, normalStoolFrequency = null }: DiaryT
       {hasAnyData(days) ? (
         <>
           <Text style={styles.chartTitle}>Schmerzlevel</Text>
-          <BarRow days={days} valueKey="worstPainLevel" maxValue={PAIN_LEVEL_SCALE} barColor={colors.danger} />
+          <BarRow
+            days={days}
+            valueKey="worstPainLevel"
+            maxValue={PAIN_LEVEL_SCALE}
+            barColor={colors.danger}
+            meanColor={colors.border}
+            scaleLabelColor={colors.textSecondary}
+            formatMean={formatMeanLabel}
+          />
 
           <Text style={styles.chartTitle}>Stuhlgang-Häufigkeit</Text>
-          <BarRow days={days} valueKey="totalStoolFrequency" maxValue={stoolFrequencyMax} barColor={colors.primary} />
+          <BarRow
+            days={days}
+            valueKey="totalStoolFrequency"
+            maxValue={stoolFrequencyMax}
+            barColor={colors.primary}
+            meanColor={colors.border}
+            scaleLabelColor={colors.textSecondary}
+            formatMean={formatMeanLabel}
+          />
 
           {normalStoolFrequency !== null && (
             <>
@@ -139,6 +230,9 @@ export function DiaryTrendChart({ entries, normalStoolFrequency = null }: DiaryT
                 valueKey="activityIndex"
                 maxValue={MAX_ACTIVITY_INDEX}
                 barColor={colors.accent}
+                meanColor={colors.border}
+                scaleLabelColor={colors.textSecondary}
+                formatMean={formatMeanLabel}
               />
             </>
           )}
