@@ -19,6 +19,7 @@ import {
 import { writeAndShareBackup, pickBackupFileContent } from '../../../src/features/backup/backupFileService';
 import { BackupPasswordForm } from '../../../src/features/backup/components/BackupPasswordForm';
 import { DiaryReminderSettings } from '../../../src/features/diary/components/DiaryReminderSettings';
+import { NormalStoolFrequencySettings } from '../../../src/features/diary/components/NormalStoolFrequencySettings';
 import {
   rescheduleAllAfterRestore,
   formatRestoreResultMessage,
@@ -416,6 +417,8 @@ export default function EinstellungenScreen() {
         </View>
 
         <DiaryReminderSettings reloadKey={reloadKey} />
+
+        <NormalStoolFrequencySettings reloadKey={reloadKey} />
 
         <SectionHeading>App-Sperre</SectionHeading>
         <View style={styles.row}>

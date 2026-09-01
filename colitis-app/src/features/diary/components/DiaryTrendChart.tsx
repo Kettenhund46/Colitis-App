@@ -4,12 +4,15 @@ import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { buildDailyTrend } from '../trendLogic';
+import { MAX_ACTIVITY_INDEX } from '../activityIndex';
 import type { DailyTrendPoint, TrendRangeDays } from '../trendLogic';
 import type { DiaryEntryWithTriggers } from '../types';
 import type { ThemeColors } from '../../../theme/types';
 
 interface DiaryTrendChartProps {
   entries: DiaryEntryWithTriggers[];
+  /** Ohne persoenlichen Normalwert entfaellt die Aktivitaets-Reihe. */
+  normalStoolFrequency?: number | null;
 }
 
 const RANGE_OPTIONS: { value: TrendRangeDays; label: string }[] = [
@@ -70,7 +73,7 @@ const barRowStyles = StyleSheet.create({
 
 interface BarRowProps {
   days: DailyTrendPoint[];
-  valueKey: 'worstPainLevel' | 'totalStoolFrequency';
+  valueKey: 'worstPainLevel' | 'totalStoolFrequency' | 'activityIndex';
   maxValue: number;
   barColor: string;
 }
@@ -89,12 +92,12 @@ function BarRow({ days, valueKey, maxValue, barColor }: BarRowProps) {
   );
 }
 
-export function DiaryTrendChart({ entries }: DiaryTrendChartProps) {
+export function DiaryTrendChart({ entries, normalStoolFrequency = null }: DiaryTrendChartProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const [rangeDays, setRangeDays] = useState<TrendRangeDays>(7);
 
-  const days = buildDailyTrend(entries, rangeDays);
+  const days = buildDailyTrend(entries, rangeDays, new Date(), normalStoolFrequency);
   const stoolFrequencyMax = resolveStoolFrequencyMax(days);
 
   return (
@@ -125,6 +128,20 @@ export function DiaryTrendChart({ entries }: DiaryTrendChartProps) {
 
           <Text style={styles.chartTitle}>Stuhlgang-Häufigkeit</Text>
           <BarRow days={days} valueKey="totalStoolFrequency" maxValue={stoolFrequencyMax} barColor={colors.primary} />
+
+          {normalStoolFrequency !== null && (
+            <>
+              <Text style={styles.chartTitle}>Krankheitsaktivität (0–{MAX_ACTIVITY_INDEX})</Text>
+              {/* Feste Skala statt Tageshoechstwert: Ein Score ist nur im
+                  Vergleich zu seinem Maximum zu lesen. */}
+              <BarRow
+                days={days}
+                valueKey="activityIndex"
+                maxValue={MAX_ACTIVITY_INDEX}
+                barColor={colors.accent}
+              />
+            </>
+          )}
 
           <View style={styles.dateRangeRow}>
             <Text style={styles.dateRangeText}>{formatShortDate(days[0].date)}</Text>

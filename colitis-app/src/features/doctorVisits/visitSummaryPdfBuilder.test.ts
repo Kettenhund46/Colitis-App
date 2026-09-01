@@ -25,6 +25,8 @@ function summary(overrides: Partial<VisitSummary> = {}): VisitSummary {
     triggers: [],
     medications: [],
     nextScreeningDate: null,
+    activity: null,
+    isActivityBaselineMissing: false,
     isEmpty: false,
     ...overrides,
   };

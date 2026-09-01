@@ -4,6 +4,14 @@ import type { DoctorVisit } from './types';
 import { groupEntriesByDay, hasBlood, rateDayTotals, sumDayTotals } from '../diary/calendarLogic';
 import type { DiaryEntryWithTriggers } from '../diary/types';
 import { computeTriggerPatterns } from '../diary/analysis';
+import {
+  buildDailyActivityIndex,
+  averageActivityIndex,
+  latestActivityPoint,
+  formatActivityIndexValue,
+  formatActivityAverage,
+} from '../diary/activityIndex';
+import type { ActivityIndex } from '../diary/activityIndex';
 import { labelFor, TRIGGER_CATEGORY_OPTIONS } from '../diary/constants';
 import { isMedicationDueOn, localDateOf } from '../medications/adherence';
 import type { Medication, MedicationIntake, ScreeningReminder } from '../medications/types';
@@ -324,8 +332,26 @@ export interface VisitSummary {
   triggers: TriggerShare[];
   medications: MedicationSummaryLine[];
   nextScreeningDate: string | null;
+  /** null ohne Normalwert oder ohne einen einzigen erfassten Tag. */
+  activity: ActivitySummary | null;
+  /**
+   * Der Normalwert fehlt. Getrennt von `activity === null`, weil der
+   * Bildschirm im einen Fall auf die Einstellungen verweisen muss und im
+   * anderen nur feststellt, dass nichts erfasst wurde.
+   */
+  isActivityBaselineMissing: boolean;
   /** Kein Eintrag und kein Medikament im Zeitraum. */
   isEmpty: boolean;
+}
+
+export interface ActivitySummary {
+  /** Mittel ueber alle erfassten Tage des Zeitraums, eine Nachkommastelle. */
+  average: number;
+  /** Der juengste erfasste Tag -- was gerade gilt. */
+  latest: ActivityIndex;
+  latestDate: string;
+  /** Wie viele Tage in das Mittel eingegangen sind. */
+  dayCount: number;
 }
 
 export interface VisitSummaryInput {
@@ -336,6 +362,8 @@ export interface VisitSummaryInput {
   screening: ScreeningReminder | null;
   /** Heutiger Kalendertag, YYYY-MM-DD lokal. */
   today: string;
+  /** Uebliche Stuhlgaenge pro Tag; ohne sie entfaellt die Aktivitaet. */
+  normalStoolFrequency: number | null;
 }
 
 export function computeTriggerShares(entries: DiaryEntryWithTriggers[]): TriggerShare[] {
@@ -445,6 +473,41 @@ export function formatDecimal(value: number): string {
   return value.toFixed(1).replace('.', ',');
 }
 
+function buildActivitySummary(
+  entriesOfPeriod: DiaryEntryWithTriggers[],
+  period: SummaryPeriod,
+  normalStoolFrequency: number | null
+): ActivitySummary | null {
+  if (normalStoolFrequency === null) {
+    return null;
+  }
+
+  const points = buildDailyActivityIndex(
+    entriesOfPeriod,
+    period.fromDate,
+    period.toDate,
+    normalStoolFrequency
+  );
+  const average = averageActivityIndex(points);
+  const latest = latestActivityPoint(points);
+
+  if (average === null || latest === null) {
+    return null;
+  }
+
+  return { average, latest: latest.index, latestDate: latest.date, dayCount: points.length };
+}
+
+export const NO_ACTIVITY_DATA_TEXT =
+  'Im Zeitraum wurde nichts erfasst — ohne Einträge lässt sich keine Aktivität berechnen.';
+
+/** "2 von 6 am 28.08.2026 · Mittel 1,7 über 21 Tage" */
+export function formatActivityLabel(activity: ActivitySummary): string {
+  const latest = `${formatActivityIndexValue(activity.latest)} am ${formatGermanDate(activity.latestDate)}`;
+  const average = `Mittel ${formatActivityAverage(activity.average)} über ${formatDayCount(activity.dayCount)}`;
+  return `${latest} · ${average}`;
+}
+
 export function buildVisitSummary(input: VisitSummaryInput): VisitSummary {
   const period = determinePeriod(input.visits, input.today);
   // Einmal filtern, einmal buendeln. Die einzelnen Auswertungen bekommen das
@@ -466,6 +529,8 @@ export function buildVisitSummary(input: VisitSummaryInput): VisitSummary {
     triggers: figures === null ? [] : computeTriggerShares(entries),
     medications,
     nextScreeningDate: input.screening === null ? null : input.screening.nextDueDate,
+    activity: buildActivitySummary(entries, period, input.normalStoolFrequency),
+    isActivityBaselineMissing: input.normalStoolFrequency === null,
     isEmpty: daysWithEntries === 0 && medications.length === 0,
   };
 }

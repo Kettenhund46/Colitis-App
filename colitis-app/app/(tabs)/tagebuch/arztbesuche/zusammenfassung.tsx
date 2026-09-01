@@ -8,6 +8,7 @@ import {
   listMedicationIntakes,
 } from '../../../../src/features/medications/db/medicationsRepository';
 import { getScreeningReminder } from '../../../../src/features/medications/db/screeningRepository';
+import { getNormalStoolFrequency } from '../../../../src/features/settings/settingsStorage';
 import { listDoctorVisits } from '../../../../src/features/doctorVisits/db/doctorVisitsRepository';
 import { buildVisitSummary } from '../../../../src/features/doctorVisits/visitSummary';
 import { exportVisitSummary } from '../../../../src/features/doctorVisits/visitSummaryExport';
@@ -42,6 +43,7 @@ export default function ZusammenfassungScreen() {
             listDoctorVisits(db),
             getScreeningReminder(db),
           ]);
+          const normalStoolFrequency = await getNormalStoolFrequency();
           if (isActive) {
             setSummary(
               buildVisitSummary({
@@ -50,6 +52,7 @@ export default function ZusammenfassungScreen() {
                 intakes,
                 visits,
                 screening,
+                normalStoolFrequency,
                 today: formatLocalDateKey(new Date()),
               })
             );

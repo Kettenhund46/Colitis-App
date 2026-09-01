@@ -15,9 +15,37 @@ import {
   KPI_LABEL_STOOLS,
   NO_MEDICATION_TEXT,
   NO_NOTABLE_PHASE_TEXT,
+  NO_ACTIVITY_DATA_TEXT,
+  formatActivityLabel,
   ORIGIN_NOTE_TEXT,
 } from './visitSummary';
 import type { MedicationSummaryLine, VisitSummary } from './visitSummary';
+import {
+  ACTIVITY_INDEX_NAME,
+  ACTIVITY_INDEX_ORIGIN_NOTE,
+  NO_BASELINE_TEXT,
+  formatActivityIndexValue,
+  formatActivityIndexBreakdown,
+} from '../diary/activityIndex';
+
+function buildActivitySection(summary: VisitSummary): string {
+  const heading = `<h2>${escapeHtml(ACTIVITY_INDEX_NAME)}</h2>`;
+
+  if (summary.activity === null) {
+    const text = summary.isActivityBaselineMissing ? NO_BASELINE_TEXT : NO_ACTIVITY_DATA_TEXT;
+    return `${heading}<p>${escapeHtml(text)}</p>`;
+  }
+
+  return `
+    ${heading}
+    <p class="activity">
+      <span class="n">${escapeHtml(formatActivityIndexValue(summary.activity.latest))}</span>
+      <span class="l">${escapeHtml(formatActivityIndexBreakdown(summary.activity.latest))}</span>
+    </p>
+    <p>${escapeHtml(formatActivityLabel(summary.activity))}</p>
+    <p class="origin">${escapeHtml(ACTIVITY_INDEX_ORIGIN_NOTE)}</p>
+  `;
+}
 
 function buildFiguresSection(summary: VisitSummary): string {
   if (summary.figures === null) {
@@ -102,6 +130,9 @@ export function buildVisitSummaryHtml(summary: VisitSummary, today: Date): strin
           .kpi .n { display: block; font-size: 19px; font-weight: 700; }
           .kpi .l { display: block; font-size: 10px; color: #6B6259; margin-top: 3px; }
           .sparse { font-style: italic; }
+          .activity .n { font-size: 24px; font-weight: 700; margin-right: 10px; }
+          .activity .l { color: #6B6259; }
+          .origin { font-style: italic; color: #6B6259; }
           .med { border-top: 1px solid #E4DACB; padding: 7px 0; }
           .med.ended { color: #6B6259; }
           .med-name { font-weight: 700; margin: 0; }
@@ -113,6 +144,7 @@ export function buildVisitSummaryHtml(summary: VisitSummary, today: Date): strin
       <body>
         <h1>Zusammenfassung für den Arztbesuch</h1>
         <p class="generated">${escapeHtml(formatPeriodLabel(summary.period))}</p>
+        ${buildActivitySection(summary)}
         ${buildFiguresSection(summary)}
         ${buildPhasesSection(summary)}
         ${buildTriggersSection(summary)}

@@ -14,6 +14,7 @@ import {
   formatMedicationIntakeLabel,
   formatMedicationDetailLabel,
   buildVisitSummary,
+  formatActivityLabel,
 } from './visitSummary';
 import type { DoctorVisit } from './types';
 import type { DiaryEntryWithTriggers } from '../diary/types';
@@ -715,6 +716,7 @@ describe('visitSummary', () => {
         intakes: [intake(1, 1, 3)],
         visits: [visit({ id: 1, visitDate: '2026-08-01', doctorName: 'Dr. Weber' })],
         screening: null,
+        normalStoolFrequency: 2,
         today: '2026-08-20',
       });
 
@@ -733,6 +735,7 @@ describe('visitSummary', () => {
         intakes: [],
         visits: [visit({ id: 1, visitDate: '2026-08-01' })],
         screening: null,
+        normalStoolFrequency: 2,
         today: '2026-08-20',
       });
 
@@ -749,6 +752,7 @@ describe('visitSummary', () => {
         intakes: [],
         visits: [visit({ id: 1, visitDate: '2026-08-01' })],
         screening: null,
+        normalStoolFrequency: 2,
         today: '2026-08-20',
       });
       expect(summary.isEmpty).toBe(true);
@@ -761,6 +765,7 @@ describe('visitSummary', () => {
         intakes: [],
         visits: [visit({ id: 1, visitDate: '2026-08-01' })],
         screening: null,
+        normalStoolFrequency: 2,
         today: '2026-08-20',
       });
       expect(summary.isEmpty).toBe(false);
@@ -773,9 +778,88 @@ describe('visitSummary', () => {
         intakes: [],
         visits: [],
         screening: { id: 1, intervalMonths: 12, nextDueDate: '2027-01-15', note: null, notificationId: null },
+        normalStoolFrequency: 2,
         today: '2026-08-20',
       });
       expect(summary.nextScreeningDate).toBe('2027-01-15');
     });
+
+    describe('Krankheitsaktivität', () => {
+      function summaryWith(normalStoolFrequency: number | null, entries = sevenGoodDays) {
+        return buildVisitSummary({
+          entries,
+          medications: [],
+          intakes: [],
+          visits: [visit({ id: 1, visitDate: '2026-08-01' })],
+          screening: null,
+          normalStoolFrequency,
+          today: '2026-08-20',
+        });
+      }
+
+      it('reports the missing baseline separately from missing data', () => {
+        const summary = summaryWith(null);
+
+        expect(summary.activity).toBeNull();
+        expect(summary.isActivityBaselineMissing).toBe(true);
+      });
+
+      it('reports no activity without a single recorded day, baseline or not', () => {
+        const summary = summaryWith(2, []);
+
+        expect(summary.activity).toBeNull();
+        expect(summary.isActivityBaselineMissing).toBe(false);
+      });
+
+      it('carries the latest day, its date and the average', () => {
+        const entries = [
+          entry({ id: 1, occurredAt: localIso(2026, 8, 10), stoolFrequency: 2 }),
+          entry({ id: 2, occurredAt: localIso(2026, 8, 12), stoolFrequency: 8, bloodLevel: 2 }),
+        ];
+        const summary = summaryWith(2, entries);
+
+        expect(summary.activity?.latestDate).toBe('2026-08-12');
+        expect(summary.activity?.latest).toEqual({ stoolSubscore: 3, bloodSubscore: 2, total: 5 });
+        // 0 und 5 an zwei erfassten Tagen.
+        expect(summary.activity?.average).toBe(2.5);
+        expect(summary.activity?.dayCount).toBe(2);
+      });
+
+      it('counts only days inside the period', () => {
+        const entries = [
+          // Vor dem Besuch am 01.08. und damit ausserhalb des Zeitraums.
+          entry({ id: 1, occurredAt: localIso(2026, 7, 20), stoolFrequency: 9 }),
+          entry({ id: 2, occurredAt: localIso(2026, 8, 5), stoolFrequency: 2 }),
+        ];
+        const summary = summaryWith(2, entries);
+
+        expect(summary.activity?.dayCount).toBe(1);
+        expect(summary.activity?.average).toBe(0);
+      });
+    });
+  });
+});
+
+describe('formatActivityLabel', () => {
+  it('names the latest day and the average over the recorded days', () => {
+    const label = formatActivityLabel({
+      average: 1.7,
+      latest: { stoolSubscore: 1, bloodSubscore: 1, total: 2 },
+      latestDate: '2026-08-28',
+      dayCount: 21,
+    });
+
+    expect(label).toBe('2 von 6 am 28.08.2026 · Mittel 1,7 über 21 Tage');
+  });
+
+  it('uses the singular for a single recorded day', () => {
+    const label = formatActivityLabel({
+      average: 3,
+      latest: { stoolSubscore: 3, bloodSubscore: 0, total: 3 },
+      latestDate: '2026-08-28',
+      dayCount: 1,
+    });
+
+    expect(label).toContain('über 1 Tag');
   });
 });

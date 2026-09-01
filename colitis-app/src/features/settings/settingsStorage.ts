@@ -38,6 +38,37 @@ export async function setIncludeIllnessJokes(enabled: boolean): Promise<void> {
   await AsyncStorage.setItem(INCLUDE_ILLNESS_JOKES_KEY, enabled ? 'true' : 'false');
 }
 
+const NORMAL_STOOL_FREQUENCY_KEY = 'colitis2go.settings.normalStoolFrequency';
+
+/** Obergrenze, damit ein Tippfehler nicht als Normalwert durchgeht. */
+export const MAX_NORMAL_STOOL_FREQUENCY = 20;
+
+/**
+ * Die uebliche Zahl an Stuhlgaengen pro Tag ausserhalb eines Schubs. `null`
+ * heisst: noch nicht angegeben -- dann laesst sich die Krankheitsaktivitaet
+ * nicht rechnen, weil ihr Frequenz-Teilwert relativ dazu zaehlt. Kein
+ * Vorgabewert, weil geraten hier eine falsche Zahl erzeugen wuerde.
+ */
+export async function getNormalStoolFrequency(): Promise<number | null> {
+  const stored = await AsyncStorage.getItem(NORMAL_STOOL_FREQUENCY_KEY);
+  if (stored === null) {
+    return null;
+  }
+  const parsed = Number(stored);
+  if (!Number.isInteger(parsed) || parsed < 0 || parsed > MAX_NORMAL_STOOL_FREQUENCY) {
+    return null;
+  }
+  return parsed;
+}
+
+export async function setNormalStoolFrequency(value: number | null): Promise<void> {
+  if (value === null) {
+    await AsyncStorage.removeItem(NORMAL_STOOL_FREQUENCY_KEY);
+    return;
+  }
+  await AsyncStorage.setItem(NORMAL_STOOL_FREQUENCY_KEY, String(value));
+}
+
 const ONBOARDING_SEEN_KEY = 'colitis2go.settings.onboardingSeen';
 
 export async function getOnboardingSeen(): Promise<boolean> {

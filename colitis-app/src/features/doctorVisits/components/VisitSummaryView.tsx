@@ -15,8 +15,17 @@ import {
   KPI_LABEL_STOOLS,
   NO_MEDICATION_TEXT,
   NO_NOTABLE_PHASE_TEXT,
+  NO_ACTIVITY_DATA_TEXT,
+  formatActivityLabel,
   ORIGIN_NOTE_TEXT,
 } from '../visitSummary';
+import {
+  ACTIVITY_INDEX_NAME,
+  ACTIVITY_INDEX_ORIGIN_NOTE,
+  NO_BASELINE_TEXT,
+  formatActivityIndexValue,
+  formatActivityIndexBreakdown,
+} from '../../diary/activityIndex';
 import { formatGermanDate } from '../doctorVisitPassBuilder';
 import { SectionHeading } from '../../../components/ui/SectionHeading';
 import { useTheme } from '../../../theme/ThemeContext';
@@ -36,6 +45,24 @@ export function VisitSummaryView({ summary }: VisitSummaryViewProps) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.periodText}>{formatPeriodLabel(summary.period)}</Text>
+
+      <SectionHeading>{ACTIVITY_INDEX_NAME}</SectionHeading>
+      {summary.activity === null ? (
+        <Text style={styles.bodyText}>
+          {summary.isActivityBaselineMissing ? NO_BASELINE_TEXT : NO_ACTIVITY_DATA_TEXT}
+        </Text>
+      ) : (
+        <>
+          <View style={styles.activityRow}>
+            <Text style={styles.activityNumber}>{formatActivityIndexValue(summary.activity.latest)}</Text>
+            <Text style={styles.activityBreakdown}>
+              {formatActivityIndexBreakdown(summary.activity.latest)}
+            </Text>
+          </View>
+          <Text style={styles.bodyText}>{formatActivityLabel(summary.activity)}</Text>
+          <Text style={styles.originNote}>{ACTIVITY_INDEX_ORIGIN_NOTE}</Text>
+        </>
+      )}
 
       {figures === null ? (
         <Text style={styles.sparseText}>
@@ -125,6 +152,31 @@ function makeStyles(colors: ThemeColors) {
       fontSize: tokens.typography.fontSize.sm,
       fontStyle: 'italic',
       lineHeight: 20,
+    },
+    activityRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      flexWrap: 'wrap',
+      gap: tokens.spacing.sm,
+      marginBottom: tokens.spacing.xs,
+    },
+    // Die groesste Stufe der Skala: Diese Zahl ist der Grund, warum das
+    // Dokument ueberhaupt aufgeschlagen wird.
+    activityNumber: {
+      color: colors.textPrimary,
+      fontSize: tokens.typography.fontSize.xl,
+      fontWeight: tokens.typography.fontWeight.bold,
+    },
+    activityBreakdown: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+    },
+    originNote: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      fontStyle: 'italic',
+      lineHeight: 18,
+      marginBottom: tokens.spacing.md,
     },
     kpiRow: { flexDirection: 'row', gap: tokens.spacing.sm, marginBottom: tokens.spacing.sm },
     kpi: {

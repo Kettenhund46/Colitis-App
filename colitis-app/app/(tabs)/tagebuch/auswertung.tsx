@@ -3,6 +3,7 @@ import { useFocusEffect } from 'expo-router';
 import { ScrollView, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
 import { listDiaryEntries } from '../../../src/features/diary/db/diaryRepository';
+import { getNormalStoolFrequency } from '../../../src/features/settings/settingsStorage';
 import { computeTriggerPatterns } from '../../../src/features/diary/analysis';
 import { TriggerAnalysisView } from '../../../src/features/diary/components/TriggerAnalysisView';
 import { DiaryTrendChart } from '../../../src/features/diary/components/DiaryTrendChart';
@@ -20,18 +21,22 @@ export default function AuswertungScreen() {
   const [patterns, setPatterns] = useState<TriggerPatternStat[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [normalStoolFrequency, setNormalStoolFrequency] = useState<number | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
       setIsLoading(true);
 
-      createEncryptedDb()
-        .then((db) => listDiaryEntries(db))
-        .then((loadedEntries) => {
+      Promise.all([
+        createEncryptedDb().then((db) => listDiaryEntries(db)),
+        getNormalStoolFrequency(),
+      ])
+        .then(([loadedEntries, normalStools]) => {
           if (isActive) {
             setEntries(loadedEntries);
             setPatterns(computeTriggerPatterns(loadedEntries));
+            setNormalStoolFrequency(normalStools);
             setError(null);
             setIsLoading(false);
           }
@@ -61,7 +66,7 @@ export default function AuswertungScreen() {
         <SkeletonList count={2} lines={2} />
       ) : (
         <ScrollView style={styles.scroll}>
-          <DiaryTrendChart entries={entries} />
+          <DiaryTrendChart entries={entries} normalStoolFrequency={normalStoolFrequency} />
           <TriggerAnalysisView patterns={patterns} />
         </ScrollView>
       )}
