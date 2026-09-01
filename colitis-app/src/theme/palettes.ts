@@ -11,6 +11,7 @@ export const lightColors: ThemeColors = {
   warning: '#C9A227',
   success: '#3E8E4F',
   border: '#E4DACB',
+  borderStrong: '#C3B295',
   overlay: 'rgba(46, 42, 38, 0.4)',
 };
 
@@ -25,6 +26,7 @@ export const darkColors: ThemeColors = {
   warning: '#D9B84A',
   success: '#7BC98C',
   border: '#3A362F',
+  borderStrong: '#635B4C',
   overlay: 'rgba(0, 0, 0, 0.6)',
 };
 
@@ -39,6 +41,7 @@ export const lightBlueColors: ThemeColors = {
   warning: '#C9A227',
   success: '#3E8E4F',
   border: '#D7E3ED',
+  borderStrong: '#A9C0D4',
   overlay: 'rgba(29, 43, 54, 0.4)',
 };
 

@@ -43,7 +43,9 @@ export function accentColorFor(accent: CardAccent | undefined, colors: ThemeColo
     case 'info':
       return colors.accent;
     case 'neutral':
-      return colors.border;
+      // Nicht colors.border: Im dunklen Theme umgibt genau dieser Ton die
+      // Karte, die Kante waere dort nur ein dickerer Rahmen.
+      return colors.borderStrong;
   }
 }
 

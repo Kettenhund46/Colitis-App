@@ -37,7 +37,11 @@ export function NewsFeedList({ items, onSelect }: NewsFeedListProps) {
           accessibilityLabel={`Neuigkeit: ${item.title}${item.isRead ? ' (bereits gelesen)' : ''}`}
           onPress={() => onSelect(item)}
         >
-          <Card accent={item.isRead ? undefined : 'info'} isMuted={item.isRead}>
+          {/* Auch gelesene Karten bekommen eine Kante -- ohne sie saesse ihr
+              linker Rand vier Pixel weiter links als der der ungelesenen, und
+              die Liste franste aus. Den Unterschied tragen Farbe und
+              Daempfung, nicht die Geometrie. */}
+          <Card accent={item.isRead ? 'neutral' : 'info'} isMuted={item.isRead}>
             <Text style={[styles.cardTitle, item.isRead && styles.textRead]}>{item.title}</Text>
             <Text style={[styles.cardSummary, item.isRead && styles.textRead]}>{item.summaryDe}</Text>
             <Text style={styles.cardMeta}>

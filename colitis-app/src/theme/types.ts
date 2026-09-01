@@ -11,5 +11,8 @@ export interface ThemeColors {
   warning: string;
   success: string;
   border: string;
+  /** Deutlicher als border -- fuer die neutrale Zustandskante, die sich sonst
+   *  im dunklen Theme nicht vom Rahmen der Karte unterscheidet. */
+  borderStrong: string;
   overlay: string;
 }

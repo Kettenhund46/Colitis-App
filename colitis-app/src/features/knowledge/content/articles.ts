@@ -138,4 +138,68 @@ Welche Wirkstoffklasse im Einzelfall geeignet ist, hängt von Schweregrad, Ausde
       'https://www.mdpi.com/2077-0383/14/10/3475',
     ],
   },
+  {
+    slug: 'ernaehrung',
+    title: 'Ernährung im Schub und dazwischen',
+    body: `Es gibt keine „Colitis-Diät“, die die Erkrankung heilt oder einen Schub sicher verhindert. Was gut vertragen wird, ist von Mensch zu Mensch verschieden – deshalb ist das eigene Tagebuch hier aussagekräftiger als jede allgemeine Liste.
+
+In der Remission gilt grundsätzlich: normal und ausgewogen essen. Pauschale Verbote sind nicht nur unnötig, sondern riskant – wer über Monate immer mehr weglässt, landet schnell bei einer einseitigen Ernährung mit zu wenig Eiweiß, Kalorien und Mikronährstoffen. Sinnvoller ist, einzelne verdächtige Lebensmittel gezielt und zeitlich begrenzt wegzulassen und zu beobachten, ob sich etwas ändert. Beschwerden treten oft nicht am selben Tag auf – ein Blick auf den Vortag lohnt sich.
+
+Im akuten Schub vertragen viele Betroffene leichter verdauliche, ballaststoffarme Kost besser: mehrere kleine Mahlzeiten statt weniger großer, wenig Rohkost, wenig stark Blähendes, zurückhaltend mit sehr Fettigem, Scharfem, Koffein und Alkohol. Wichtiger als jede Lebensmittelauswahl ist bei häufigen, wässrigen Stühlen aber der Ausgleich von Flüssigkeit und Elektrolyten. Eine ballaststoffarme Phase ist eine Übergangslösung für den Schub, keine Dauerernährung.
+
+Auf einige Mängel wird bei Colitis Ulcerosa besonders geachtet: Eisenmangel durch den Blutverlust (häufigste Ursache der Blutarmut), Vitamin D, sowie unter längerer Kortison-Therapie Kalzium und Knochengesundheit. Eine Laktoseintoleranz kommt bei CED-Betroffenen häufiger vor und wird gelegentlich mit einem Schub verwechselt. Ob und welche Nahrungsergänzung sinnvoll ist, gehört in die Sprechstunde – nicht ins Regal des Drogeriemarkts. Bei anhaltendem Gewichtsverlust oder stark eingeschränkter Auswahl ist eine Ernährungsberatung mit CED-Erfahrung der richtige nächste Schritt.`,
+    sources: [
+      'https://register.awmf.org/assets/guidelines/021-009l_S3_Colitis-ulcerosa_2025-11.pdf',
+      'https://www.dgvs.de/leitlinien/unterer-gi-trakt/colitis-ulcerosa/',
+      'https://www.dccv.de/',
+    ],
+  },
+  {
+    slug: 'impfungen',
+    title: 'Impfungen unter Immunsuppression',
+    body: `Viele Medikamente gegen Colitis Ulcerosa – Kortison in höherer Dosis, Azathioprin, Biologika, JAK-Inhibitoren – dämpfen das Immunsystem. Das verändert zwei Dinge: Manche Impfungen sind dann nicht mehr möglich, und Infektionen, gegen die man sich impfen lassen kann, verlaufen unter Umständen schwerer.
+
+Entscheidend ist der Unterschied zwischen Totimpfstoffen und Lebendimpfstoffen. Totimpfstoffe (unter anderem Grippe, Pneumokokken, Hepatitis B, COVID-19, HPV, der Gürtelrose-Totimpfstoff) sind unter Immunsuppression grundsätzlich möglich; die Impfantwort kann allerdings schwächer ausfallen. Lebendimpfstoffe (unter anderem Masern-Mumps-Röteln, Windpocken, Gelbfieber, die Schluckimpfung gegen Typhus) sind unter laufender Immunsuppression in der Regel nicht möglich.
+
+Daraus folgt der wichtigste praktische Punkt: Der Impfstatus sollte möglichst **vor** dem Beginn einer immunsuppressiven Therapie geprüft und vervollständigt werden. Für Lebendimpfungen ist dabei ein zeitlicher Vorlauf nötig. Ist die Therapie bereits angelaufen, entscheidet die behandelnde Ärztin oder der behandelnde Arzt, was noch möglich ist und welche Abstände einzuhalten sind.
+
+Die konkreten Empfehlungen für Menschen mit Immundefizienz veröffentlicht in Deutschland die Ständige Impfkommission (STIKO) am Robert Koch-Institut; sie werden regelmäßig aktualisiert. Auch das Umfeld ist relevant: Wer mit immunsupprimierten Personen zusammenlebt, sollte den eigenen Impfschutz aktuell halten. Dieser Artikel ist allgemeines Hintergrundwissen und ersetzt keine ärztliche Impfberatung.`,
+    sources: [
+      'https://www.rki.de/DE/Themen/Infektionskrankheiten/Impfen/Staendige-Impfkommission/Immundefizienz/immundefizienz-node.html',
+      'https://www.rki.de/DE/Themen/Infektionskrankheiten/Impfen/Staendige-Impfkommission/Empfehlungen-der-STIKO/Empfehlungen/empfehlungen-node.html',
+      'https://www.dgvs.de/leitlinien/unterer-gi-trakt/colitis-ulcerosa/',
+    ],
+  },
+  {
+    slug: 'arbeit',
+    title: 'Arbeit, Krankschreibung und Nachteilsausgleich',
+    body: `Eine chronische Erkrankung berührt das Arbeitsleben – rechtlich ist die Lage aber klarer, als viele Betroffene annehmen.
+
+Bei Arbeitsunfähigkeit zahlt der Arbeitgeber zunächst sechs Wochen das Entgelt weiter. Danach übernimmt die gesetzliche Krankenkasse mit dem Krankengeld, das für dieselbe Erkrankung auf 78 Wochen innerhalb von drei Jahren begrenzt ist. Wichtig für den Alltag: Dem Arbeitgeber gegenüber besteht **keine** Pflicht, die Diagnose zu nennen. Auf der Arbeitsunfähigkeitsbescheinigung, die er erhält, steht sie nicht.
+
+Wer länger oder wiederholt ausfällt, hat Anspruch auf ein Betriebliches Eingliederungsmanagement (BEM) – ein Angebot des Arbeitgebers, gemeinsam nach Lösungen zu suchen, etwa nach angepassten Arbeitszeiten oder einem Arbeitsplatz in Toilettennähe. Die Teilnahme ist freiwillig. Nach einer längeren Krankheitsphase ist außerdem eine stufenweise Wiedereingliederung möglich, bei der die Arbeitszeit schrittweise gesteigert wird.
+
+Je nach Schweregrad kann ein Grad der Behinderung (GdB) festgestellt werden; ab GdB 50 gilt man als schwerbehindert, was unter anderem zusätzlichen Urlaub und einen besonderen Kündigungsschutz mit sich bringt. Wie hoch der GdB ausfällt, richtet sich nach Häufigkeit der Schübe, Stuhlfrequenz und Begleiterscheinungen. Bei Anträgen, Widersprüchen und Fragen zum Nachteilsausgleich – etwa zum Euro-WC-Schlüssel für behindertengerechte Toiletten – berät die DCCV als unabhängige Patientenorganisation. Rechtliche Einzelfragen gehören in eine Sozialberatung; dieser Artikel gibt nur die Orientierung.`,
+    sources: [
+      'https://www.dccv.de/',
+      'https://www.gesetze-im-internet.de/entgfg/',
+      'https://www.gesetze-im-internet.de/sgb_9_2018/',
+    ],
+  },
+  {
+    slug: 'reisen',
+    title: 'Reisen mit Colitis Ulcerosa',
+    body: `Reisen ist mit Colitis Ulcerosa gut möglich – es braucht etwas mehr Vorlauf als sonst, vor allem bei Fernreisen und unter Immunsuppression.
+
+Medikamente gehören ins Handgepäck, nicht in den aufgegebenen Koffer, und zwar in ausreichender Menge plus Reserve für den Fall einer verlängerten Rückreise. Für Spritzen, Kühlpflichtiges und größere Mengen ist eine ärztliche Bescheinigung sinnvoll, für Auslandsreisen auf Englisch. Biologika brauchen eine durchgehende Kühlkette – Kühltaschen mit Temperaturanzeige sind dafür gedacht, das Bordpersonal ist nicht dafür zuständig.
+
+Impfungen und Prophylaxe wollen früh geplant sein: Unter laufender Immunsuppression sind Lebendimpfungen wie Gelbfieber oder die Schluckimpfung gegen Typhus in der Regel nicht möglich, was manche Reiseziele einschränkt oder eine längere Vorlaufzeit erfordert. Eine reisemedizinische Beratung mehrere Wochen vor Abflug klärt das ebenso wie Wechselwirkungen einer Malaria-Prophylaxe mit der laufenden Therapie.
+
+Vor Ort gilt für Immunsupprimierte besondere Vorsicht bei Lebensmittel- und Wasserhygiene, weil eine Reisedurchfallerkrankung nicht nur unangenehm ist, sondern schwerer verlaufen und einen Schub anstoßen kann. Innerhalb der EU gilt die Europäische Krankenversicherungskarte; darüber hinaus ist eine Auslandsreise-Krankenversicherung ratsam – auf Ausschlüsse für vorbestehende chronische Erkrankungen achten. Praktisch bewährt haben sich außerdem: die Adresse einer gastroenterologischen Anlaufstelle am Zielort notieren, den Medikamentenplan als PDF dabeihaben und den Euro-WC-Schlüssel einpacken, der in vielen europäischen Ländern passt.`,
+    sources: [
+      'https://www.dccv.de/',
+      'https://www.dgvs.de/leitlinien/unterer-gi-trakt/colitis-ulcerosa/',
+      'https://www.rki.de/DE/Themen/Infektionskrankheiten/Impfen/Staendige-Impfkommission/Immundefizienz/immundefizienz-node.html',
+    ],
+  },
 ];

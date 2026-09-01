@@ -12,23 +12,19 @@ const LINE_WIDTHS = ['100%', '62%', '78%'] as const;
 interface GhostCardProps {
   /** Wie viele Textzeilen angedeutet werden. */
   lines?: number;
-  /** Kopfzeile mit Titelbalken und Marke rechts, wie in der Tagebuch-Karte. */
-  hasHeaderBadge?: boolean;
 }
 
-export function GhostCard({ lines = DEFAULT_LINES, hasHeaderBadge = true }: GhostCardProps) {
+export function GhostCard({ lines = DEFAULT_LINES }: GhostCardProps) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const lineIndexes = Array.from({ length: Math.max(lines, 1) }, (_, index) => index);
 
   return (
     <Card accent="neutral">
-      {hasHeaderBadge && (
-        <View style={styles.header}>
-          <View style={[styles.bar, styles.title]} />
-          <View style={[styles.bar, styles.badge]} />
-        </View>
-      )}
+      <View style={styles.header}>
+        <View style={[styles.bar, styles.title]} />
+        <View style={[styles.bar, styles.badge]} />
+      </View>
       {lineIndexes.map((index) => (
         <View
           key={index}

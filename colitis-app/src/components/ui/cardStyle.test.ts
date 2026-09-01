@@ -24,7 +24,15 @@ describe('accentColorFor', () => {
     expect(accentColorFor('warning', colors)).toBe(colors.warning);
     expect(accentColorFor('danger', colors)).toBe(colors.danger);
     expect(accentColorFor('info', colors)).toBe(colors.accent);
-    expect(accentColorFor('neutral', colors)).toBe(colors.border);
+    expect(accentColorFor('neutral', colors)).toBe(colors.borderStrong);
+  });
+
+  it('keeps the neutral edge apart from the card outline in every theme', () => {
+    // Im dunklen Theme umgibt colors.border die Karte; waere die Kante
+    // derselbe Ton, bliebe sie nur ein dickerer Rahmen.
+    for (const palette of Object.values(palettes)) {
+      expect(accentColorFor('neutral', palette)).not.toBe(palette.border);
+    }
   });
 
   it('follows the theme it is given, not a fixed palette', () => {

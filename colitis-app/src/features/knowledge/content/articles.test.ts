@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { KNOWLEDGE_ARTICLES } from './articles';
 
 describe('KNOWLEDGE_ARTICLES', () => {
-  it('contains exactly 6 articles', () => {
-    expect(KNOWLEDGE_ARTICLES).toHaveLength(6);
+  it('contains exactly 10 articles', () => {
+    expect(KNOWLEDGE_ARTICLES).toHaveLength(10);
   });
 
   it('has the expected slugs in the expected order', () => {
@@ -14,6 +14,10 @@ describe('KNOWLEDGE_ARTICLES', () => {
       'folgen',
       'forschung',
       'medikamente',
+      'ernaehrung',
+      'impfungen',
+      'arbeit',
+      'reisen',
     ]);
   });
 
