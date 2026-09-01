@@ -13,6 +13,8 @@ import { rescheduleDiaryReminder } from '../src/features/diary/scheduleDiaryRemi
 import { resetAppData } from '../src/lib/appReset';
 import { LockScreen } from '../src/features/appLock/components/LockScreen';
 import { useAppLockGate } from '../src/features/appLock/useAppLockGate';
+import { OnboardingView } from '../src/features/onboarding/components/OnboardingView';
+import { useOnboardingGate } from '../src/features/onboarding/useOnboardingGate';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeContext';
 import { SwipeNavigationProvider } from '../src/navigation/SwipeNavigationContext';
 import { DailyJokeModal } from '../src/features/dailyJoke/components/DailyJokeModal';
@@ -117,6 +119,11 @@ function MigratedLayout({
   const styles = makeStyles(colors);
   const { success, error } = useMigrations(db, migrations);
   const { isResolved, isLockRequired, unlock } = useAppLockGate();
+  const {
+    isResolved: isOnboardingResolved,
+    isOnboardingRequired,
+    complete: completeOnboarding,
+  } = useOnboardingGate();
 
   if (error) {
     console.error('[DB] Migration fehlgeschlagen:', error);
@@ -127,7 +134,7 @@ function MigratedLayout({
     );
   }
 
-  if (!success || !isResolved) {
+  if (!success || !isResolved || !isOnboardingResolved) {
     return (
       <View style={styles.centered}>
         <Text style={styles.text}>Datenbank wird vorbereitet …</Text>
@@ -137,6 +144,12 @@ function MigratedLayout({
 
   if (isLockRequired) {
     return <LockScreen onUnlock={unlock} onReset={onReset} />;
+  }
+
+  // Nach der Sperre: Wer die App zum ersten Mal oeffnet, hat noch keinen PIN,
+  // und wer einen hat, soll ihn nicht hinter der Einfuehrung eingeben muessen.
+  if (isOnboardingRequired) {
+    return <OnboardingView onDone={completeOnboarding} />;
   }
 
   return (

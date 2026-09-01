@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Alert, Linking, Pressable, ScrollView, Text, TextInput, View, StyleSheet } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { createEncryptedDb } from '../../../src/db/client';
@@ -73,6 +73,7 @@ function isBackupEnvelopeShape(value: unknown): value is BackupEnvelope {
 }
 
 export default function EinstellungenScreen() {
+  const router = useRouter();
   const { themeId, colors, setThemeId } = useTheme();
   const { swipeEnabled, setSwipeEnabled } = useSwipeNavigation();
   const styles = makeStyles(colors);
@@ -493,6 +494,22 @@ export default function EinstellungenScreen() {
             accessibilityLabel="Auch krankheitsbedingte Witze anzeigen"
             disabled={!dailyJokeEnabled}
           />
+        </View>
+
+        <SectionHeading>Einführung</SectionHeading>
+        <Text style={styles.sectionHint}>
+          Die drei Bildschirme vom ersten Start — wofür die App da ist, wo deine Daten liegen und wann sie dich
+          erinnert.
+        </Text>
+        <View style={styles.buttonRow}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Einführung erneut ansehen"
+            style={styles.submitButton}
+            onPress={() => router.push('/willkommen')}
+          >
+            <Text style={styles.submitButtonText}>Einführung erneut ansehen</Text>
+          </Pressable>
         </View>
 
         <SectionHeading>Community</SectionHeading>

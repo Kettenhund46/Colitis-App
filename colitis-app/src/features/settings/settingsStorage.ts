@@ -38,6 +38,17 @@ export async function setIncludeIllnessJokes(enabled: boolean): Promise<void> {
   await AsyncStorage.setItem(INCLUDE_ILLNESS_JOKES_KEY, enabled ? 'true' : 'false');
 }
 
+const ONBOARDING_SEEN_KEY = 'colitis2go.settings.onboardingSeen';
+
+export async function getOnboardingSeen(): Promise<boolean> {
+  const stored = await AsyncStorage.getItem(ONBOARDING_SEEN_KEY);
+  return stored === 'true';
+}
+
+export async function setOnboardingSeen(seen: boolean): Promise<void> {
+  await AsyncStorage.setItem(ONBOARDING_SEEN_KEY, seen ? 'true' : 'false');
+}
+
 const BACKUP_REMINDER_ENABLED_KEY = 'colitis2go.settings.backupReminderEnabled';
 const BACKUP_REMINDER_INTERVAL_DAYS_KEY = 'colitis2go.settings.backupReminderIntervalDays';
 const LAST_BACKUP_AT_KEY = 'colitis2go.settings.lastBackupAt';
