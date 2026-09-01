@@ -8,6 +8,8 @@ export type DayRating = 'good' | 'medium' | 'bad';
 export interface DayTotals {
   totalStoolFrequency: number;
   worstPainLevel: number;
+  /** Stuhlgaenge des Tages, die den Schlaf unterbrochen haben. */
+  nocturnalStools: number;
   /** Die schwerste Blutbeimengung des Tages -- der Mayo-Teilwert nimmt das Schlimmste. */
   worstBloodLevel: BloodLevel;
 }
@@ -21,6 +23,7 @@ export function sumDayTotals(entries: DiaryEntryWithTriggers[]): DayTotals {
   return {
     totalStoolFrequency: entries.reduce((total, entry) => total + entry.stoolFrequency, 0),
     worstPainLevel: entries.reduce((worst, entry) => Math.max(worst, entry.painLevel), 0),
+    nocturnalStools: entries.reduce((total, entry) => total + entry.nocturnalStools, 0),
     worstBloodLevel: entries.reduce<BloodLevel>(
       (worst, entry) => (entry.bloodLevel > worst ? entry.bloodLevel : worst),
       0
@@ -45,6 +48,7 @@ export function rateDiaryEntry(entry: DiaryEntryWithTriggers): DayRating {
   return rateDayTotals({
     totalStoolFrequency: entry.stoolFrequency,
     worstPainLevel: entry.painLevel,
+    nocturnalStools: entry.nocturnalStools,
     worstBloodLevel: entry.bloodLevel,
   });
 }

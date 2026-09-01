@@ -4,6 +4,7 @@ export interface NewDiaryEntryInput {
   occurredAt: string;
   stoolFrequency: number;
   bloodLevel: BloodLevel;
+  nocturnalStools: number;
   stoolConsistency: StoolConsistency;
   painLevel: number;
   symptoms: string[];
@@ -17,6 +18,7 @@ export interface DiaryEntryWithTriggers {
   occurredAt: string;
   stoolFrequency: number;
   bloodLevel: BloodLevel;
+  nocturnalStools: number;
   stoolConsistency: string;
   painLevel: number;
   symptoms: string[];

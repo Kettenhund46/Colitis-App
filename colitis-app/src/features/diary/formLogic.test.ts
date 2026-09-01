@@ -49,6 +49,7 @@ describe('buildDiaryEntryInput', () => {
       {
         stoolFrequency: 4,
         bloodLevel: 1,
+        nocturnalStools: 0,
         stoolConsistency: 'waessrig',
         painLevel: 7,
         symptoms: ['fieber'],
@@ -63,6 +64,7 @@ describe('buildDiaryEntryInput', () => {
       occurredAt: '2026-07-08T10:00:00.000Z',
       stoolFrequency: 4,
       bloodLevel: 1,
+      nocturnalStools: 0,
       stoolConsistency: 'waessrig',
       painLevel: 7,
       symptoms: ['fieber'],

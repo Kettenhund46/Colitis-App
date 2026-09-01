@@ -8,6 +8,7 @@ function makeEntry(overrides: Partial<DiaryEntryWithTriggers> = {}): DiaryEntryW
     occurredAt: '2026-07-08T10:00:00.000Z',
     stoolFrequency: 3,
     bloodLevel: 0,
+    nocturnalStools: 0,
     stoolConsistency: 'weich',
     painLevel: 4,
     symptoms: [],
@@ -28,7 +29,7 @@ describe('buildDiaryCsv', () => {
     const csv = buildDiaryCsv([]);
     const firstLine = csv.slice(1).split('\r\n')[0];
     expect(firstLine).toBe(
-      'Datum;Stuhlgang-Häufigkeit;Konsistenz;Schmerzlevel;Blut im Stuhl;Auslöser;Symptome;Notiz'
+      'Datum;Stuhlgang-Häufigkeit;Konsistenz;Schmerzlevel;Blut im Stuhl;Davon nachts;Auslöser;Symptome;Notiz'
     );
   });
 
@@ -42,7 +43,7 @@ describe('buildDiaryCsv', () => {
     const csv = buildDiaryCsv([makeEntry({ stoolFrequency: 5, stoolConsistency: 'waessrig', painLevel: 8 })]);
     const row = csv.slice(1).split('\r\n')[1];
     expect(row).toContain('08.07.2026');
-    expect(row).toContain(';5;Wässrig;8;Kein Blut;;;');
+    expect(row).toContain(';5;Wässrig;8;Kein Blut;0;;;');
   });
 
   it('names the blood level instead of a yes-no flag', () => {

@@ -65,6 +65,7 @@ export function buildQuickEntryInput(
     occurredAt,
     stoolFrequency: 1,
     bloodLevel: hasBlood ? QUICK_ENTRY_BLOOD_LEVEL : 0,
+    nocturnalStools: 0,
     stoolConsistency: consistency,
     painLevel: 0,
     symptoms: [],

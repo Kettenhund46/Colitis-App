@@ -6,6 +6,7 @@ import {
   formatPeriodLabel,
   formatPhaseLabel,
   formatRatingLabel,
+  formatNocturnalLabel,
   formatRecordedDaysLabel,
   formatSparseDataLabel,
   formatTriggerListLabel,
@@ -64,6 +65,7 @@ function buildFiguresSection(summary: VisitSummary): string {
     </div>
     <h2>Tagesbewertung</h2>
     <p>${escapeHtml(formatRatingLabel(figures))}</p>
+    <p>${escapeHtml(formatNocturnalLabel(figures, summary.daysWithEntries))}</p>
   `;
 }
 

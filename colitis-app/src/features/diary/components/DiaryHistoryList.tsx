@@ -76,6 +76,9 @@ export function DiaryHistoryList({ entries, onDelete, onCreate, hiddenId }: Diar
                   Stuhlgang: {item.stoolFrequency}× · {labelFor(STOOL_CONSISTENCY_OPTIONS, item.stoolConsistency)}
                 </Text>
                 <Text style={styles.cardDetail}>Schmerzlevel: {item.painLevel}/10</Text>
+                {item.nocturnalStools > 0 && (
+                  <Text style={styles.cardDetail}>Davon nachts: {item.nocturnalStools}</Text>
+                )}
                 {item.bloodLevel > 0 && (
                   <Text style={styles.cardWarning}>Blut im Stuhl: {BLOOD_LEVEL_LABELS[item.bloodLevel]}</Text>
                 )}

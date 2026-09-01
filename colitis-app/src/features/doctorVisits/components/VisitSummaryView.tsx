@@ -6,6 +6,7 @@ import {
   formatPeriodLabel,
   formatPhaseLabel,
   formatRatingLabel,
+  formatNocturnalLabel,
   formatRecordedDaysLabel,
   formatSparseDataLabel,
   formatTriggerListLabel,
@@ -93,6 +94,7 @@ export function VisitSummaryView({ summary }: VisitSummaryViewProps) {
 
           <SectionHeading>Tagesbewertung</SectionHeading>
           <Text style={styles.bodyText}>{formatRatingLabel(figures)}</Text>
+          <Text style={styles.bodyText}>{formatNocturnalLabel(figures, summary.daysWithEntries)}</Text>
 
           <SectionHeading>Auffällige Phasen</SectionHeading>
           {summary.phases.length === 0 ? (

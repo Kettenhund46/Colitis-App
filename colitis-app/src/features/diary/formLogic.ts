@@ -4,6 +4,7 @@ import type { NewDiaryEntryInput } from './types';
 export interface DiaryEntryFormState {
   stoolFrequency: number;
   bloodLevel: BloodLevel;
+  nocturnalStools: number;
   stoolConsistency: StoolConsistency | null;
   painLevel: number;
   symptoms: SymptomKey[];
@@ -15,6 +16,7 @@ export interface DiaryEntryFormState {
 export const INITIAL_DIARY_ENTRY_FORM_STATE: DiaryEntryFormState = {
   stoolFrequency: 0,
   bloodLevel: 0,
+  nocturnalStools: 0,
   stoolConsistency: null,
   painLevel: 0,
   symptoms: [],
@@ -52,6 +54,7 @@ export function buildDiaryEntryInput(state: DiaryEntryFormState, occurredAt: str
     occurredAt,
     stoolFrequency: state.stoolFrequency,
     bloodLevel: state.bloodLevel,
+    nocturnalStools: state.nocturnalStools,
     stoolConsistency: state.stoolConsistency,
     painLevel: state.painLevel,
     symptoms: state.symptoms,

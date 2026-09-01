@@ -115,6 +115,8 @@ export const MAX_PHASES = 2;
 export interface SummaryFigures {
   stoolsPerDay: number;
   daysWithBlood: number;
+  /** Tage, an denen mindestens ein Stuhlgang den Schlaf unterbrochen hat. */
+  daysWithNocturnalStools: number;
   averagePainLevel: number;
   goodDays: number;
   mediumDays: number;
@@ -176,6 +178,7 @@ function figuresFromDays(byDay: DaysWithEntries): SummaryFigures | null {
   let totalStools = 0;
   let totalWorstPain = 0;
   let daysWithBlood = 0;
+  let daysWithNocturnalStools = 0;
   let goodDays = 0;
   let mediumDays = 0;
   let badDays = 0;
@@ -186,6 +189,9 @@ function figuresFromDays(byDay: DaysWithEntries): SummaryFigures | null {
     totalWorstPain += totals.worstPainLevel;
     if (hasBlood(totals)) {
       daysWithBlood += 1;
+    }
+    if (totals.nocturnalStools > 0) {
+      daysWithNocturnalStools += 1;
     }
     const rating = rateDayTotals(totals);
     if (rating === 'good') {
@@ -202,6 +208,7 @@ function figuresFromDays(byDay: DaysWithEntries): SummaryFigures | null {
   return {
     stoolsPerDay: roundToOne(totalStools / byDay.size),
     daysWithBlood,
+    daysWithNocturnalStools,
     averagePainLevel: roundToOne(totalWorstPain / byDay.size),
     goodDays,
     mediumDays,
@@ -496,6 +503,20 @@ function buildActivitySummary(
   }
 
   return { average, latest: latest.index, latestDate: latest.date, dayCount: points.length };
+}
+
+/**
+ * Naechtliche Stuhlgaenge zaehlen nicht in den 6-Punkte-Mayo -- der kennt sie
+ * nicht. Sie stehen trotzdem im Dokument, weil sie in der Sprechstunde
+ * gefragt werden.
+ */
+export function formatNocturnalLabel(figures: SummaryFigures, daysWithEntries: number): string {
+  if (figures.daysWithNocturnalStools === 0) {
+    return 'Kein Stuhlgang hat den Schlaf unterbrochen.';
+  }
+  return `Nächtliche Stuhlgänge an ${figures.daysWithNocturnalStools} von ${formatDayCountDative(
+    daysWithEntries
+  )} mit Eintrag.`;
 }
 
 export const NO_ACTIVITY_DATA_TEXT =

@@ -9,6 +9,12 @@ export const diaryEntries = sqliteTable('diary_entries', {
    * 0 kein Blut, 1 Schlieren, 2 sichtbares Blut, 3 nur Blut.
    */
   bloodLevel: integer('blood_level').notNull().default(0),
+  /**
+   * Stuhlgaenge, die den Schlaf unterbrochen haben. Gehen nicht in den
+   * 6-Punkte-Mayo ein -- der kennt sie nicht --, sind aber ein starker
+   * Hinweis auf Aktivitaet und stehen deshalb im Arztdokument.
+   */
+  nocturnalStools: integer('nocturnal_stools').notNull().default(0),
   stoolConsistency: text('stool_consistency').notNull(),
   painLevel: integer('pain_level').notNull(),
   symptoms: text('symptoms').notNull(),

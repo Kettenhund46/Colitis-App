@@ -9,6 +9,7 @@ const CURRENT_ROW: DiaryRow = {
   occurredAt: '2026-07-14T09:00:00.000Z',
   stoolFrequency: 3,
   bloodLevel: 2,
+  nocturnalStools: 0,
   stoolConsistency: 'weich',
   painLevel: 4,
   symptoms: 'Bauchschmerzen',

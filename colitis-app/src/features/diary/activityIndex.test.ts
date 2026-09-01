@@ -16,7 +16,7 @@ import type { BloodLevel } from './constants';
 import type { DiaryEntryWithTriggers } from './types';
 
 function totals(totalStoolFrequency: number, worstBloodLevel: BloodLevel = 0): DayTotals {
-  return { totalStoolFrequency, worstPainLevel: 0, worstBloodLevel };
+  return { totalStoolFrequency, worstPainLevel: 0, nocturnalStools: 0, worstBloodLevel };
 }
 
 function localIso(year: number, month: number, day: number, hour = 9): string {
@@ -28,6 +28,7 @@ function entry(overrides: Partial<DiaryEntryWithTriggers> & { id: number }): Dia
     occurredAt: localIso(2026, 8, 1),
     stoolFrequency: 0,
     bloodLevel: 0,
+    nocturnalStools: 0,
     stoolConsistency: 'normal',
     painLevel: 0,
     symptoms: [],

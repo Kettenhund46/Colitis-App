@@ -15,6 +15,7 @@ import {
   formatMedicationDetailLabel,
   buildVisitSummary,
   formatActivityLabel,
+  formatNocturnalLabel,
 } from './visitSummary';
 import type { DoctorVisit } from './types';
 import type { DiaryEntryWithTriggers } from '../diary/types';
@@ -37,6 +38,7 @@ function entry(
   return {
     stoolFrequency: 1,
     bloodLevel: 0,
+    nocturnalStools: 0,
     stoolConsistency: 'weich',
     painLevel: 0,
     symptoms: [],
@@ -390,6 +392,7 @@ describe('visitSummary', () => {
       const label = formatRatingLabel({
         stoolsPerDay: 3.2,
         daysWithBlood: 12,
+        daysWithNocturnalStools: 0,
         averagePainLevel: 2.4,
         goodDays: 71,
         mediumDays: 18,
@@ -837,6 +840,36 @@ describe('visitSummary', () => {
         expect(summary.activity?.average).toBe(0);
       });
     });
+  });
+});
+
+describe('formatNocturnalLabel', () => {
+  function figures(daysWithNocturnalStools: number) {
+    return {
+      stoolsPerDay: 3,
+      daysWithBlood: 0,
+      daysWithNocturnalStools,
+      averagePainLevel: 1,
+      goodDays: 5,
+      mediumDays: 1,
+      badDays: 1,
+    };
+  }
+
+  it('says plainly when sleep was never interrupted', () => {
+    expect(formatNocturnalLabel(figures(0), 7)).toBe('Kein Stuhlgang hat den Schlaf unterbrochen.');
+  });
+
+  it('counts the affected days against the recorded ones', () => {
+    expect(formatNocturnalLabel(figures(4), 21)).toBe(
+      'Nächtliche Stuhlgänge an 4 von 21 Tagen mit Eintrag.'
+    );
+  });
+
+  it('uses the dative singular for a single recorded day', () => {
+    expect(formatNocturnalLabel(figures(1), 1)).toBe(
+      'Nächtliche Stuhlgänge an 1 von 1 Tag mit Eintrag.'
+    );
   });
 });
 

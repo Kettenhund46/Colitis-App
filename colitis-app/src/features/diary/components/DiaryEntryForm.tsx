@@ -60,6 +60,14 @@ export function DiaryEntryForm({ onSubmit }: DiaryEntryFormProps) {
         max={20}
       />
 
+      <NumberStepper
+        label="Davon nachts (den Schlaf unterbrochen)"
+        value={formState.nocturnalStools}
+        onChange={(next) => setFormState({ ...formState, nocturnalStools: next })}
+        min={0}
+        max={20}
+      />
+
       <Text style={styles.sectionLabel}>Blut im Stuhl</Text>
       <Text style={styles.sectionHint}>
         Die Stufen entsprechen dem Blut-Teilwert des Mayo-Scores und gehen in die Krankheitsaktivität ein.

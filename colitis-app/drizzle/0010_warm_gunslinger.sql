@@ -1,0 +1,1 @@
+ALTER TABLE `diary_entries` ADD `nocturnal_stools` integer DEFAULT 0 NOT NULL;

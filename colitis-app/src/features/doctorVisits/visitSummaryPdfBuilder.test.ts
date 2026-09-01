@@ -16,6 +16,7 @@ function summary(overrides: Partial<VisitSummary> = {}): VisitSummary {
     figures: {
       stoolsPerDay: 3.2,
       daysWithBlood: 12,
+      daysWithNocturnalStools: 0,
       averagePainLevel: 2.4,
       goodDays: 71,
       mediumDays: 18,

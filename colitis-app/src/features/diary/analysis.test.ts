@@ -8,6 +8,7 @@ function buildEntry(overrides: Partial<DiaryEntryWithTriggers>): DiaryEntryWithT
     occurredAt: '2026-07-01T08:00:00.000Z',
     stoolFrequency: 3,
     bloodLevel: 0,
+    nocturnalStools: 0,
     stoolConsistency: 'normal',
     painLevel: 4,
     symptoms: [],
