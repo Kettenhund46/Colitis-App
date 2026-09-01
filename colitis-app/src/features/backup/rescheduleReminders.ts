@@ -4,6 +4,7 @@ import {
   rememberScheduledReminder,
   requestNotificationPermission,
   scheduleDailyReminder,
+  scheduleDateReminder,
   scheduleScreeningReminder,
 } from '../../lib/notifications/notificationService';
 import {
@@ -12,10 +13,19 @@ import {
 } from '../medications/notifications/reminderContent';
 import { setReminderTimeNotificationId } from '../medications/db/medicationsRepository';
 import { setScreeningReminderNotificationId } from '../medications/db/screeningRepository';
+import { setDoctorVisitNotificationId } from '../doctorVisits/db/doctorVisitsRepository';
+import {
+  buildAppointmentReminderTrigger,
+  buildAppointmentReminderContent,
+} from '../doctorVisits/appointmentReminder';
 import type { BackupDb } from './db/backupRepository';
 import type { BackupData } from './types';
 
-export async function rescheduleAllReminders(db: BackupDb, data: BackupData): Promise<void> {
+export async function rescheduleAllReminders(
+  db: BackupDb,
+  data: BackupData,
+  now: Date = new Date()
+): Promise<void> {
   configureNotificationHandling();
 
   await cancelAllScheduledReminders();
@@ -27,6 +37,9 @@ export async function rescheduleAllReminders(db: BackupDb, data: BackupData): Pr
     }
     for (const screeningReminder of data.tables.screeningReminders) {
       await setScreeningReminderNotificationId(db, screeningReminder.id, null);
+    }
+    for (const visit of data.tables.doctorVisits) {
+      await setDoctorVisitNotificationId(db, visit.id, null);
     }
     return;
   }
@@ -50,5 +63,23 @@ export async function rescheduleAllReminders(db: BackupDb, data: BackupData): Pr
     await rememberScheduledReminder(notificationId, (id) =>
       setScreeningReminderNotificationId(db, screeningReminder.id, id)
     );
+  }
+
+  // Die aus der Sicherung stammenden Kennungen zeigen ins Leere -- oben wurde
+  // alles storniert. Jeder Besuch bekommt deshalb entweder eine neue Kennung
+  // oder ausdruecklich keine.
+  for (const visit of data.tables.doctorVisits) {
+    const trigger =
+      visit.nextAppointmentDate === null
+        ? null
+        : buildAppointmentReminderTrigger(visit.nextAppointmentDate, now);
+
+    if (trigger === null) {
+      await setDoctorVisitNotificationId(db, visit.id, null);
+      continue;
+    }
+
+    const notificationId = await scheduleDateReminder(trigger.date, buildAppointmentReminderContent(visit));
+    await rememberScheduledReminder(notificationId, (id) => setDoctorVisitNotificationId(db, visit.id, id));
   }
 }

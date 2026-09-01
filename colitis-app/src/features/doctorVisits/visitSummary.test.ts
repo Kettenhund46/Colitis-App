@@ -25,6 +25,7 @@ function visit(overrides: Partial<DoctorVisit> & { id: number; visitDate: string
     reason: null,
     note: null,
     nextAppointmentDate: null,
+    nextAppointmentNotificationId: null,
     ...overrides,
   };
 }

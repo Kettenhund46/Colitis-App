@@ -111,6 +111,9 @@ describe('doctor visits repository', () => {
       reason: 'Akuter Schub',
       note: 'Kortison-Stoß begonnen.',
       nextAppointmentDate: '2026-08-01',
+      // Das Bearbeiten fasst die Kennung nicht an -- geplant wird eine Ebene
+      // darueber, in rescheduleAppointmentReminder.
+      nextAppointmentNotificationId: null,
     });
   });
 

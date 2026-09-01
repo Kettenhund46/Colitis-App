@@ -3,6 +3,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../../src/db/client';
 import { listDoctorVisits, deleteDoctorVisit } from '../../../../src/features/doctorVisits/db/doctorVisitsRepository';
+import { cancelAppointmentReminder } from '../../../../src/features/doctorVisits/scheduleAppointmentReminder';
 import { exportDoctorVisitPass } from '../../../../src/features/doctorVisits/doctorVisitPassExport';
 import { DoctorVisitList } from '../../../../src/features/doctorVisits/components/DoctorVisitList';
 import { SkeletonList } from '../../../../src/components/ui/SkeletonList';
@@ -53,6 +54,9 @@ export default function ArztbesucheScreen() {
   const { pending, requestDelete, undo } = usePendingDeletion<number>(async (visitId) => {
     try {
       const db = await createEncryptedDb();
+      // Vor dem Loeschen: Danach ist die Kennung weg, die Benachrichtigung
+      // aber noch geplant.
+      await cancelAppointmentReminder(db, visitId);
       await deleteDoctorVisit(db, visitId);
       setVisits(await listDoctorVisits(db));
       setError(null);

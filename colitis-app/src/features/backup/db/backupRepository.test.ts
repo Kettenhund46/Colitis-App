@@ -289,6 +289,7 @@ describe('backup repository', () => {
             reason: 'Kontrolle',
             note: null,
             nextAppointmentDate: null,
+            nextAppointmentNotificationId: null,
           },
         ],
       },

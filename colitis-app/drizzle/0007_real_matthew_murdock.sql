@@ -1,0 +1,1 @@
+ALTER TABLE `doctor_visits` ADD `next_appointment_notification_id` text;

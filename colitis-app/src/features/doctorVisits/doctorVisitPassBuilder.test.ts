@@ -24,6 +24,7 @@ describe('buildDoctorVisitPassHtml', () => {
       reason: 'Kontrolle',
       note: 'Blutwerte unauffällig',
       nextAppointmentDate: '2026-10-20',
+      nextAppointmentNotificationId: null,
     };
 
     const html = buildDoctorVisitPassHtml([visit], today);
@@ -43,6 +44,7 @@ describe('buildDoctorVisitPassHtml', () => {
       reason: null,
       note: null,
       nextAppointmentDate: null,
+      nextAppointmentNotificationId: null,
     };
 
     const html = buildDoctorVisitPassHtml([visit], today);
@@ -59,6 +61,7 @@ describe('buildDoctorVisitPassHtml', () => {
       reason: null,
       note: null,
       nextAppointmentDate: null,
+      nextAppointmentNotificationId: null,
     };
 
     const html = buildDoctorVisitPassHtml([visit], today);

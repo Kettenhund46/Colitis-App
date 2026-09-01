@@ -79,6 +79,10 @@ export function DoctorVisitForm({ initialState, onSubmit, submitLabel }: DoctorV
       />
 
       <Text style={styles.sectionLabel}>Nächster Termin (optional, JJJJ-MM-TT)</Text>
+      <Text style={styles.hintText}>
+        Ist ein Termin eingetragen, erinnert dich die App am Vorabend um 18:00 Uhr. Dafür wird beim Speichern die
+        Benachrichtigungserlaubnis angefragt; bei Ablehnung wird der Termin trotzdem gespeichert.
+      </Text>
       <TextInput
         style={styles.textInput}
         placeholder="Leer lassen, falls noch kein Folgetermin bekannt"
@@ -120,6 +124,11 @@ function makeStyles(colors: ThemeColors) {
       fontWeight: tokens.typography.fontWeight.medium,
       marginBottom: tokens.spacing.xs,
       marginTop: tokens.spacing.sm,
+    },
+    hintText: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      marginBottom: tokens.spacing.sm,
     },
     textInput: {
       borderWidth: 1,

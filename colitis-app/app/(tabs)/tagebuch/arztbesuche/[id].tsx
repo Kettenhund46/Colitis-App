@@ -3,6 +3,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../../src/db/client';
 import { getDoctorVisitById, updateDoctorVisit } from '../../../../src/features/doctorVisits/db/doctorVisitsRepository';
+import { rescheduleAppointmentReminder } from '../../../../src/features/doctorVisits/scheduleAppointmentReminder';
 import { DoctorVisitForm } from '../../../../src/features/doctorVisits/components/DoctorVisitForm';
 import { saveFeedback } from '../../../../src/lib/haptics';
 import { useTheme } from '../../../../src/theme/ThemeContext';
@@ -49,6 +50,7 @@ export default function ArztbesuchBearbeitenScreen() {
     try {
       const db = await createEncryptedDb();
       await updateDoctorVisit(db, visitId, input);
+      await rescheduleAppointmentReminder(db, visitId);
       setSaveError(null);
       saveFeedback();
       router.back();

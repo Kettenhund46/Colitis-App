@@ -25,6 +25,7 @@ export async function createDoctorVisit(db: DoctorVisitsDb, input: DoctorVisitIn
     reason: input.reason,
     note: input.note,
     nextAppointmentDate: input.nextAppointmentDate,
+    nextAppointmentNotificationId: null,
   };
 }
 
@@ -55,6 +56,17 @@ export async function updateDoctorVisit(db: DoctorVisitsDb, visitId: number, inp
       note: input.note,
       nextAppointmentDate: input.nextAppointmentDate,
     })
+    .where(eq(doctorVisits.id, visitId));
+}
+
+export async function setDoctorVisitNotificationId(
+  db: DoctorVisitsDb,
+  visitId: number,
+  notificationId: string | null
+): Promise<void> {
+  await db
+    .update(doctorVisits)
+    .set({ nextAppointmentNotificationId: notificationId })
     .where(eq(doctorVisits.id, visitId));
 }
 

@@ -8,6 +8,7 @@ import m0003 from './0003_add_cached_feed_items.sql';
 import m0004 from './0004_absurd_quasar.sql';
 import m0005 from './0005_curious_diamondback.sql';
 import m0006 from './0006_milky_vance_astro.sql';
+import m0007 from './0007_real_matthew_murdock.sql';
 
   export default {
     journal,
@@ -18,7 +19,8 @@ m0002,
 m0003,
 m0004,
 m0005,
-m0006
+m0006,
+m0007
     }
   }
   

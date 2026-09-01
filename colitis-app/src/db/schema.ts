@@ -106,4 +106,5 @@ export const doctorVisits = sqliteTable('doctor_visits', {
   reason: text('reason'),
   note: text('note'),
   nextAppointmentDate: text('next_appointment_date'),
+  nextAppointmentNotificationId: text('next_appointment_notification_id'),
 });

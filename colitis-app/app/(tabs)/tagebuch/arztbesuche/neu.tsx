@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../../src/db/client';
 import { createDoctorVisit } from '../../../../src/features/doctorVisits/db/doctorVisitsRepository';
+import { rescheduleAppointmentReminder } from '../../../../src/features/doctorVisits/scheduleAppointmentReminder';
 import { DoctorVisitForm } from '../../../../src/features/doctorVisits/components/DoctorVisitForm';
 import { saveFeedback } from '../../../../src/lib/haptics';
 import { useTheme } from '../../../../src/theme/ThemeContext';
@@ -19,7 +20,8 @@ export default function NeuerArztbesuchScreen() {
   async function handleSubmit(input: DoctorVisitInput) {
     try {
       const db = await createEncryptedDb();
-      await createDoctorVisit(db, input);
+      const visit = await createDoctorVisit(db, input);
+      await rescheduleAppointmentReminder(db, visit.id);
       setSaveError(null);
       saveFeedback();
       router.back();
