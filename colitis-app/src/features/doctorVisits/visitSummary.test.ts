@@ -35,7 +35,7 @@ function entry(
 ): DiaryEntryWithTriggers {
   return {
     stoolFrequency: 1,
-    hasBlood: false,
+    bloodLevel: 0,
     stoolConsistency: 'weich',
     painLevel: 0,
     symptoms: [],
@@ -224,8 +224,8 @@ describe('visitSummary', () => {
 
     it('counts a day with blood once, however many entries it has', () => {
       const entries = [
-        entry({ id: 1, occurredAt: localIso(2026, 8, 1, 9), hasBlood: true }),
-        entry({ id: 2, occurredAt: localIso(2026, 8, 1, 18), hasBlood: true }),
+        entry({ id: 1, occurredAt: localIso(2026, 8, 1, 9), bloodLevel: 1 }),
+        entry({ id: 2, occurredAt: localIso(2026, 8, 1, 18), bloodLevel: 1 }),
         ...[2, 3, 4, 5, 6, 7].map((day) => entry({ id: day + 10, occurredAt: localIso(2026, 8, day) })),
       ];
       expect(computeFigures(entries, PERIOD_AUGUST)?.daysWithBlood).toBe(1);
@@ -247,7 +247,7 @@ describe('visitSummary', () => {
       const entries = [
         ...[1, 2, 3, 4, 5].map((day) => entry({ id: day, occurredAt: localIso(2026, 8, day) })),
         entry({ id: 6, occurredAt: localIso(2026, 8, 6), painLevel: 5 }),
-        entry({ id: 7, occurredAt: localIso(2026, 8, 7), hasBlood: true }),
+        entry({ id: 7, occurredAt: localIso(2026, 8, 7), bloodLevel: 1 }),
       ];
       const figures = computeFigures(entries, PERIOD_AUGUST);
       expect(figures?.goodDays).toBe(5);
@@ -266,7 +266,7 @@ describe('visitSummary', () => {
 
   describe('findNotablePhases', () => {
     function badDay(id: number, day: number, withBlood = false): DiaryEntryWithTriggers {
-      return entry({ id, occurredAt: localIso(2026, 8, day), painLevel: 8, hasBlood: withBlood });
+      return entry({ id, occurredAt: localIso(2026, 8, day), painLevel: 8, bloodLevel: withBlood ? 1 : 0 });
     }
 
     function goodDay(id: number, day: number): DiaryEntryWithTriggers {

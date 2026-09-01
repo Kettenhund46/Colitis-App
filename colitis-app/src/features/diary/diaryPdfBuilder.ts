@@ -1,4 +1,10 @@
-import { STOOL_CONSISTENCY_OPTIONS, SYMPTOM_OPTIONS, labelFor, buildTriggerLabels } from './constants';
+import {
+  STOOL_CONSISTENCY_OPTIONS,
+  SYMPTOM_OPTIONS,
+  BLOOD_LEVEL_LABELS,
+  labelFor,
+  buildTriggerLabels,
+} from './constants';
 import { formatOccurredAt } from './formatting';
 import type { DiaryEntryWithTriggers } from './types';
 
@@ -20,7 +26,11 @@ function buildEntrySection(entry: DiaryEntryWithTriggers): string {
       <h2>${escapeHtml(formatOccurredAt(entry.occurredAt))}</h2>
       <p>Stuhlgang: ${entry.stoolFrequency}&times; &middot; ${escapeHtml(consistencyLabel)}</p>
       <p>Schmerzlevel: ${entry.painLevel}/10</p>
-      ${entry.hasBlood ? '<p class="warning">Blut im Stuhl</p>' : ''}
+      ${
+        entry.bloodLevel > 0
+          ? `<p class="warning">Blut im Stuhl: ${escapeHtml(BLOOD_LEVEL_LABELS[entry.bloodLevel])}</p>`
+          : ''
+      }
       ${triggerLabels.length > 0 ? `<p>Auslöser: ${escapeHtml(triggerLabels.join(', '))}</p>` : ''}
       ${symptomLabels.length > 0 ? `<p>Symptome: ${escapeHtml(symptomLabels.join(', '))}</p>` : ''}
       ${entry.note ? `<p class="note">${escapeHtml(entry.note)}</p>` : ''}

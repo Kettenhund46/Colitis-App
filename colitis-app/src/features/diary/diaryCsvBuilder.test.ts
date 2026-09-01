@@ -7,7 +7,7 @@ function makeEntry(overrides: Partial<DiaryEntryWithTriggers> = {}): DiaryEntryW
     id: 1,
     occurredAt: '2026-07-08T10:00:00.000Z',
     stoolFrequency: 3,
-    hasBlood: false,
+    bloodLevel: 0,
     stoolConsistency: 'weich',
     painLevel: 4,
     symptoms: [],
@@ -42,15 +42,17 @@ describe('buildDiaryCsv', () => {
     const csv = buildDiaryCsv([makeEntry({ stoolFrequency: 5, stoolConsistency: 'waessrig', painLevel: 8 })]);
     const row = csv.slice(1).split('\r\n')[1];
     expect(row).toContain('08.07.2026');
-    expect(row).toContain(';5;Wässrig;8;Nein;;;');
+    expect(row).toContain(';5;Wässrig;8;Kein Blut;;;');
   });
 
-  it('renders "Ja" or "Nein" for blood in stool', () => {
-    const withBlood = buildDiaryCsv([makeEntry({ hasBlood: true })]);
-    expect(withBlood.slice(1).split('\r\n')[1]).toContain(';Ja;');
+  it('names the blood level instead of a yes-no flag', () => {
+    const rowFor = (bloodLevel: 0 | 1 | 2 | 3) =>
+      buildDiaryCsv([makeEntry({ bloodLevel })]).slice(1).split('\r\n')[1];
 
-    const withoutBlood = buildDiaryCsv([makeEntry({ hasBlood: false })]);
-    expect(withoutBlood.slice(1).split('\r\n')[1]).toContain(';Nein;');
+    expect(rowFor(0)).toContain(';Kein Blut;');
+    expect(rowFor(1)).toContain(';Schlieren;');
+    expect(rowFor(2)).toContain(';Sichtbares Blut;');
+    expect(rowFor(3)).toContain(';Nur Blut;');
   });
 
   it('joins multiple trigger and symptom labels with commas inside one cell', () => {

@@ -1,9 +1,9 @@
-import type { StoolConsistency, TriggerCategory } from './constants';
+import type { BloodLevel, StoolConsistency, TriggerCategory } from './constants';
 
 export interface NewDiaryEntryInput {
   occurredAt: string;
   stoolFrequency: number;
-  hasBlood: boolean;
+  bloodLevel: BloodLevel;
   stoolConsistency: StoolConsistency;
   painLevel: number;
   symptoms: string[];
@@ -16,7 +16,7 @@ export interface DiaryEntryWithTriggers {
   id: number;
   occurredAt: string;
   stoolFrequency: number;
-  hasBlood: boolean;
+  bloodLevel: BloodLevel;
   stoolConsistency: string;
   painLevel: number;
   symptoms: string[];

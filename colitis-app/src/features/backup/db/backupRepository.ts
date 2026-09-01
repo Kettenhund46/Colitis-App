@@ -12,6 +12,7 @@ import {
 } from '../../../db/schema';
 import * as schema from '../../../db/schema';
 import { BACKUP_FORMAT_VERSION, type BackupData } from '../types';
+import { normalizeDiaryRow } from '../legacyDiaryRow';
 
 export type BackupDb = BaseSQLiteDatabase<'sync', any, typeof schema>;
 
@@ -48,7 +49,7 @@ export async function importBackupData(db: BackupDb, data: BackupData): Promise<
 
     // Eltern vor Kindern einfuegen, mit den urspruenglichen IDs aus dem Backup.
     for (const row of data.tables.diaryEntries) {
-      tx.insert(diaryEntries).values(row).run();
+      tx.insert(diaryEntries).values(normalizeDiaryRow(row)).run();
     }
     for (const row of data.tables.medications) {
       tx.insert(medications).values(row).run();

@@ -4,7 +4,11 @@ export const diaryEntries = sqliteTable('diary_entries', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   occurredAt: text('occurred_at').notNull(),
   stoolFrequency: integer('stool_frequency').notNull(),
-  hasBlood: integer('has_blood', { mode: 'boolean' }).notNull(),
+  /**
+   * Blutbeimengung in vier Stufen, nach dem Blut-Teilwert des Mayo-Scores:
+   * 0 kein Blut, 1 Schlieren, 2 sichtbares Blut, 3 nur Blut.
+   */
+  bloodLevel: integer('blood_level').notNull().default(0),
   stoolConsistency: text('stool_consistency').notNull(),
   painLevel: integer('pain_level').notNull(),
   symptoms: text('symptoms').notNull(),

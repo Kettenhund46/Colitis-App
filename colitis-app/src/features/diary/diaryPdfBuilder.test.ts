@@ -7,7 +7,7 @@ function makeEntry(overrides: Partial<DiaryEntryWithTriggers> = {}): DiaryEntryW
     id: 1,
     occurredAt: '2026-07-08T10:00:00.000Z',
     stoolFrequency: 3,
-    hasBlood: false,
+    bloodLevel: 0,
     stoolConsistency: 'weich',
     painLevel: 4,
     symptoms: [],
@@ -38,10 +38,10 @@ describe('buildDiaryPdfHtml', () => {
   });
 
   it('flags blood in stool only when present', () => {
-    const withBlood = buildDiaryPdfHtml([makeEntry({ hasBlood: true })]);
+    const withBlood = buildDiaryPdfHtml([makeEntry({ bloodLevel: 1 })]);
     expect(withBlood).toContain('Blut im Stuhl');
 
-    const withoutBlood = buildDiaryPdfHtml([makeEntry({ hasBlood: false })]);
+    const withoutBlood = buildDiaryPdfHtml([makeEntry({ bloodLevel: 0 })]);
     expect(withoutBlood).not.toContain('Blut im Stuhl');
   });
 

@@ -1,4 +1,5 @@
 import type { DiaryEntryWithTriggers } from './types';
+import type { BloodLevel } from './constants';
 import type { CardAccent } from '../../components/ui/Card';
 import { formatLocalDateKey as formatDateKey } from '../../lib/localDate';
 
@@ -7,19 +8,28 @@ export type DayRating = 'good' | 'medium' | 'bad';
 export interface DayTotals {
   totalStoolFrequency: number;
   worstPainLevel: number;
-  hasBlood: boolean;
+  /** Die schwerste Blutbeimengung des Tages -- der Mayo-Teilwert nimmt das Schlimmste. */
+  worstBloodLevel: BloodLevel;
+}
+
+/** Ob an diesem Tag ueberhaupt Blut vermerkt war. */
+export function hasBlood(totals: DayTotals): boolean {
+  return totals.worstBloodLevel > 0;
 }
 
 export function sumDayTotals(entries: DiaryEntryWithTriggers[]): DayTotals {
   return {
     totalStoolFrequency: entries.reduce((total, entry) => total + entry.stoolFrequency, 0),
     worstPainLevel: entries.reduce((worst, entry) => Math.max(worst, entry.painLevel), 0),
-    hasBlood: entries.some((entry) => entry.hasBlood),
+    worstBloodLevel: entries.reduce<BloodLevel>(
+      (worst, entry) => (entry.bloodLevel > worst ? entry.bloodLevel : worst),
+      0
+    ),
   };
 }
 
 export function rateDayTotals(totals: DayTotals): DayRating {
-  if (totals.hasBlood) {
+  if (hasBlood(totals)) {
     return 'bad';
   }
   if (totals.worstPainLevel >= 7 || totals.totalStoolFrequency >= 8) {
@@ -35,7 +45,7 @@ export function rateDiaryEntry(entry: DiaryEntryWithTriggers): DayRating {
   return rateDayTotals({
     totalStoolFrequency: entry.stoolFrequency,
     worstPainLevel: entry.painLevel,
-    hasBlood: entry.hasBlood,
+    worstBloodLevel: entry.bloodLevel,
   });
 }
 

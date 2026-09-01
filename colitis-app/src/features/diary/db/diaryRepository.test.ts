@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as schema from '../../../db/schema';
 import {
@@ -12,18 +12,26 @@ import {
 } from './diaryRepository';
 import { triggers } from '../../../db/schema';
 
+// Alle Migrationen, nicht nur die erste: Bis zur Blutstufe hatte sich
+// diary_entries seit 0000 nie geaendert, weshalb die Abkuerzung lange nicht
+// auffiel. Die uebrigen Feature-Tests machen es seit jeher so.
 function createTestDb() {
   const sqlite = new Database(':memory:');
-  const migrationSql = readFileSync(
-    join(__dirname, '../../../../drizzle/0000_remarkable_junta.sql'),
-    'utf-8'
-  );
-  for (const statement of migrationSql.split('--> statement-breakpoint')) {
-    const trimmed = statement.trim();
-    if (trimmed.length > 0) {
-      sqlite.exec(trimmed);
+  const migrationsDir = join(__dirname, '../../../../drizzle');
+  const migrationFiles = readdirSync(migrationsDir)
+    .filter((file) => file.endsWith('.sql'))
+    .sort();
+
+  for (const file of migrationFiles) {
+    const migrationSql = readFileSync(join(migrationsDir, file), 'utf-8');
+    for (const statement of migrationSql.split('--> statement-breakpoint')) {
+      const trimmed = statement.trim();
+      if (trimmed.length > 0) {
+        sqlite.exec(trimmed);
+      }
     }
   }
+
   return drizzle(sqlite, { schema });
 }
 
@@ -38,7 +46,7 @@ describe('diary repository', () => {
     const id = await createDiaryEntry(db, {
       occurredAt: '2026-07-08T10:00:00.000Z',
       stoolFrequency: 3,
-      hasBlood: false,
+      bloodLevel: 0,
       stoolConsistency: 'weich',
       painLevel: 4,
       symptoms: ['bauchschmerzen', 'muedigkeit'],
@@ -54,7 +62,7 @@ describe('diary repository', () => {
     await createDiaryEntry(db, {
       occurredAt: '2026-07-06T08:00:00.000Z',
       stoolFrequency: 1,
-      hasBlood: false,
+      bloodLevel: 0,
       stoolConsistency: 'normal',
       painLevel: 1,
       symptoms: [],
@@ -65,7 +73,7 @@ describe('diary repository', () => {
     await createDiaryEntry(db, {
       occurredAt: '2026-07-08T08:00:00.000Z',
       stoolFrequency: 5,
-      hasBlood: true,
+      bloodLevel: 1,
       stoolConsistency: 'waessrig',
       painLevel: 8,
       symptoms: ['fieber'],
@@ -86,7 +94,7 @@ describe('diary repository', () => {
     await createDiaryEntry(db, {
       occurredAt: '2026-07-08T09:00:00.000Z',
       stoolFrequency: 2,
-      hasBlood: false,
+      bloodLevel: 0,
       stoolConsistency: 'hart',
       painLevel: 2,
       symptoms: ['kraempfe', 'gelenkschmerzen'],
@@ -103,7 +111,7 @@ describe('diary repository', () => {
     await createDiaryEntry(db, {
       occurredAt: '2026-07-08T10:00:00.000Z',
       stoolFrequency: 3,
-      hasBlood: false,
+      bloodLevel: 0,
       stoolConsistency: 'weich',
       painLevel: 4,
       symptoms: [],
@@ -120,7 +128,7 @@ describe('diary repository', () => {
     await createDiaryEntry(db, {
       occurredAt: '2026-07-08T10:00:00.000Z',
       stoolFrequency: 3,
-      hasBlood: false,
+      bloodLevel: 0,
       stoolConsistency: 'weich',
       painLevel: 4,
       symptoms: [],
@@ -137,7 +145,7 @@ describe('diary repository', () => {
     const id = await createDiaryEntry(db, {
       occurredAt: '2026-07-08T10:00:00.000Z',
       stoolFrequency: 3,
-      hasBlood: false,
+      bloodLevel: 0,
       stoolConsistency: 'weich',
       painLevel: 4,
       symptoms: [],
@@ -156,7 +164,7 @@ describe('diary repository', () => {
     const keptId = await createDiaryEntry(db, {
       occurredAt: '2026-07-06T08:00:00.000Z',
       stoolFrequency: 1,
-      hasBlood: false,
+      bloodLevel: 0,
       stoolConsistency: 'normal',
       painLevel: 1,
       symptoms: [],
@@ -167,7 +175,7 @@ describe('diary repository', () => {
     const deletedId = await createDiaryEntry(db, {
       occurredAt: '2026-07-08T08:00:00.000Z',
       stoolFrequency: 5,
-      hasBlood: true,
+      bloodLevel: 1,
       stoolConsistency: 'waessrig',
       painLevel: 8,
       symptoms: [],
@@ -186,7 +194,7 @@ describe('diary repository', () => {
     const id = await createDiaryEntry(db, {
       occurredAt: '2026-07-27T09:00:00.000Z',
       stoolFrequency: 2,
-      hasBlood: false,
+      bloodLevel: 0,
       stoolConsistency: 'normal',
       painLevel: 6,
       symptoms: ['bauchschmerzen', 'muedigkeit'],
@@ -197,14 +205,14 @@ describe('diary repository', () => {
 
     await updateDiaryEntryQuickFields(db, id, {
       stoolFrequency: 3,
-      hasBlood: true,
+      bloodLevel: 1,
       stoolConsistency: 'waessrig',
     });
 
     const [entry] = await listDiaryEntries(db);
 
     expect(entry.stoolFrequency).toBe(3);
-    expect(entry.hasBlood).toBe(true);
+    expect(entry.bloodLevel).toBe(1);
     expect(entry.stoolConsistency).toBe('waessrig');
 
     expect(entry.occurredAt).toBe('2026-07-27T09:00:00.000Z');
@@ -219,7 +227,7 @@ describe('diary repository', () => {
     const firstId = await createDiaryEntry(db, {
       occurredAt: '2026-07-26T09:00:00.000Z',
       stoolFrequency: 1,
-      hasBlood: false,
+      bloodLevel: 0,
       stoolConsistency: 'hart',
       painLevel: 0,
       symptoms: [],
@@ -230,7 +238,7 @@ describe('diary repository', () => {
     const secondId = await createDiaryEntry(db, {
       occurredAt: '2026-07-27T09:00:00.000Z',
       stoolFrequency: 1,
-      hasBlood: false,
+      bloodLevel: 0,
       stoolConsistency: 'normal',
       painLevel: 0,
       symptoms: [],
@@ -241,7 +249,7 @@ describe('diary repository', () => {
 
     await updateDiaryEntryQuickFields(db, secondId, {
       stoolFrequency: 9,
-      hasBlood: true,
+      bloodLevel: 1,
       stoolConsistency: 'waessrig',
     });
 
@@ -250,11 +258,11 @@ describe('diary repository', () => {
     const untouched = entries.find((entry) => entry.id === firstId);
 
     expect(changed?.stoolFrequency).toBe(9);
-    expect(changed?.hasBlood).toBe(true);
+    expect(changed?.bloodLevel).toBe(1);
     expect(changed?.stoolConsistency).toBe('waessrig');
 
     expect(untouched?.stoolFrequency).toBe(1);
-    expect(untouched?.hasBlood).toBe(false);
+    expect(untouched?.bloodLevel).toBe(0);
     expect(untouched?.stoolConsistency).toBe('hart');
   });
 });

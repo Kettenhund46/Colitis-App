@@ -18,7 +18,7 @@ function makeEntry(overrides: Partial<DiaryEntryWithTriggers> = {}): DiaryEntryW
     id: 1,
     occurredAt: localIso(2026, 6, 27, 10),
     stoolFrequency: 2,
-    hasBlood: false,
+    bloodLevel: 0,
     stoolConsistency: 'normal',
     painLevel: 3,
     symptoms: ['muedigkeit'],
@@ -101,7 +101,7 @@ describe('buildQuickEntryInput', () => {
     expect(input).toEqual({
       occurredAt,
       stoolFrequency: 1,
-      hasBlood: false,
+      bloodLevel: 0,
       stoolConsistency: 'weich',
       painLevel: 0,
       symptoms: [],
@@ -113,7 +113,7 @@ describe('buildQuickEntryInput', () => {
 
   it('passes the blood flag through', () => {
     const input = buildQuickEntryInput('waessrig', true, localIso(2026, 6, 27, 12));
-    expect(input.hasBlood).toBe(true);
+    expect(input.bloodLevel).toBe(1);
   });
 });
 
@@ -124,13 +124,13 @@ describe('buildQuickEntryUpdate', () => {
   });
 
   it('keeps blood set once it was recorded', () => {
-    const update = buildQuickEntryUpdate(makeEntry({ hasBlood: true }), 'normal', false);
-    expect(update.hasBlood).toBe(true);
+    const update = buildQuickEntryUpdate(makeEntry({ bloodLevel: 1 }), 'normal', false);
+    expect(update.bloodLevel).toBe(1);
   });
 
   it('sets blood when this tap reports it', () => {
-    const update = buildQuickEntryUpdate(makeEntry({ hasBlood: false }), 'normal', true);
-    expect(update.hasBlood).toBe(true);
+    const update = buildQuickEntryUpdate(makeEntry({ bloodLevel: 0 }), 'normal', true);
+    expect(update.bloodLevel).toBe(1);
   });
 
   it('keeps the worse consistency when the new one is milder', () => {
@@ -150,7 +150,7 @@ describe('buildQuickEntryUpdate', () => {
 
   it('reports only the three quick fields', () => {
     const update = buildQuickEntryUpdate(makeEntry(), 'normal', false);
-    expect(Object.keys(update).sort()).toEqual(['hasBlood', 'stoolConsistency', 'stoolFrequency']);
+    expect(Object.keys(update).sort()).toEqual(['bloodLevel', 'stoolConsistency', 'stoolFrequency']);
   });
 });
 
@@ -187,14 +187,14 @@ describe('summarizeToday', () => {
 
   it('reports blood when any entry of the day recorded it', () => {
     const entries = [
-      makeEntry({ id: 1, occurredAt: localIso(2026, 6, 27, 8), hasBlood: true }),
-      makeEntry({ id: 2, occurredAt: localIso(2026, 6, 27, 20), hasBlood: false }),
+      makeEntry({ id: 1, occurredAt: localIso(2026, 6, 27, 8), bloodLevel: 1 }),
+      makeEntry({ id: 2, occurredAt: localIso(2026, 6, 27, 20), bloodLevel: 0 }),
     ];
     expect(summarizeToday(entries, now).hasBlood).toBe(true);
   });
 
   it('does not report blood when no entry of the day recorded it', () => {
-    const entries = [makeEntry({ id: 1, occurredAt: localIso(2026, 6, 27, 8), hasBlood: false })];
+    const entries = [makeEntry({ id: 1, occurredAt: localIso(2026, 6, 27, 8), bloodLevel: 0 })];
     expect(summarizeToday(entries, now).hasBlood).toBe(false);
   });
 });

@@ -2,6 +2,7 @@ import { desc, eq } from 'drizzle-orm';
 import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core';
 import { diaryEntries, triggers } from '../../../db/schema';
 import * as schema from '../../../db/schema';
+import { toBloodLevel } from '../constants';
 import type { NewDiaryEntryInput, DiaryEntryWithTriggers } from '../types';
 import type { QuickEntryUpdate } from '../quickEntryLogic';
 
@@ -13,7 +14,7 @@ export async function createDiaryEntry(db: DiaryDb, input: NewDiaryEntryInput): 
     .values({
       occurredAt: input.occurredAt,
       stoolFrequency: input.stoolFrequency,
-      hasBlood: input.hasBlood,
+      bloodLevel: input.bloodLevel,
       stoolConsistency: input.stoolConsistency,
       painLevel: input.painLevel,
       symptoms: input.symptoms.join(','),
@@ -51,7 +52,7 @@ export async function listDiaryEntries(db: DiaryDb): Promise<DiaryEntryWithTrigg
       id: entry.id,
       occurredAt: entry.occurredAt,
       stoolFrequency: entry.stoolFrequency,
-      hasBlood: entry.hasBlood,
+      bloodLevel: toBloodLevel(entry.bloodLevel),
       stoolConsistency: entry.stoolConsistency,
       painLevel: entry.painLevel,
       symptoms: entry.symptoms.length > 0 ? entry.symptoms.split(',') : [],
@@ -73,7 +74,7 @@ export async function updateDiaryEntryQuickFields(
     .update(diaryEntries)
     .set({
       stoolFrequency: update.stoolFrequency,
-      hasBlood: update.hasBlood,
+      bloodLevel: update.bloodLevel,
       stoolConsistency: update.stoolConsistency,
     })
     .where(eq(diaryEntries.id, entryId));

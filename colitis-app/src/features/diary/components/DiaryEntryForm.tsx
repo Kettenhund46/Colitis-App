@@ -3,7 +3,15 @@ import { Pressable, ScrollView, Text, TextInput, View, StyleSheet } from 'react-
 import { NumberStepper } from '../../../components/ui/NumberStepper';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
-import { SYMPTOM_OPTIONS, STOOL_CONSISTENCY_OPTIONS, TRIGGER_CATEGORY_OPTIONS, FOOD_TRIGGER_SUGGESTIONS } from '../constants';
+import {
+  SYMPTOM_OPTIONS,
+  STOOL_CONSISTENCY_OPTIONS,
+  TRIGGER_CATEGORY_OPTIONS,
+  FOOD_TRIGGER_SUGGESTIONS,
+  BLOOD_LEVELS,
+  BLOOD_LEVEL_LABELS,
+  BLOOD_LEVEL_DESCRIPTIONS,
+} from '../constants';
 import type { StoolConsistency, SymptomKey, TriggerCategory } from '../constants';
 import {
   INITIAL_DIARY_ENTRY_FORM_STATE,
@@ -53,24 +61,30 @@ export function DiaryEntryForm({ onSubmit }: DiaryEntryFormProps) {
       />
 
       <Text style={styles.sectionLabel}>Blut im Stuhl</Text>
-      <View style={styles.row}>
-        {[
-          { key: false, label: 'Nein' },
-          { key: true, label: 'Ja' },
-        ].map((option) => {
-          const isSelected = formState.hasBlood === option.key;
+      <Text style={styles.sectionHint}>
+        Die Stufen entsprechen dem Blut-Teilwert des Mayo-Scores und gehen in die Krankheitsaktivität ein.
+      </Text>
+      <View style={styles.bloodColumn}>
+        {BLOOD_LEVELS.map((level) => {
+          const isSelected = formState.bloodLevel === level;
           return (
             <Pressable
-              key={String(option.key)}
+              key={level}
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
-              onPress={() => setFormState({ ...formState, hasBlood: option.key })}
+              accessibilityLabel={`${BLOOD_LEVEL_LABELS[level]}: ${BLOOD_LEVEL_DESCRIPTIONS[level]}`}
+              onPress={() => setFormState({ ...formState, bloodLevel: level })}
               style={[
-                styles.choiceButton,
-                isSelected && (option.key ? styles.choiceButtonDanger : styles.choiceButtonActive),
+                styles.bloodButton,
+                isSelected && (level > 0 ? styles.choiceButtonDanger : styles.choiceButtonActive),
               ]}
             >
-              <Text style={styles.choiceButtonText}>{option.label}</Text>
+              <Text style={[styles.choiceButtonText, isSelected && styles.bloodTextSelected]}>
+                {BLOOD_LEVEL_LABELS[level]}
+              </Text>
+              <Text style={[styles.bloodDescription, isSelected && styles.bloodTextSelected]}>
+                {BLOOD_LEVEL_DESCRIPTIONS[level]}
+              </Text>
             </Pressable>
           );
         })}
@@ -234,6 +248,32 @@ function makeStyles(colors: ThemeColors) {
       gap: tokens.spacing.xs,
       marginBottom: tokens.spacing.md,
     },
+    sectionHint: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      marginBottom: tokens.spacing.sm,
+    },
+    // Vier Stufen mit Erklaerung passen nicht nebeneinander -- untereinander
+    // bleibt die Beschreibung lesbar, auf die es hier ankommt.
+    bloodColumn: {
+      gap: tokens.spacing.xs,
+      marginBottom: tokens.spacing.md,
+    },
+    bloodButton: {
+      paddingVertical: tokens.spacing.sm,
+      paddingHorizontal: tokens.spacing.md,
+      borderRadius: tokens.radius.sm,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    bloodDescription: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      marginTop: 2,
+    },
+    // Auf der gefuellten Flaeche traegt der normale Textton nicht.
+    bloodTextSelected: { color: colors.surface },
     choiceButton: {
       paddingVertical: tokens.spacing.xs,
       paddingHorizontal: tokens.spacing.md,

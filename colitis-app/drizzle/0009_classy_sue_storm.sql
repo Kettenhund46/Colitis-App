@@ -1,0 +1,1 @@
+ALTER TABLE `diary_entries` DROP COLUMN `has_blood`;

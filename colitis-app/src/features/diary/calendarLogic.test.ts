@@ -14,7 +14,7 @@ function makeEntry(overrides: Partial<DiaryEntryWithTriggers> = {}): DiaryEntryW
     id: 1,
     occurredAt: '2026-07-08T10:00:00.000Z',
     stoolFrequency: 2,
-    hasBlood: false,
+    bloodLevel: 0,
     stoolConsistency: 'normal',
     painLevel: 2,
     symptoms: [],
@@ -27,11 +27,11 @@ function makeEntry(overrides: Partial<DiaryEntryWithTriggers> = {}): DiaryEntryW
 
 describe('rateDiaryEntry', () => {
   it('rates a low-symptom entry as good', () => {
-    expect(rateDiaryEntry(makeEntry({ painLevel: 0, stoolFrequency: 0, hasBlood: false }))).toBe('good');
+    expect(rateDiaryEntry(makeEntry({ painLevel: 0, stoolFrequency: 0, bloodLevel: 0 }))).toBe('good');
   });
 
   it('rates blood as bad even with low pain and frequency', () => {
-    expect(rateDiaryEntry(makeEntry({ painLevel: 0, stoolFrequency: 0, hasBlood: true }))).toBe('bad');
+    expect(rateDiaryEntry(makeEntry({ painLevel: 0, stoolFrequency: 0, bloodLevel: 1 }))).toBe('bad');
   });
 
   it('rates painLevel 7 as bad', () => {
@@ -74,7 +74,7 @@ describe('rateDayEntries', () => {
   });
 
   it('returns the worst rating when entries are mixed good and bad', () => {
-    const entries = [makeEntry({ painLevel: 1 }), makeEntry({ hasBlood: true })];
+    const entries = [makeEntry({ painLevel: 1 }), makeEntry({ bloodLevel: 1 })];
     expect(rateDayEntries(entries)).toBe('bad');
   });
 
@@ -84,46 +84,46 @@ describe('rateDayEntries', () => {
   });
 
   it('is independent of entry order', () => {
-    const entries = [makeEntry({ hasBlood: true }), makeEntry({ painLevel: 1 }), makeEntry({ painLevel: 4 })];
+    const entries = [makeEntry({ bloodLevel: 1 }), makeEntry({ painLevel: 1 }), makeEntry({ painLevel: 4 })];
     expect(rateDayEntries(entries)).toBe('bad');
   });
 
   it('adds up the frequencies of a day split across entries', () => {
     const entries = [
-      makeEntry({ stoolFrequency: 5, painLevel: 0, hasBlood: false }),
-      makeEntry({ stoolFrequency: 4, painLevel: 0, hasBlood: false }),
+      makeEntry({ stoolFrequency: 5, painLevel: 0, bloodLevel: 0 }),
+      makeEntry({ stoolFrequency: 4, painLevel: 0, bloodLevel: 0 }),
     ];
     expect(rateDayEntries(entries)).toBe('bad');
   });
 
   it('rates a split day as medium once the sum reaches five', () => {
     const entries = [
-      makeEntry({ stoolFrequency: 3, painLevel: 0, hasBlood: false }),
-      makeEntry({ stoolFrequency: 2, painLevel: 0, hasBlood: false }),
+      makeEntry({ stoolFrequency: 3, painLevel: 0, bloodLevel: 0 }),
+      makeEntry({ stoolFrequency: 2, painLevel: 0, bloodLevel: 0 }),
     ];
     expect(rateDayEntries(entries)).toBe('medium');
   });
 
   it('keeps a quiet split day good', () => {
     const entries = [
-      makeEntry({ stoolFrequency: 2, painLevel: 1, hasBlood: false }),
-      makeEntry({ stoolFrequency: 2, painLevel: 2, hasBlood: false }),
+      makeEntry({ stoolFrequency: 2, painLevel: 1, bloodLevel: 0 }),
+      makeEntry({ stoolFrequency: 2, painLevel: 2, bloodLevel: 0 }),
     ];
     expect(rateDayEntries(entries)).toBe('good');
   });
 
   it('takes the highest pain level of the day, not the sum', () => {
     const entries = [
-      makeEntry({ stoolFrequency: 0, painLevel: 3, hasBlood: false }),
-      makeEntry({ stoolFrequency: 0, painLevel: 3, hasBlood: false }),
+      makeEntry({ stoolFrequency: 0, painLevel: 3, bloodLevel: 0 }),
+      makeEntry({ stoolFrequency: 0, painLevel: 3, bloodLevel: 0 }),
     ];
     expect(rateDayEntries(entries)).toBe('good');
   });
 
   it('flags the day as bad when any entry recorded blood', () => {
     const entries = [
-      makeEntry({ stoolFrequency: 1, painLevel: 0, hasBlood: true }),
-      makeEntry({ stoolFrequency: 1, painLevel: 0, hasBlood: false }),
+      makeEntry({ stoolFrequency: 1, painLevel: 0, bloodLevel: 1 }),
+      makeEntry({ stoolFrequency: 1, painLevel: 0, bloodLevel: 0 }),
     ];
     expect(rateDayEntries(entries)).toBe('bad');
   });
@@ -202,23 +202,23 @@ describe('buildDayRatings', () => {
 
   it('rates a day with a single entry', () => {
     const entries = [
-      makeEntry({ occurredAt: '2026-08-18T09:00:00', stoolFrequency: 1, painLevel: 0, hasBlood: false }),
+      makeEntry({ occurredAt: '2026-08-18T09:00:00', stoolFrequency: 1, painLevel: 0, bloodLevel: 0 }),
     ];
     expect(buildDayRatings(entries).get('2026-08-18')).toBe('good');
   });
 
   it('rates a split day by its combined values, not by a single entry', () => {
     const entries = [
-      makeEntry({ occurredAt: '2026-08-18T09:00:00', stoolFrequency: 5, painLevel: 0, hasBlood: false }),
-      makeEntry({ occurredAt: '2026-08-18T20:00:00', stoolFrequency: 4, painLevel: 0, hasBlood: false }),
+      makeEntry({ occurredAt: '2026-08-18T09:00:00', stoolFrequency: 5, painLevel: 0, bloodLevel: 0 }),
+      makeEntry({ occurredAt: '2026-08-18T20:00:00', stoolFrequency: 4, painLevel: 0, bloodLevel: 0 }),
     ];
     expect(buildDayRatings(entries).get('2026-08-18')).toBe('bad');
   });
 
   it('keeps days apart from one another', () => {
     const entries = [
-      makeEntry({ occurredAt: '2026-08-17T09:00:00', stoolFrequency: 1, painLevel: 0, hasBlood: false }),
-      makeEntry({ occurredAt: '2026-08-18T09:00:00', stoolFrequency: 1, painLevel: 0, hasBlood: true }),
+      makeEntry({ occurredAt: '2026-08-17T09:00:00', stoolFrequency: 1, painLevel: 0, bloodLevel: 0 }),
+      makeEntry({ occurredAt: '2026-08-18T09:00:00', stoolFrequency: 1, painLevel: 0, bloodLevel: 1 }),
     ];
     const ratings = buildDayRatings(entries);
 
@@ -229,8 +229,8 @@ describe('buildDayRatings', () => {
 
   it('agrees with rateDayEntries for the same day', () => {
     const entries = [
-      makeEntry({ occurredAt: '2026-08-18T09:00:00', stoolFrequency: 3, painLevel: 5, hasBlood: false }),
-      makeEntry({ occurredAt: '2026-08-18T20:00:00', stoolFrequency: 2, painLevel: 1, hasBlood: false }),
+      makeEntry({ occurredAt: '2026-08-18T09:00:00', stoolFrequency: 3, painLevel: 5, bloodLevel: 0 }),
+      makeEntry({ occurredAt: '2026-08-18T20:00:00', stoolFrequency: 2, painLevel: 1, bloodLevel: 0 }),
     ];
     expect(buildDayRatings(entries).get('2026-08-18')).toBe(rateDayEntries(entries));
   });

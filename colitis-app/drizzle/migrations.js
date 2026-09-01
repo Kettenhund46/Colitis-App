@@ -9,6 +9,8 @@ import m0004 from './0004_absurd_quasar.sql';
 import m0005 from './0005_curious_diamondback.sql';
 import m0006 from './0006_milky_vance_astro.sql';
 import m0007 from './0007_real_matthew_murdock.sql';
+import m0008 from './0008_parallel_white_tiger.sql';
+import m0009 from './0009_classy_sue_storm.sql';
 
   export default {
     journal,
@@ -20,7 +22,9 @@ m0003,
 m0004,
 m0005,
 m0006,
-m0007
+m0007,
+m0008,
+m0009
     }
   }
   

@@ -12,6 +12,39 @@ export const STOOL_CONSISTENCY_OPTIONS: SelectOption<StoolConsistency>[] = [
   { key: 'waessrig', label: 'Wässrig' },
 ];
 
+/**
+ * Blutbeimengung in den vier Stufen des Mayo-Teilwerts. Die Zahlen sind
+ * zugleich der Punktwert -- deshalb Zahlen und keine Schluessel.
+ */
+export type BloodLevel = 0 | 1 | 2 | 3;
+
+export const BLOOD_LEVELS: BloodLevel[] = [0, 1, 2, 3];
+
+/** Kurz, fuer Auswahlknoepfe und Listen. */
+export const BLOOD_LEVEL_LABELS: Record<BloodLevel, string> = {
+  0: 'Kein Blut',
+  1: 'Schlieren',
+  2: 'Sichtbares Blut',
+  3: 'Nur Blut',
+};
+
+/** Ausfuehrlich, fuer das Formular und das Arztdokument. */
+export const BLOOD_LEVEL_DESCRIPTIONS: Record<BloodLevel, string> = {
+  0: 'Kein Blut gesehen',
+  1: 'Schlieren, seltener als die Hälfte der Male',
+  2: 'Sichtbares Blut bei den meisten Malen',
+  3: 'Nur Blut, kein Stuhl',
+};
+
+export function isBloodLevel(value: number): value is BloodLevel {
+  return value === 0 || value === 1 || value === 2 || value === 3;
+}
+
+/** Aus einer gespeicherten Zahl eine Stufe machen; alles Unbekannte gilt als kein Blut. */
+export function toBloodLevel(value: number): BloodLevel {
+  return isBloodLevel(value) ? value : 0;
+}
+
 export type TriggerCategory = 'ernaehrung' | 'stress' | 'schlaf' | 'medikament' | 'sonstiges';
 
 export const TRIGGER_CATEGORY_OPTIONS: SelectOption<TriggerCategory>[] = [

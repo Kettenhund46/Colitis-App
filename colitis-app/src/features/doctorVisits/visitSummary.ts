@@ -1,7 +1,7 @@
 import { addDays, eachDayInclusive, formatLocalDateKey, parseLocalDate } from '../../lib/localDate';
 import { formatGermanDate } from './doctorVisitPassBuilder';
 import type { DoctorVisit } from './types';
-import { groupEntriesByDay, rateDayTotals, sumDayTotals } from '../diary/calendarLogic';
+import { groupEntriesByDay, hasBlood, rateDayTotals, sumDayTotals } from '../diary/calendarLogic';
 import type { DiaryEntryWithTriggers } from '../diary/types';
 import { computeTriggerPatterns } from '../diary/analysis';
 import { labelFor, TRIGGER_CATEGORY_OPTIONS } from '../diary/constants';
@@ -176,7 +176,7 @@ function figuresFromDays(byDay: DaysWithEntries): SummaryFigures | null {
     const totals = sumDayTotals(dayEntries);
     totalStools += totals.totalStoolFrequency;
     totalWorstPain += totals.worstPainLevel;
-    if (totals.hasBlood) {
+    if (hasBlood(totals)) {
       daysWithBlood += 1;
     }
     const rating = rateDayTotals(totals);
@@ -253,7 +253,7 @@ function notablePhasesFromDays(byDay: DaysWithEntries, period: SummaryPeriod): N
     }
     lastAffectedDate = date;
     affectedDays += 1;
-    if (totals.hasBlood) {
+    if (hasBlood(totals)) {
       daysWithBlood += 1;
     }
   }

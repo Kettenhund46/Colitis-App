@@ -1,9 +1,9 @@
-import type { StoolConsistency, SymptomKey, TriggerCategory } from './constants';
+import type { BloodLevel, StoolConsistency, SymptomKey, TriggerCategory } from './constants';
 import type { NewDiaryEntryInput } from './types';
 
 export interface DiaryEntryFormState {
   stoolFrequency: number;
-  hasBlood: boolean;
+  bloodLevel: BloodLevel;
   stoolConsistency: StoolConsistency | null;
   painLevel: number;
   symptoms: SymptomKey[];
@@ -14,7 +14,7 @@ export interface DiaryEntryFormState {
 
 export const INITIAL_DIARY_ENTRY_FORM_STATE: DiaryEntryFormState = {
   stoolFrequency: 0,
-  hasBlood: false,
+  bloodLevel: 0,
   stoolConsistency: null,
   painLevel: 0,
   symptoms: [],
@@ -51,7 +51,7 @@ export function buildDiaryEntryInput(state: DiaryEntryFormState, occurredAt: str
   return {
     occurredAt,
     stoolFrequency: state.stoolFrequency,
-    hasBlood: state.hasBlood,
+    bloodLevel: state.bloodLevel,
     stoolConsistency: state.stoolConsistency,
     painLevel: state.painLevel,
     symptoms: state.symptoms,

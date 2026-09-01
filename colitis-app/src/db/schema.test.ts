@@ -24,7 +24,7 @@ describe('database schema', () => {
         'id',
         'occurredAt',
         'stoolFrequency',
-        'hasBlood',
+        'bloodLevel',
         'stoolConsistency',
         'painLevel',
         'symptoms',

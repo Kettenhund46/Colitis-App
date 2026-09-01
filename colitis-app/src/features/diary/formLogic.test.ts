@@ -48,7 +48,7 @@ describe('buildDiaryEntryInput', () => {
     const input = buildDiaryEntryInput(
       {
         stoolFrequency: 4,
-        hasBlood: true,
+        bloodLevel: 1,
         stoolConsistency: 'waessrig',
         painLevel: 7,
         symptoms: ['fieber'],
@@ -62,7 +62,7 @@ describe('buildDiaryEntryInput', () => {
     expect(input).toEqual({
       occurredAt: '2026-07-08T10:00:00.000Z',
       stoolFrequency: 4,
-      hasBlood: true,
+      bloodLevel: 1,
       stoolConsistency: 'waessrig',
       painLevel: 7,
       symptoms: ['fieber'],

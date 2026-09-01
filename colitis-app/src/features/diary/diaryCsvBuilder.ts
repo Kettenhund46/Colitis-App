@@ -1,4 +1,10 @@
-import { STOOL_CONSISTENCY_OPTIONS, SYMPTOM_OPTIONS, labelFor, buildTriggerLabels } from './constants';
+import {
+  STOOL_CONSISTENCY_OPTIONS,
+  SYMPTOM_OPTIONS,
+  BLOOD_LEVEL_LABELS,
+  labelFor,
+  buildTriggerLabels,
+} from './constants';
 import { formatOccurredAt } from './formatting';
 import type { DiaryEntryWithTriggers } from './types';
 
@@ -34,7 +40,7 @@ function buildEntryRow(entry: DiaryEntryWithTriggers): string {
     String(entry.stoolFrequency),
     consistencyLabel,
     String(entry.painLevel),
-    entry.hasBlood ? 'Ja' : 'Nein',
+    BLOOD_LEVEL_LABELS[entry.bloodLevel],
     triggerLabels.join(', '),
     symptomLabels.join(', '),
     entry.note ?? '',

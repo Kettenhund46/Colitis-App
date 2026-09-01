@@ -7,7 +7,7 @@ function makeEntry(overrides: Partial<DiaryEntryWithTriggers> = {}): DiaryEntryW
     id: 1,
     occurredAt: '2026-07-22T10:00:00',
     stoolFrequency: 2,
-    hasBlood: false,
+    bloodLevel: 0,
     stoolConsistency: 'normal',
     painLevel: 2,
     symptoms: [],

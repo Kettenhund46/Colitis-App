@@ -1,5 +1,5 @@
 import { formatDateKey } from './calendarLogic';
-import type { StoolConsistency } from './constants';
+import type { BloodLevel, StoolConsistency } from './constants';
 import type { DiaryEntryWithTriggers, NewDiaryEntryInput } from './types';
 
 export const STOOL_CONSISTENCY_SEVERITY: Record<StoolConsistency, number> = {
@@ -11,9 +11,21 @@ export const STOOL_CONSISTENCY_SEVERITY: Record<StoolConsistency, number> = {
 
 const FALLBACK_CONSISTENCY: StoolConsistency = 'normal';
 
+/**
+ * Der Schnell-Eintrag kennt Blut nur als ja/nein -- vier Stufen wuerden aus
+ * zwei Tipps drei machen und ihm den Sinn nehmen. "Ja" gilt deshalb als
+ * Schlieren, die zurueckhaltendste Deutung. Im vollen Formular laesst sich
+ * der Tag nachschaerfen; der Tageswert nimmt ohnehin die schwerste Angabe.
+ */
+export const QUICK_ENTRY_BLOOD_LEVEL: BloodLevel = 1;
+
+export function worseBloodLevel(a: BloodLevel, b: BloodLevel): BloodLevel {
+  return b > a ? b : a;
+}
+
 export interface QuickEntryUpdate {
   stoolFrequency: number;
-  hasBlood: boolean;
+  bloodLevel: BloodLevel;
   stoolConsistency: StoolConsistency;
 }
 
@@ -52,7 +64,7 @@ export function buildQuickEntryInput(
   return {
     occurredAt,
     stoolFrequency: 1,
-    hasBlood,
+    bloodLevel: hasBlood ? QUICK_ENTRY_BLOOD_LEVEL : 0,
     stoolConsistency: consistency,
     painLevel: 0,
     symptoms: [],
@@ -69,7 +81,7 @@ export function buildQuickEntryUpdate(
 ): QuickEntryUpdate {
   return {
     stoolFrequency: existing.stoolFrequency + 1,
-    hasBlood: existing.hasBlood || hasBlood,
+    bloodLevel: worseBloodLevel(existing.bloodLevel, hasBlood ? QUICK_ENTRY_BLOOD_LEVEL : 0),
     stoolConsistency: worseConsistency(toKnownConsistency(existing.stoolConsistency), consistency),
   };
 }
@@ -89,6 +101,6 @@ export function summarizeToday(entries: DiaryEntryWithTriggers[], now: Date): To
   return {
     entryCount: todaysEntries.length,
     totalStoolFrequency: todaysEntries.reduce((total, entry) => total + entry.stoolFrequency, 0),
-    hasBlood: todaysEntries.some((entry) => entry.hasBlood),
+    hasBlood: todaysEntries.some((entry) => entry.bloodLevel > 0),
   };
 }
