@@ -575,6 +575,115 @@ innerhalb der Schleife wäre eine eigene Entscheidung.
 
 ---
 
+## Schlussrunde 01.–02.09. — sechs Tagesschritte aus dem Marktvergleich
+
+Am 01.09. entstand eine **Standortbestimmung**: Bestandsaufnahme der App aus
+dem Code, verglichen mit den CED-Apps, die Betroffene tatsächlich angeboten
+bekommen (CED Forum von Takeda, vyoapp, GI Buddy, Cara Care, Oshi Health).
+Ergebnis: Beim Erfassen und Aufbereiten ist die App vollständig und an drei
+Stellen voraus — verschlüsselte Daten ohne Konto, der Feed aus PubMed, AWMF,
+FDA und EMA, und die gezählte statt abgehakte Einnahme. Die Lücken lagen
+woanders.
+
+Daraus wurde ein Plan über zehn Tagesschritte bis zum Praktikumsende am
+11.09. Umgesetzt wurden sie in zwei Tagen.
+
+### Tag 1 — Erinnerung an den Arzttermin (`a7e876a`)
+
+Das Feld „Nächster Termin" wurde gespeichert, angezeigt und ins PDF gedruckt
+— aber es erinnerte niemand daran. Die App erinnerte an Tagebuch,
+Medikamente, Vorsorge und Sicherung, ausgerechnet nicht an den Termin, den
+der Nutzer selbst eingetragen hat. Erinnert wird jetzt am **Vorabend um
+18:00**, nicht am Terminmorgen: Der Vorlauf ist dafür da, die
+Zusammenfassung anzusehen. Neue Spalte samt Migration 0007, damit jeder
+Besuch seine eigene Erinnerung führt.
+
+### Tag 2–3 — Einführung beim ersten Start (`ed610c6`)
+
+Wer die App zum ersten Mal öffnete, sah fünf leere Tabs. Drei Bildschirme:
+wofür die App da ist, wo die Daten liegen, und die Frage nach der
+Erinnerung. Der dritte bindet den vorhandenen `DiaryReminderSettings`-Block
+ein statt ihn nachzubauen — damit ist die wichtigste Einstellung gleich
+gesetzt. Überspringen überall möglich; unter `/willkommen` jederzeit wieder
+aufrufbar, sonst wäre die Einführung nur nach Neuinstallation zu sehen.
+
+### Tag 4–6 — Krankheitsaktivität als Zahl
+
+Drei Commits. Die Zusammenfassung nannte dem Arzt Stuhlfrequenz und Tage mit
+Blut; daraus rechnet er im Kopf den Wert, den er kennt. Das übernimmt jetzt
+die App.
+
+**Entscheidung des Nutzers:** der **6-Punkte-Mayo (PRO-2)** — die beiden vom
+Patienten berichteten Teilwerte, Stuhlfrequenz und Blutbeimengung, je 0 bis
+3. Ein echtes, so benanntes Instrument statt einer Annäherung unter fremdem
+Namen. Gegen SCCAI sprach genau das: Ohne alle Originalfragen wäre es ein
+Nachbau mit einem Namen, den der Arzt anders kennt.
+
+- `b0b8c1e` **Blut in vier Stufen statt ja/nein.** Migration 0008 übernimmt
+  jedes vorhandene „Blut ja" als Stufe 1 (Schlieren) — die zurückhaltendste
+  Deutung einer Angabe, die keine Schwere kannte; 0009 entfernt `has_blood`.
+  Der Schnell-Eintrag behält seinen Schalter, vier Stufen hätten aus zwei
+  Tipps drei gemacht.
+- `d0df8b0` **Der Index.** Der Frequenz-Teilwert zählt relativ zur eigenen
+  üblichen Zahl an Stuhlgängen; die steht in den Einstellungen und hat
+  bewusst **keinen Vorgabewert** — geraten würde sie eine falsche Zahl
+  erzeugen. Sichtbar in Zusammenfassung und PDF sowie als dritte Reihe im
+  Verlaufsdiagramm mit fester Skala 0–6.
+- `d572577` **Nächtliche Stuhlgänge**, bewusst *neben* der Zahl statt darin
+  — der 6-Punkte-Mayo kennt sie nicht.
+
+**Kein Urteil, nur die Zahl.** Keine Ableitung wie „Sie sind in Remission";
+unter jeder Ausgabe steht die Herkunft und dass sie keine ärztliche
+Beurteilung ersetzt. Sobald eine App Krankheitsaktivität berechnet, bewegt
+sie sich in Richtung Medizinprodukt — rechnen und anzeigen ja, urteilen nein.
+
+**Zwei Funde nebenbei:** Eine Sicherung von *vor* der Umstellung kennt nur
+`hasBlood`; ohne Übersetzung wäre die Angabe beim Wiederherstellen still
+verschwunden, weil der unbekannte Schlüssel ignoriert wird und `blood_level`
+auf 0 fällt. Und `diaryRepository.test.ts` spielte nur die allererste
+Migration ein — folgenlos, solange sich `diary_entries` seit 0000 nie
+geändert hatte.
+
+### Tag 7 — Gestaltung (`ab68a79`)
+
+Die App hatte eine Typo-Skala mit fünf Stufen und benutzte zwei: 109 Stellen
+auf 14 Pixel, 58 auf 16, die größte Stufe kam kein einziges Mal vor. Daher
+wirkten die Bildschirme flach, obwohl Farben und Kartenform stimmten.
+Kartenüberschriften und Leerzustands-Titel auf 20, die Kennzahlen der
+Zusammenfassung auf 28. Die Tab-Leiste mischte zwei Symbolfamilien — jetzt
+durchgehend Material Community, womit die zweite Symbolschrift aus dem Start
+wegfällt. Das Verlaufsdiagramm von 80 auf 120 Pixel, mit gestrichelter
+Mittelwert-Linie, benannter Achsen-Obergrenze und hervorgehobenem jüngsten
+Balken.
+
+*Abweichung vom eigenen Vorschlag:* „Bildschirmtitel auf 28" wurde verworfen
+— es sind native Navigationsleisten mit fester Höhe, und die Flachheit saß
+ohnehin im Inhalt.
+
+### Tag 8 — Gruppe D und Inhalte (`03cce67`)
+
+Der Neuigkeiten-Feed franste links aus, weil gelesene Karten gar keine
+Zustandskante bekamen. Die neutrale Kante war im dunklen Theme genau der Ton,
+der die Karte umgibt — dafür gibt es jetzt `borderStrong` in allen drei
+Paletten. `GhostCard` trug eine Eigenschaft, die kein Aufrufer je gesetzt hat.
+
+Dazu vier Wissensartikel, von sechs auf zehn: Ernährung im Schub und
+dazwischen, Impfungen unter Immunsuppression, Arbeit und Nachteilsausgleich,
+Reisen. Alle Quellen-Links wurden vor dem Einsetzen geprüft; zwei
+RKI-Adressen mussten korrigiert werden.
+
+### Stand
+
+721 Tests grün (642 zu Beginn der Runde), Typprüfung sauber, vier
+Migrationen (0007 bis 0010). Gerätedurchgang für Tag 1–6 bestanden, für
+Tag 7–8 aus Build `b79eb3d7` läuft er.
+
+**Weiterhin offen:** Gruppe B (Historisierung der Zeitpläne), das
+Ernährungstagebuch als eigene Funktion und die Laborwerte. Alle drei sind
+eigene Phasen mit Schemawechsel und wurden bewusst nicht angefangen.
+
+---
+
 ## Abdeckungsprüfung
 
 Alle am 2026-08-20 vorgeschlagenen Verbesserungen sind genau einer Phase zugeordnet:
