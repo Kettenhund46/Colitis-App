@@ -89,6 +89,10 @@ describe('buildMedicationInput', () => {
       startDate: '2026-07-12',
       endDate: null,
       sideEffectsNote: null,
+      // Vorgabe des leeren Formulars: eine Einheit je Einnahme, kein Vorrat.
+      unitsPerIntake: 1,
+      packUnits: null,
+      stockUnits: null,
       reminderTimes: ['08:00'],
     });
   });

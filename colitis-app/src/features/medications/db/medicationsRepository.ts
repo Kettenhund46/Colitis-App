@@ -16,6 +16,9 @@ export async function createMedication(db: MedicationsDb, input: MedicationInput
       startDate: input.startDate,
       endDate: input.endDate,
       sideEffectsNote: input.sideEffectsNote,
+      unitsPerIntake: input.unitsPerIntake,
+      packUnits: input.packUnits,
+      stockUnits: input.stockUnits,
     })
     .returning({ id: medications.id });
 
@@ -29,6 +32,10 @@ export async function createMedication(db: MedicationsDb, input: MedicationInput
     startDate: input.startDate,
     endDate: input.endDate,
     sideEffectsNote: input.sideEffectsNote,
+    unitsPerIntake: input.unitsPerIntake,
+    packUnits: input.packUnits,
+    stockUnits: input.stockUnits,
+    supplyNotificationId: null,
     reminderTimes,
   };
 }
@@ -64,21 +71,37 @@ async function assertMedicationExists(db: MedicationsDb, medicationId: number): 
   }
 }
 
+/**
+ * Eine Zeile in ein Medikament. Lag zeichengleich in listMedications und
+ * getMedicationById -- mit den vier Vorratsfeldern waere die Kopie zur
+ * Fehlerquelle geworden.
+ */
+async function rowToMedication(
+  db: MedicationsDb,
+  row: typeof medications.$inferSelect
+): Promise<Medication> {
+  return {
+    id: row.id,
+    name: row.name,
+    dose: row.dose,
+    schedule: row.schedule,
+    startDate: row.startDate,
+    endDate: row.endDate,
+    sideEffectsNote: row.sideEffectsNote,
+    unitsPerIntake: row.unitsPerIntake,
+    packUnits: row.packUnits,
+    stockUnits: row.stockUnits,
+    supplyNotificationId: row.supplyNotificationId,
+    reminderTimes: await loadReminderTimes(db, row.id),
+  };
+}
+
 export async function listMedications(db: MedicationsDb): Promise<Medication[]> {
   const medicationRows = await db.select().from(medications).orderBy(asc(medications.name));
 
   const result: Medication[] = [];
   for (const medication of medicationRows) {
-    result.push({
-      id: medication.id,
-      name: medication.name,
-      dose: medication.dose,
-      schedule: medication.schedule,
-      startDate: medication.startDate,
-      endDate: medication.endDate,
-      sideEffectsNote: medication.sideEffectsNote,
-      reminderTimes: await loadReminderTimes(db, medication.id),
-    });
+    result.push(await rowToMedication(db, medication));
   }
   return result;
 }
@@ -88,17 +111,7 @@ export async function getMedicationById(db: MedicationsDb, medicationId: number)
   if (rows.length === 0) {
     return null;
   }
-  const medication = rows[0];
-  return {
-    id: medication.id,
-    name: medication.name,
-    dose: medication.dose,
-    schedule: medication.schedule,
-    startDate: medication.startDate,
-    endDate: medication.endDate,
-    sideEffectsNote: medication.sideEffectsNote,
-    reminderTimes: await loadReminderTimes(db, medication.id),
-  };
+  return rowToMedication(db, rows[0]);
 }
 
 export interface ReminderTimesReplaceResult {
@@ -122,6 +135,9 @@ export async function updateMedication(
       startDate: input.startDate,
       endDate: input.endDate,
       sideEffectsNote: input.sideEffectsNote,
+      unitsPerIntake: input.unitsPerIntake,
+      packUnits: input.packUnits,
+      stockUnits: input.stockUnits,
     })
     .where(eq(medications.id, medicationId));
 
@@ -153,6 +169,22 @@ export async function setReminderTimeNotificationId(
     .update(medicationReminderTimes)
     .set({ notificationId })
     .where(eq(medicationReminderTimes.id, reminderTimeId));
+}
+
+export async function setMedicationStock(
+  db: MedicationsDb,
+  medicationId: number,
+  stockUnits: number | null
+): Promise<void> {
+  await db.update(medications).set({ stockUnits }).where(eq(medications.id, medicationId));
+}
+
+export async function setSupplyNotificationId(
+  db: MedicationsDb,
+  medicationId: number,
+  supplyNotificationId: string | null
+): Promise<void> {
+  await db.update(medications).set({ supplyNotificationId }).where(eq(medications.id, medicationId));
 }
 
 export async function logMedicationTaken(db: MedicationsDb, medicationId: number, takenAt: string): Promise<void> {

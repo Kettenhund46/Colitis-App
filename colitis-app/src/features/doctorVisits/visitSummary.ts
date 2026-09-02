@@ -1,5 +1,6 @@
 import { addDays, eachDayInclusive, formatLocalDateKey, parseLocalDate } from '../../lib/localDate';
 import { formatDecimalComma } from '../../lib/formatNumber';
+import { formatDayCount, formatDayCountDative } from '../../lib/counting';
 import { formatGermanDate } from './doctorVisitPassBuilder';
 import type { DoctorVisit } from './types';
 import { groupEntriesByDay, hasBlood, rateDayTotals, sumDayTotals } from '../diary/calendarLogic';
@@ -73,18 +74,11 @@ export function determinePeriod(visits: DoctorVisit[], today: string): SummaryPe
 }
 
 /**
- * Zaehlwort im Nominativ: "1 Tag", "104 Tage". Ein Zeitraum kann einen
- * einzigen Tag umfassen -- ein Besuch, der heute erfasst wurde --, und
- * "1 Tage" faellt in einem Dokument fuer den Arzt sofort auf.
+ * Zaehlwoerter fuer Tage stehen jetzt in src/lib/counting.ts -- die
+ * Vorratsanzeige braucht sie ebenfalls. Hier weitergereicht, weil beide
+ * Namen im Modul selbst verwendet werden und in seinen Tests stehen.
  */
-export function formatDayCount(count: number): string {
-  return count === 1 ? `${count} Tag` : `${count} Tage`;
-}
-
-/** Zaehlwort im Dativ: "an 1 Tag", "an 104 Tagen". */
-export function formatDayCountDative(count: number): string {
-  return count === 1 ? `${count} Tag` : `${count} Tagen`;
-}
+export { formatDayCount, formatDayCountDative };
 
 /** Zaehlwort fuer erfasste Einnahmen: "1 Einnahme", "268 Einnahmen". */
 export function formatIntakeCount(count: number): string {

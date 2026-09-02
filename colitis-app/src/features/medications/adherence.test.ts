@@ -23,6 +23,10 @@ function medication(overrides: Partial<Medication> & { id: number; name: string 
     startDate: '2026-08-01',
     endDate: null,
     sideEffectsNote: null,
+    unitsPerIntake: 1,
+    packUnits: null,
+    stockUnits: null,
+    supplyNotificationId: null,
     reminderTimes: [],
     ...overrides,
   };

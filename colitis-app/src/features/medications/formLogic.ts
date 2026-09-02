@@ -9,6 +9,13 @@ export interface MedicationFormState {
   startDate: string;
   endDate: string;
   sideEffectsNote: string;
+  /**
+   * Die drei Vorratsfelder als Text, weil sie aus Eingabefeldern kommen.
+   * Leerer Bestand heisst: kein Vorrat fuehren -- nicht "null Tabletten".
+   */
+  unitsPerIntake: string;
+  packUnits: string;
+  stockUnits: string;
   reminderTimes: string[];
 }
 
@@ -27,8 +34,29 @@ export function buildInitialMedicationFormState(): MedicationFormState {
     startDate: formatLocalDate(new Date()),
     endDate: '',
     sideEffectsNote: '',
+    unitsPerIntake: '1',
+    packUnits: '',
+    stockUnits: '',
     reminderTimes: [],
   };
+}
+
+const COUNT_PATTERN = /^\d+$/;
+
+function isNonNegativeInteger(value: string): boolean {
+  return COUNT_PATTERN.test(value.trim());
+}
+
+/** Leer ist erlaubt; steht etwas da, muss es mindestens 1 sein. */
+function isOptionalPositiveInteger(value: string): boolean {
+  const trimmed = value.trim();
+  return trimmed.length === 0 || (COUNT_PATTERN.test(trimmed) && Number(trimmed) >= 1);
+}
+
+/** Leeres Feld wird zu null -- die Angabe fehlt, sie ist nicht null. */
+export function parseCount(value: string): number | null {
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : Number(trimmed);
 }
 
 const REMINDER_TIME_PATTERN = /^([0-1]\d|2[0-3]):([0-5]\d)$/;
@@ -59,6 +87,15 @@ export function validateMedicationForm(state: MedicationFormState): string[] {
   ) {
     errors.push('Das Enddatum darf nicht vor dem Startdatum liegen.');
   }
+  if (!isOptionalPositiveInteger(state.unitsPerIntake) || state.unitsPerIntake.trim().length === 0) {
+    errors.push('Einheiten pro Einnahme muss eine ganze Zahl ab 1 sein.');
+  }
+  if (!isOptionalPositiveInteger(state.packUnits)) {
+    errors.push('Packungsgröße muss eine ganze Zahl ab 1 sein oder leer bleiben.');
+  }
+  if (state.stockUnits.trim().length > 0 && !isNonNegativeInteger(state.stockUnits)) {
+    errors.push('Vorrat muss eine ganze Zahl ab 0 sein oder leer bleiben.');
+  }
   for (const time of state.reminderTimes) {
     if (!REMINDER_TIME_PATTERN.test(time)) {
       errors.push(`Ungültige Erinnerungszeit: "${time}" (erwartet HH:mm).`);
@@ -77,6 +114,9 @@ export function buildMedicationInput(state: MedicationFormState): MedicationInpu
     startDate: state.startDate,
     endDate: state.endDate.length > 0 ? state.endDate : null,
     sideEffectsNote: trimmedSideEffectsNote.length > 0 ? trimmedSideEffectsNote : null,
+    unitsPerIntake: parseCount(state.unitsPerIntake) ?? 1,
+    packUnits: parseCount(state.packUnits),
+    stockUnits: parseCount(state.stockUnits),
     reminderTimes: state.reminderTimes,
   };
 }

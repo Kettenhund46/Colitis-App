@@ -11,9 +11,14 @@ import {
   buildMedicationReminderContent,
   buildScreeningReminderContent,
 } from '../medications/notifications/reminderContent';
-import { setReminderTimeNotificationId } from '../medications/db/medicationsRepository';
+import {
+  setReminderTimeNotificationId,
+  setSupplyNotificationId,
+} from '../medications/db/medicationsRepository';
 import { setScreeningReminderNotificationId } from '../medications/db/screeningRepository';
 import { setDoctorVisitNotificationId } from '../doctorVisits/db/doctorVisitsRepository';
+import { rescheduleSupplyReminder } from '../medications/scheduleSupplyReminder';
+import { DEFAULT_PRESCRIPTION_LEAD_DAYS } from '../medications/supply';
 import {
   buildAppointmentReminderTrigger,
   buildAppointmentReminderContent,
@@ -24,7 +29,8 @@ import type { BackupData } from './types';
 export async function rescheduleAllReminders(
   db: BackupDb,
   data: BackupData,
-  now: Date = new Date()
+  now: Date = new Date(),
+  prescriptionLeadDays: number = DEFAULT_PRESCRIPTION_LEAD_DAYS
 ): Promise<void> {
   configureNotificationHandling();
 
@@ -40,6 +46,9 @@ export async function rescheduleAllReminders(
     }
     for (const visit of data.tables.doctorVisits) {
       await setDoctorVisitNotificationId(db, visit.id, null);
+    }
+    for (const medication of data.tables.medications) {
+      await setSupplyNotificationId(db, medication.id, null);
     }
     return;
   }
@@ -81,5 +90,13 @@ export async function rescheduleAllReminders(
 
     const notificationId = await scheduleDateReminder(trigger.date, buildAppointmentReminderContent(visit));
     await rememberScheduledReminder(notificationId, (id) => setDoctorVisitNotificationId(db, visit.id, id));
+  }
+
+  // Die Rezept-Erinnerungen haengen am Vorrat und damit an den
+  // Erinnerungszeiten, die eben erst wieder eingespielt wurden. Deshalb
+  // stehen sie am Ende und lesen das Medikament frisch aus der Datenbank.
+  for (const medication of data.tables.medications) {
+    await setSupplyNotificationId(db, medication.id, null);
+    await rescheduleSupplyReminder(db, medication.id, prescriptionLeadDays, now);
   }
 }

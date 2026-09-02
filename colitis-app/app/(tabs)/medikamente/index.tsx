@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Alert, Pressable, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
+import { applyIntakeToSupply, refillSupply } from '../../../src/features/medications/scheduleSupplyReminder';
+import { getPrescriptionLeadDays } from '../../../src/features/settings/settingsStorage';
+import { DEFAULT_PRESCRIPTION_LEAD_DAYS } from '../../../src/features/medications/supply';
+import { saveFeedback } from '../../../src/lib/haptics';
 import {
   listMedications,
   logMedicationTaken,
@@ -54,6 +58,7 @@ export default function MedikamenteScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [prescriptionLeadDays, setPrescriptionLeadDays] = useState(DEFAULT_PRESCRIPTION_LEAD_DAYS);
   const isSavingRef = useRef(false);
 
   useEffect(() => {
@@ -68,15 +73,17 @@ export default function MedikamenteScreen() {
       createEncryptedDb()
         .then(async (db) => {
           const today = formatLocalDate(new Date());
-          const [loadedMedications, loadedScreening, loadedIntakes] = await Promise.all([
+          const [loadedMedications, loadedScreening, loadedIntakes, loadedLeadDays] = await Promise.all([
             listMedications(db),
             getScreeningReminder(db),
             listMedicationIntakes(db, queryLowerBoundIso(today)),
+            getPrescriptionLeadDays(),
           ]);
           if (isActive) {
             setMedications(loadedMedications);
             setScreeningReminder(loadedScreening);
             setIntakes(loadedIntakes);
+            setPrescriptionLeadDays(loadedLeadDays);
             setError(null);
             setIsLoading(false);
           }
@@ -108,6 +115,10 @@ export default function MedikamenteScreen() {
     try {
       const db = await createEncryptedDb();
       await logMedicationTaken(db, medicationId, new Date().toISOString());
+      // Der Vorrat sinkt mit der Einnahme, und damit verschiebt sich der
+      // Zeitpunkt der Rezept-Erinnerung -- beides gehoert in denselben Schritt.
+      await applyIntakeToSupply(db, medicationId, await getPrescriptionLeadDays());
+      setMedications(await listMedications(db));
       setIntakes(await listMedicationIntakes(db, queryLowerBoundIso(formatLocalDate(new Date()))));
       setError(null);
     } catch (takenError: unknown) {
@@ -115,6 +126,19 @@ export default function MedikamenteScreen() {
       setError('Einnahme konnte nicht gespeichert werden.');
     } finally {
       isSavingRef.current = false;
+    }
+  }
+
+  async function handleRefill(medicationId: number) {
+    try {
+      const db = await createEncryptedDb();
+      await refillSupply(db, medicationId, prescriptionLeadDays);
+      setMedications(await listMedications(db));
+      saveFeedback();
+      setError(null);
+    } catch (refillError: unknown) {
+      console.error('[Medikamente] Packung nachlegen fehlgeschlagen:', refillError);
+      setError('Der Vorrat konnte nicht aktualisiert werden.');
     }
   }
 
@@ -289,6 +313,8 @@ export default function MedikamenteScreen() {
         onEnd={handleEnd}
         onEdit={(medicationId) => router.push(`/medikamente/${medicationId}`)}
         onDelete={handleDelete}
+      onRefill={handleRefill}
+      prescriptionLeadDays={prescriptionLeadDays}
         hiddenId={pending === null ? null : pending.id}
       />
       <Pressable

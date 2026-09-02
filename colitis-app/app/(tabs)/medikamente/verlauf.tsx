@@ -2,6 +2,8 @@ import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
+import { revertIntakeFromSupply } from '../../../src/features/medications/scheduleSupplyReminder';
+import { getPrescriptionLeadDays } from '../../../src/features/settings/settingsStorage';
 import {
   listMedications,
   listMedicationIntakes,
@@ -71,7 +73,13 @@ export default function EinnahmeVerlaufScreen() {
   const { pending, requestDelete, undo } = usePendingDeletion<number>(async (intakeId) => {
     try {
       const db = await createEncryptedDb();
+      const removed = intakes.find((intake) => intake.id === intakeId);
       await deleteMedicationIntake(db, intakeId);
+      // Eine irrtuemlich erfasste Einnahme legt ihre Einheiten zurueck in den
+      // Vorrat -- sonst laeuft der Bestand mit jedem Fehlgriff auseinander.
+      if (removed) {
+        await revertIntakeFromSupply(db, removed.medicationId, await getPrescriptionLeadDays());
+      }
       setIntakes(await listMedicationIntakes(db, null));
       setError(null);
     } catch (deleteError: unknown) {

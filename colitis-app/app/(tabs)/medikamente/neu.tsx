@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
+import { rescheduleSupplyReminder } from '../../../src/features/medications/scheduleSupplyReminder';
+import { getPrescriptionLeadDays } from '../../../src/features/settings/settingsStorage';
 import {
   createMedication,
   setReminderTimeNotificationId,
@@ -51,6 +53,15 @@ export default function NeuesMedikamentScreen() {
       } catch (notificationError: unknown) {
         console.error('[Medikamente] Erinnerungen konnten nicht geplant werden:', notificationError);
       }
+    }
+
+    // Der Vorrat bestimmt den Zeitpunkt der Rezept-Erinnerung; ohne
+    // hinterlegten Bestand tut der Aufruf nichts.
+    try {
+      const db = await createEncryptedDb();
+      await rescheduleSupplyReminder(db, created.id, await getPrescriptionLeadDays());
+    } catch (supplyError: unknown) {
+      console.error('[Medikamente] Rezept-Erinnerung konnte nicht geplant werden:', supplyError);
     }
 
     setSaveError(null);

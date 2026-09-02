@@ -1,4 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  DEFAULT_PRESCRIPTION_LEAD_DAYS,
+  MAX_PRESCRIPTION_LEAD_DAYS,
+} from '../medications/supply';
 import type { ThemeId } from '../../theme/types';
 
 const THEME_STORAGE_KEY = 'colitis2go.settings.themeId';
@@ -36,6 +40,29 @@ export async function getIncludeIllnessJokes(): Promise<boolean> {
 
 export async function setIncludeIllnessJokes(enabled: boolean): Promise<void> {
   await AsyncStorage.setItem(INCLUDE_ILLNESS_JOKES_KEY, enabled ? 'true' : 'false');
+}
+
+const PRESCRIPTION_LEAD_DAYS_KEY = 'colitis2go.settings.prescriptionLeadDays';
+
+/**
+ * Vorlauf in Tagen, bevor an ein neues Rezept erinnert wird. Anders als der
+ * Normalwert der Stuhlgaenge hat er eine sinnvolle Vorgabe -- sieben Tage
+ * passen fuer fast jedes Praeparat.
+ */
+export async function getPrescriptionLeadDays(): Promise<number> {
+  const stored = await AsyncStorage.getItem(PRESCRIPTION_LEAD_DAYS_KEY);
+  if (stored === null) {
+    return DEFAULT_PRESCRIPTION_LEAD_DAYS;
+  }
+  const parsed = Number(stored);
+  if (!Number.isInteger(parsed) || parsed < 0 || parsed > MAX_PRESCRIPTION_LEAD_DAYS) {
+    return DEFAULT_PRESCRIPTION_LEAD_DAYS;
+  }
+  return parsed;
+}
+
+export async function setPrescriptionLeadDays(days: number): Promise<void> {
+  await AsyncStorage.setItem(PRESCRIPTION_LEAD_DAYS_KEY, String(days));
 }
 
 const NORMAL_STOOL_FREQUENCY_KEY = 'colitis2go.settings.normalStoolFrequency';

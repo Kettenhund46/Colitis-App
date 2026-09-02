@@ -5,11 +5,18 @@ const rescheduleBackupReminder = vi.fn();
 const rescheduleDiaryReminder = vi.fn();
 
 vi.mock('./rescheduleReminders', () => ({
-  rescheduleAllReminders: (db: unknown, data: unknown) => rescheduleAllReminders(db, data),
+  rescheduleAllReminders: (db: unknown, data: unknown, now: unknown, leadDays: unknown) =>
+    rescheduleAllReminders(db, data, now, leadDays),
 }));
 
 vi.mock('./scheduleBackupReminder', () => ({
   rescheduleBackupReminder: () => rescheduleBackupReminder(),
+}));
+
+// Der Vorlauf kommt aus den Einstellungen und damit aus AsyncStorage --
+// hier nur ein fester Wert, die Vorratslogik ist anderswo geprueft.
+vi.mock('../settings/settingsStorage', () => ({
+  getPrescriptionLeadDays: () => Promise.resolve(7),
 }));
 
 vi.mock('../diary/scheduleDiaryReminder', () => ({
@@ -37,7 +44,7 @@ describe('rescheduleAllAfterRestore', () => {
     const failed = await rescheduleAllAfterRestore(db, data);
 
     expect(failed).toEqual([]);
-    expect(rescheduleAllReminders).toHaveBeenCalledWith(db, data);
+    expect(rescheduleAllReminders).toHaveBeenCalledWith(db, data, expect.any(Date), 7);
     expect(rescheduleBackupReminder).toHaveBeenCalledTimes(1);
     expect(rescheduleDiaryReminder).toHaveBeenCalledTimes(1);
   });

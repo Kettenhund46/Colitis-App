@@ -12,6 +12,17 @@ export interface Medication {
   startDate: string;
   endDate: string | null;
   sideEffectsNote: string | null;
+  /** Einheiten je Einnahme, meist eine Tablette. */
+  unitsPerIntake: number;
+  /** Einheiten je Packung, oder null wenn nicht hinterlegt. */
+  packUnits: number | null;
+  /** Aktueller Bestand; null heisst: fuer dieses Medikament kein Vorrat gefuehrt. */
+  stockUnits: number | null;
+  /**
+   * Kennung der geplanten Rezept-Erinnerung. Gehoert nicht zu
+   * `MedicationInput` -- sie entsteht beim Planen, nicht im Formular.
+   */
+  supplyNotificationId: string | null;
   reminderTimes: MedicationReminderTime[];
 }
 
@@ -22,6 +33,9 @@ export interface MedicationInput {
   startDate: string;
   endDate: string | null;
   sideEffectsNote: string | null;
+  unitsPerIntake: number;
+  packUnits: number | null;
+  stockUnits: number | null;
   reminderTimes: string[];
 }
 

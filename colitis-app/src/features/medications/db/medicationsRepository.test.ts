@@ -29,6 +29,9 @@ describe('medications repository', () => {
       startDate: '2026-07-12',
       endDate: null,
       sideEffectsNote: null,
+      unitsPerIntake: 1,
+      packUnits: null,
+      stockUnits: null,
       reminderTimes: ['08:00'],
     });
 
@@ -47,6 +50,9 @@ describe('medications repository', () => {
       startDate: '2026-01-01',
       endDate: null,
       sideEffectsNote: null,
+      unitsPerIntake: 1,
+      packUnits: null,
+      stockUnits: null,
       reminderTimes: [],
     });
     await createMedication(db, {
@@ -56,6 +62,9 @@ describe('medications repository', () => {
       startDate: '2026-01-01',
       endDate: null,
       sideEffectsNote: null,
+      unitsPerIntake: 1,
+      packUnits: null,
+      stockUnits: null,
       reminderTimes: ['21:00'],
     });
 
@@ -73,6 +82,9 @@ describe('medications repository', () => {
       startDate: '2026-07-12',
       endDate: null,
       sideEffectsNote: null,
+      unitsPerIntake: 1,
+      packUnits: null,
+      stockUnits: null,
       reminderTimes: [],
     });
 
@@ -91,6 +103,9 @@ describe('medications repository', () => {
       startDate: '2026-07-12',
       endDate: null,
       sideEffectsNote: null,
+      unitsPerIntake: 1,
+      packUnits: null,
+      stockUnits: null,
       reminderTimes: ['08:00'],
     });
 
@@ -101,6 +116,9 @@ describe('medications repository', () => {
       startDate: '2026-07-12',
       endDate: null,
       sideEffectsNote: null,
+      unitsPerIntake: 1,
+      packUnits: null,
+      stockUnits: null,
       reminderTimes: ['08:00', '20:00'],
     });
 
@@ -121,6 +139,9 @@ describe('medications repository', () => {
       startDate: '2026-07-12',
       endDate: null,
       sideEffectsNote: null,
+      unitsPerIntake: 1,
+      packUnits: null,
+      stockUnits: null,
       reminderTimes: ['08:00'],
     });
 
@@ -139,6 +160,9 @@ describe('medications repository', () => {
       startDate: '2026-07-12',
       endDate: null,
       sideEffectsNote: null,
+      unitsPerIntake: 1,
+      packUnits: null,
+      stockUnits: null,
       reminderTimes: ['08:00'],
     });
 
@@ -156,6 +180,9 @@ describe('medications repository', () => {
       startDate: '2026-07-12',
       endDate: null,
       sideEffectsNote: null,
+      unitsPerIntake: 1,
+      packUnits: null,
+      stockUnits: null,
       reminderTimes: [],
     });
 
@@ -176,6 +203,9 @@ describe('medications repository', () => {
         startDate: '2026-07-12',
         endDate: null,
         sideEffectsNote: null,
+        unitsPerIntake: 1,
+        packUnits: null,
+        stockUnits: null,
         reminderTimes: [],
       })
     ).rejects.toThrow('Medikament mit ID 999999 wurde nicht gefunden.');
@@ -201,6 +231,9 @@ describe('medications repository', () => {
       startDate: '2026-07-12',
       endDate: null,
       sideEffectsNote: null,
+      unitsPerIntake: 1,
+      packUnits: null,
+      stockUnits: null,
       reminderTimes: ['08:00', '20:00'],
     });
     await logMedicationTaken(db, created.id, '2026-07-16T08:05:00.000Z');
@@ -225,6 +258,9 @@ describe('medications repository', () => {
       startDate: '2026-07-12',
       endDate: null,
       sideEffectsNote: 'Verursacht gelegentlich Übelkeit',
+      unitsPerIntake: 1,
+      packUnits: null,
+      stockUnits: null,
       reminderTimes: [],
     });
 
@@ -242,6 +278,9 @@ describe('medications repository', () => {
       startDate: '2026-07-12',
       endDate: null,
       sideEffectsNote: 'Übelkeit',
+      unitsPerIntake: 1,
+      packUnits: null,
+      stockUnits: null,
       reminderTimes: [],
     });
 
@@ -252,6 +291,9 @@ describe('medications repository', () => {
       startDate: '2026-07-12',
       endDate: null,
       sideEffectsNote: null,
+      unitsPerIntake: 1,
+      packUnits: null,
+      stockUnits: null,
       reminderTimes: [],
     });
 
@@ -267,6 +309,9 @@ describe('medications repository', () => {
       startDate: '2026-08-01',
       endDate: null,
       sideEffectsNote: null,
+      unitsPerIntake: 1,
+      packUnits: null,
+      stockUnits: null,
       reminderTimes: [],
     });
   }

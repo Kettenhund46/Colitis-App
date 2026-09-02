@@ -1,6 +1,7 @@
 import { rescheduleAllReminders } from './rescheduleReminders';
 import { rescheduleBackupReminder } from './scheduleBackupReminder';
 import { rescheduleDiaryReminder } from '../diary/scheduleDiaryReminder';
+import { getPrescriptionLeadDays } from '../settings/settingsStorage';
 import type { BackupDb } from './db/backupRepository';
 import type { BackupData } from './types';
 
@@ -21,7 +22,7 @@ export async function rescheduleAllAfterRestore(
   data: BackupData
 ): Promise<ReminderKind[]> {
   const steps: [ReminderKind, () => Promise<unknown>][] = [
-    ['Medikamente', () => rescheduleAllReminders(db, data)],
+    ['Medikamente', async () => rescheduleAllReminders(db, data, new Date(), await getPrescriptionLeadDays())],
     ['Sicherung', () => rescheduleBackupReminder()],
     ['Tagebuch', () => rescheduleDiaryReminder()],
   ];

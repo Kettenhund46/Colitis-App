@@ -78,6 +78,13 @@
       "when": 1788268235859,
       "tag": "0010_warm_gunslinger",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1788361710749,
+      "tag": "0011_clumsy_fat_cobra",
+      "breakpoints": true
     }
   ]
 }

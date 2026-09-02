@@ -3,6 +3,7 @@ import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
 import { isMedicationActive, formatLocalDate } from '../medicationStatus';
 import { expectedDosesPerDay, formatTakenButtonLabel, isMedicationDueOn } from '../adherence';
+import { formatSupplyLabel, formatRefillLabel, isSupplyLow } from '../supply';
 import { Card } from '../../../components/ui/Card';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
@@ -20,6 +21,10 @@ interface MedicationListProps {
   onEnd: (medicationId: number) => void;
   onEdit: (medicationId: number) => void;
   onDelete: (medicationId: number) => void;
+  /** Legt eine Packung nach. */
+  onRefill: (medicationId: number) => void;
+  /** Ab wie vielen Tagen Restreichweite der Vorrat als knapp gilt. */
+  prescriptionLeadDays: number;
   onCreate: () => void;
   hiddenId: number | null;
   /**
@@ -41,6 +46,8 @@ export function MedicationList({
   onEnd,
   onEdit,
   onDelete,
+  onRefill,
+  prescriptionLeadDays,
   onCreate,
   hiddenId,
   footer = null,
@@ -83,6 +90,9 @@ export function MedicationList({
         const expectedToday = expectedDosesPerDay(item);
         const takenToday = takenTodayCounts.get(item.id) ?? 0;
         const isTakenToday = takenToday >= expectedToday;
+        const supplyLabel = formatSupplyLabel(item);
+        const isLow = isSupplyLow(item, prescriptionLeadDays);
+        const refillLabel = formatRefillLabel(item);
         return (
           <View style={styles.rowWrapper}>
             <SwipeableRow onDelete={() => onDelete(item.id)}>
@@ -98,6 +108,9 @@ export function MedicationList({
               )}
               {item.sideEffectsNote && (
                 <Text style={styles.cardSideEffects}>Nebenwirkungen: {item.sideEffectsNote}</Text>
+              )}
+              {supplyLabel !== null && (
+                <Text style={isLow ? styles.cardSupplyLow : styles.cardDetail}>{supplyLabel}</Text>
               )}
               {!isActive && item.endDate && <Text style={styles.cardEndedLabel}>Beendet am {item.endDate}</Text>}
               <View style={styles.actionsRow}>
@@ -117,6 +130,16 @@ export function MedicationList({
                     <Text style={isTakenToday ? styles.takenButtonText : styles.notTakenButtonText}>
                       {formatTakenButtonLabel(takenToday, expectedToday)}
                     </Text>
+                  </Pressable>
+                )}
+                {refillLabel !== null && supplyLabel !== null && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Packung ${item.name} nachlegen`}
+                    style={styles.refillButton}
+                    onPress={() => onRefill(item.id)}
+                  >
+                    <Text style={styles.refillButtonText}>{refillLabel}</Text>
                   </Pressable>
                 )}
                 <Pressable
@@ -186,6 +209,21 @@ function makeStyles(colors: ThemeColors) {
       marginBottom: tokens.spacing.xs,
     },
     cardDetail: { color: colors.textSecondary, fontSize: tokens.typography.fontSize.sm },
+    // Knapper Vorrat in Warnfarbe: Der Nutzer muss etwas tun, aber nichts ist
+    // schiefgegangen -- deshalb kein Rot.
+    cardSupplyLow: {
+      color: colors.warning,
+      fontSize: tokens.typography.fontSize.sm,
+      fontWeight: tokens.typography.fontWeight.medium,
+    },
+    refillButton: {
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      paddingVertical: tokens.spacing.xs,
+      paddingHorizontal: tokens.spacing.md,
+    },
+    refillButtonText: { color: colors.primary, fontSize: tokens.typography.fontSize.sm },
     cardSideEffects: {
       color: colors.textSecondary,
       fontSize: tokens.typography.fontSize.sm,

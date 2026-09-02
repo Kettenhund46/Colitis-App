@@ -11,6 +11,10 @@ function makeMedication(overrides: Partial<Medication> = {}): Medication {
     startDate: '2026-01-15',
     endDate: null,
     sideEffectsNote: null,
+    unitsPerIntake: 1,
+    packUnits: null,
+    stockUnits: null,
+    supplyNotificationId: null,
     reminderTimes: [],
     ...overrides,
   };

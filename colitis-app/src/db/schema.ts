@@ -40,6 +40,17 @@ export const medications = sqliteTable('medications', {
   startDate: text('start_date').notNull(),
   endDate: text('end_date'),
   sideEffectsNote: text('side_effects_note'),
+  /** Wie viele Einheiten eine einzelne Einnahme kostet -- meist eine Tablette. */
+  unitsPerIntake: integer('units_per_intake').notNull().default(1),
+  /** Einheiten je Packung, fuer das Nachfuellen mit einem Tipp. */
+  packUnits: integer('pack_units'),
+  /**
+   * Aktueller Bestand in Einheiten. `null` heisst: fuer dieses Medikament
+   * wird kein Vorrat gefuehrt -- dann bleibt die ganze Anzeige aus.
+   */
+  stockUnits: integer('stock_units'),
+  /** Kennung der geplanten Erinnerung an ein neues Rezept. */
+  supplyNotificationId: text('supply_notification_id'),
 });
 
 export const medicationLog = sqliteTable('medication_log', {

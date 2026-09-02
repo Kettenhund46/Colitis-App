@@ -102,6 +102,42 @@ export function MedicationForm({ initialState, onSubmit, submitLabel }: Medicati
         onChangeText={(text) => setFormState({ ...formState, endDate: text })}
       />
 
+      <Text style={styles.sectionLabel}>Vorrat (optional)</Text>
+      <Text style={styles.hintText}>
+        Bleibt der Vorrat leer, wird für dieses Medikament kein Bestand geführt. Sonst zieht jede erfasste
+        Einnahme ab, und die App erinnert rechtzeitig an ein neues Rezept.
+      </Text>
+
+      <Text style={styles.sectionLabel}>Einheiten pro Einnahme</Text>
+      <TextInput
+        style={styles.textInput}
+        placeholder="1"
+        placeholderTextColor={colors.textSecondary}
+        keyboardType="number-pad"
+        value={formState.unitsPerIntake}
+        onChangeText={(text) => setFormState({ ...formState, unitsPerIntake: text })}
+      />
+
+      <Text style={styles.sectionLabel}>Packungsgröße</Text>
+      <TextInput
+        style={styles.textInput}
+        placeholder="z. B. 100"
+        placeholderTextColor={colors.textSecondary}
+        keyboardType="number-pad"
+        value={formState.packUnits}
+        onChangeText={(text) => setFormState({ ...formState, packUnits: text })}
+      />
+
+      <Text style={styles.sectionLabel}>Aktueller Vorrat</Text>
+      <TextInput
+        style={styles.textInput}
+        placeholder="Leer lassen, um keinen Vorrat zu führen"
+        placeholderTextColor={colors.textSecondary}
+        keyboardType="number-pad"
+        value={formState.stockUnits}
+        onChangeText={(text) => setFormState({ ...formState, stockUnits: text })}
+      />
+
       <Text style={styles.sectionLabel}>Erinnerungszeiten</Text>
       <Text style={styles.hintText}>
         Für Erinnerungen wird beim Speichern die Benachrichtigungserlaubnis angefragt. Bei Ablehnung werden die

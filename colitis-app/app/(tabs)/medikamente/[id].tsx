@@ -2,6 +2,8 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
+import { rescheduleSupplyReminder } from '../../../src/features/medications/scheduleSupplyReminder';
+import { getPrescriptionLeadDays } from '../../../src/features/settings/settingsStorage';
 import {
   getMedicationById,
   updateMedication,
@@ -79,6 +81,10 @@ export default function MedikamentBearbeitenScreen() {
         }
       }
 
+      // Bestand oder Einheiten je Einnahme koennen sich geaendert haben, und
+      // beides verschiebt den Zeitpunkt der Rezept-Erinnerung.
+      await rescheduleSupplyReminder(db, medicationId, await getPrescriptionLeadDays());
+
       setSaveError(null);
       saveFeedback();
       router.back();
@@ -119,6 +125,10 @@ export default function MedikamentBearbeitenScreen() {
           startDate: medication.startDate,
           endDate: medication.endDate ?? '',
           sideEffectsNote: medication.sideEffectsNote ?? '',
+          unitsPerIntake: String(medication.unitsPerIntake),
+          // Leeres Feld statt "null": Die Angabe fehlt, sie ist nicht null.
+          packUnits: medication.packUnits === null ? '' : String(medication.packUnits),
+          stockUnits: medication.stockUnits === null ? '' : String(medication.stockUnits),
           reminderTimes: medication.reminderTimes.map((reminderTime) => reminderTime.time),
         }}
         onSubmit={handleSubmit}
