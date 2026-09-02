@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Stack, useFocusEffect, useRouter } from 'expo-router';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Alert, Pressable, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
 import { listDiaryEntries, deleteDiaryEntry } from '../../../src/features/diary/db/diaryRepository';
@@ -100,14 +99,11 @@ export default function TagebuchScreen() {
     }
   }
 
+  // Anders als der Medikamenten-Pass gibt es das Tagebuch in zwei Formaten.
+  // Die Leiste sitzt deshalb an derselben Stelle wie dort, fragt aber noch,
+  // welches gemeint ist. Auf den Leerfall prueft sie nicht mehr -- ohne
+  // Eintraege ist sie abgeschaltet.
   function handleOpenExportMenu() {
-    if (entries.length === 0) {
-      Alert.alert('Tagebuch exportieren', 'Noch keine Einträge zum Exportieren.', [
-        { text: 'OK', style: 'cancel' },
-      ]);
-      return;
-    }
-
     Alert.alert('Tagebuch exportieren', undefined, [
       { text: 'Als PDF exportieren', onPress: () => void handleExportPdf() },
       { text: 'Als CSV exportieren', onPress: () => void handleExportCsv() },
@@ -119,33 +115,24 @@ export default function TagebuchScreen() {
 
   return (
     <SwipeableTabScreen tab="tagebuch" style={styles.container}>
-      <Stack.Screen
-        options={{
-          headerRight: () => (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Export-Menü öffnen"
-              accessibilityState={{ disabled: isExporting }}
-              disabled={isExporting}
-              style={[styles.headerButton, isExporting && styles.headerButtonDisabled]}
-              onPress={handleOpenExportMenu}
-            >
-              <MaterialCommunityIcons name="dots-vertical" size={22} color={colors.textPrimary} />
-            </Pressable>
-          ),
-        }}
-      />
       {showFlareWarning && <FlareWarningBanner onDismiss={() => setIsFlareWarningDismissed(true)} />}
       {error && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
-      {isExporting && (
-        <View style={styles.statusBanner}>
-          <Text style={styles.statusText}>Export wird erstellt …</Text>
-        </View>
-      )}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: isExporting || entries.length === 0 }}
+        accessibilityLabel="Tagebuch exportieren"
+        disabled={isExporting || entries.length === 0}
+        style={[styles.exportLink, (isExporting || entries.length === 0) && styles.exportLinkDisabled]}
+        onPress={handleOpenExportMenu}
+      >
+        <Text style={styles.exportLinkText}>
+          {isExporting ? 'Export wird erstellt …' : 'Tagebuch exportieren (PDF oder CSV)'}
+        </Text>
+      </Pressable>
       <View style={styles.viewToggleRow}>
         <Pressable
           accessibilityRole="button"
@@ -232,15 +219,20 @@ function makeStyles(colors: ThemeColors) {
       fontSize: tokens.typography.fontSize.sm,
       textAlign: 'center',
     },
-    statusBanner: {
+    // Gleiche Form und gleiche Stelle wie der Export im Medikamente-Tab.
+    exportLink: {
       backgroundColor: colors.surface,
       borderBottomWidth: 1,
-      borderBottomColor: colors.primary,
-      padding: tokens.spacing.sm,
+      borderBottomColor: colors.border,
+      padding: tokens.spacing.md,
     },
-    statusText: {
-      color: colors.textSecondary,
+    exportLinkDisabled: {
+      opacity: 0.5,
+    },
+    exportLinkText: {
+      color: colors.primary,
       fontSize: tokens.typography.fontSize.sm,
+      fontWeight: tokens.typography.fontWeight.medium,
       textAlign: 'center',
     },
     viewToggleRow: {
@@ -288,13 +280,6 @@ function makeStyles(colors: ThemeColors) {
       color: colors.primary,
       fontSize: tokens.typography.fontSize.sm,
       fontWeight: tokens.typography.fontWeight.medium,
-    },
-    headerButton: {
-      paddingHorizontal: tokens.spacing.sm,
-      paddingVertical: tokens.spacing.xs,
-    },
-    headerButtonDisabled: {
-      opacity: 0.5,
     },
     addButton: {
       position: 'absolute',
