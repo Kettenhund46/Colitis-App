@@ -28,6 +28,7 @@ function summary(overrides: Partial<VisitSummary> = {}): VisitSummary {
     nextScreeningDate: null,
     activity: null,
     isActivityBaselineMissing: false,
+    openQuestions: [],
     isEmpty: false,
     ...overrides,
   };

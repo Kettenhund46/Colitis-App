@@ -129,3 +129,15 @@ export const doctorVisits = sqliteTable('doctor_visits', {
   nextAppointmentDate: text('next_appointment_date'),
   nextAppointmentNotificationId: text('next_appointment_notification_id'),
 });
+
+/**
+ * Fragen, die zwischen zwei Terminen einfallen. Sie haengen bewusst an keinem
+ * Besuch: Wer sie notiert, weiss noch nicht, bei welchem Termin sie
+ * drankommen. `answeredAt` null heisst offen.
+ */
+export const visitQuestions = sqliteTable('visit_questions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  text: text('text').notNull(),
+  createdAt: text('created_at').notNull(),
+  answeredAt: text('answered_at'),
+});

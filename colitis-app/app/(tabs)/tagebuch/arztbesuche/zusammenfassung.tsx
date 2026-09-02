@@ -9,6 +9,7 @@ import {
 } from '../../../../src/features/medications/db/medicationsRepository';
 import { getScreeningReminder } from '../../../../src/features/medications/db/screeningRepository';
 import { getNormalStoolFrequency } from '../../../../src/features/settings/settingsStorage';
+import { listVisitQuestions } from '../../../../src/features/doctorVisits/db/visitQuestionsRepository';
 import { listDoctorVisits } from '../../../../src/features/doctorVisits/db/doctorVisitsRepository';
 import { buildVisitSummary } from '../../../../src/features/doctorVisits/visitSummary';
 import { exportVisitSummary } from '../../../../src/features/doctorVisits/visitSummaryExport';
@@ -36,12 +37,13 @@ export default function ZusammenfassungScreen() {
 
       createEncryptedDb()
         .then(async (db) => {
-          const [entries, medications, intakes, visits, screening] = await Promise.all([
+          const [entries, medications, intakes, visits, screening, questions] = await Promise.all([
             listDiaryEntries(db),
             listMedications(db),
             listMedicationIntakes(db, null),
             listDoctorVisits(db),
             getScreeningReminder(db),
+            listVisitQuestions(db),
           ]);
           const normalStoolFrequency = await getNormalStoolFrequency();
           if (isActive) {
@@ -53,6 +55,7 @@ export default function ZusammenfassungScreen() {
                 visits,
                 screening,
                 normalStoolFrequency,
+                questions,
                 today: formatLocalDateKey(new Date()),
               })
             );

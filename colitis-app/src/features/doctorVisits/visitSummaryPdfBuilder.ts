@@ -28,6 +28,17 @@ import {
   formatActivityIndexValue,
   formatActivityIndexBreakdown,
 } from '../diary/activityIndex';
+import { QUESTIONS_SECTION_TITLE } from './visitQuestions';
+
+function buildQuestionsSection(summary: VisitSummary): string {
+  if (summary.openQuestions.length === 0) {
+    return '';
+  }
+  const items = summary.openQuestions
+    .map((question) => `<li>${escapeHtml(question.text)}</li>`)
+    .join('');
+  return `<h2>${escapeHtml(QUESTIONS_SECTION_TITLE)}</h2><ul class="questions">${items}</ul>`;
+}
 
 function buildActivitySection(summary: VisitSummary): string {
   const heading = `<h2>${escapeHtml(ACTIVITY_INDEX_NAME)}</h2>`;
@@ -135,6 +146,7 @@ export function buildVisitSummaryHtml(summary: VisitSummary, today: Date): strin
           .activity .n { font-size: 24px; font-weight: 700; margin-right: 10px; }
           .activity .l { color: #6B6259; }
           .origin { font-style: italic; color: #6B6259; }
+          .questions { font-size: 12px; margin: 3px 0 3px 18px; padding: 0; line-height: 1.5; }
           .med { border-top: 1px solid #E4DACB; padding: 7px 0; }
           .med.ended { color: #6B6259; }
           .med-name { font-weight: 700; margin: 0; }
@@ -146,6 +158,7 @@ export function buildVisitSummaryHtml(summary: VisitSummary, today: Date): strin
       <body>
         <h1>Zusammenfassung für den Arztbesuch</h1>
         <p class="generated">${escapeHtml(formatPeriodLabel(summary.period))}</p>
+        ${buildQuestionsSection(summary)}
         ${buildActivitySection(summary)}
         ${buildFiguresSection(summary)}
         ${buildPhasesSection(summary)}

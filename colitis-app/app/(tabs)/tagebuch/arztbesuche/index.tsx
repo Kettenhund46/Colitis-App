@@ -110,6 +110,14 @@ export default function ArztbesucheScreen() {
       >
         <Text style={styles.prepareLinkText}>Für den nächsten Termin vorbereiten</Text>
       </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Fragen für den Termin"
+        style={styles.prepareLink}
+        onPress={() => router.push('/tagebuch/arztbesuche/fragen')}
+      >
+        <Text style={styles.prepareLinkText}>Fragen für den Termin</Text>
+      </Pressable>
       {isLoading ? (
         <SkeletonList count={3} lines={2} />
       ) : (

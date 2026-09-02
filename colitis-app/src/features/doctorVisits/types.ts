@@ -12,6 +12,15 @@ export interface DoctorVisit {
   nextAppointmentNotificationId: string | null;
 }
 
+export interface VisitQuestion {
+  id: number;
+  text: string;
+  /** ISO-Zeitstempel, wann die Frage notiert wurde. */
+  createdAt: string;
+  /** ISO-Zeitstempel des Abhakens; null heisst offen. */
+  answeredAt: string | null;
+}
+
 export interface DoctorVisitInput {
   visitDate: string;
   doctorName: string | null;

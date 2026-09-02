@@ -27,6 +27,7 @@ import {
   formatActivityIndexValue,
   formatActivityIndexBreakdown,
 } from '../../diary/activityIndex';
+import { QUESTIONS_SECTION_TITLE } from '../visitQuestions';
 import { formatGermanDate } from '../doctorVisitPassBuilder';
 import { SectionHeading } from '../../../components/ui/SectionHeading';
 import { useTheme } from '../../../theme/ThemeContext';
@@ -46,6 +47,19 @@ export function VisitSummaryView({ summary }: VisitSummaryViewProps) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.periodText}>{formatPeriodLabel(summary.period)}</Text>
+
+      {/* Ganz oben, vor den Zahlen: Im Sprechzimmer ist die Frage das, was
+          sonst verlorengeht. */}
+      {summary.openQuestions.length > 0 && (
+        <>
+          <SectionHeading>{QUESTIONS_SECTION_TITLE}</SectionHeading>
+          {summary.openQuestions.map((question) => (
+            <Text key={question.id} style={styles.bodyText}>
+              • {question.text}
+            </Text>
+          ))}
+        </>
+      )}
 
       <SectionHeading>{ACTIVITY_INDEX_NAME}</SectionHeading>
       {summary.activity === null ? (

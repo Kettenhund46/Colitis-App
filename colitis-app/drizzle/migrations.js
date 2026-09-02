@@ -13,6 +13,7 @@ import m0008 from './0008_parallel_white_tiger.sql';
 import m0009 from './0009_classy_sue_storm.sql';
 import m0010 from './0010_warm_gunslinger.sql';
 import m0011 from './0011_clumsy_fat_cobra.sql';
+import m0012 from './0012_careless_shiva.sql';
 
   export default {
     journal,
@@ -28,7 +29,8 @@ m0007,
 m0008,
 m0009,
 m0010,
-m0011
+m0011,
+m0012
     }
   }
   

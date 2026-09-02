@@ -2,7 +2,8 @@ import { addDays, eachDayInclusive, formatLocalDateKey, parseLocalDate } from '.
 import { formatDecimalComma } from '../../lib/formatNumber';
 import { formatDayCount, formatDayCountDative } from '../../lib/counting';
 import { formatGermanDate } from './doctorVisitPassBuilder';
-import type { DoctorVisit } from './types';
+import type { DoctorVisit, VisitQuestion } from './types';
+import { openQuestions } from './visitQuestions';
 import { groupEntriesByDay, hasBlood, rateDayTotals, sumDayTotals } from '../diary/calendarLogic';
 import type { DiaryEntryWithTriggers } from '../diary/types';
 import { computeTriggerPatterns } from '../diary/analysis';
@@ -342,6 +343,8 @@ export interface VisitSummary {
    * anderen nur feststellt, dass nichts erfasst wurde.
    */
   isActivityBaselineMissing: boolean;
+  /** Offene Fragen, aelteste zuerst -- sie stehen ganz oben im Dokument. */
+  openQuestions: VisitQuestion[];
   /** Kein Eintrag und kein Medikament im Zeitraum. */
   isEmpty: boolean;
 }
@@ -366,6 +369,8 @@ export interface VisitSummaryInput {
   today: string;
   /** Uebliche Stuhlgaenge pro Tag; ohne sie entfaellt die Aktivitaet. */
   normalStoolFrequency: number | null;
+  /** Alle notierten Fragen; gefiltert wird hier. */
+  questions: VisitQuestion[];
 }
 
 export function computeTriggerShares(entries: DiaryEntryWithTriggers[]): TriggerShare[] {
@@ -545,6 +550,7 @@ export function buildVisitSummary(input: VisitSummaryInput): VisitSummary {
     triggers: figures === null ? [] : computeTriggerShares(entries),
     medications,
     nextScreeningDate: input.screening === null ? null : input.screening.nextDueDate,
+    openQuestions: openQuestions(input.questions),
     activity: buildActivitySummary(entries, period, input.normalStoolFrequency),
     isActivityBaselineMissing: input.normalStoolFrequency === null,
     isEmpty: daysWithEntries === 0 && medications.length === 0,

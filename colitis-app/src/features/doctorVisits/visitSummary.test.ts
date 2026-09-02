@@ -724,6 +724,7 @@ describe('visitSummary', () => {
         visits: [visit({ id: 1, visitDate: '2026-08-01', doctorName: 'Dr. Weber' })],
         screening: null,
         normalStoolFrequency: 2,
+        questions: [],
         today: '2026-08-20',
       });
 
@@ -743,6 +744,7 @@ describe('visitSummary', () => {
         visits: [visit({ id: 1, visitDate: '2026-08-01' })],
         screening: null,
         normalStoolFrequency: 2,
+        questions: [],
         today: '2026-08-20',
       });
 
@@ -760,6 +762,7 @@ describe('visitSummary', () => {
         visits: [visit({ id: 1, visitDate: '2026-08-01' })],
         screening: null,
         normalStoolFrequency: 2,
+        questions: [],
         today: '2026-08-20',
       });
       expect(summary.isEmpty).toBe(true);
@@ -773,6 +776,7 @@ describe('visitSummary', () => {
         visits: [visit({ id: 1, visitDate: '2026-08-01' })],
         screening: null,
         normalStoolFrequency: 2,
+        questions: [],
         today: '2026-08-20',
       });
       expect(summary.isEmpty).toBe(false);
@@ -786,6 +790,7 @@ describe('visitSummary', () => {
         visits: [],
         screening: { id: 1, intervalMonths: 12, nextDueDate: '2027-01-15', note: null, notificationId: null },
         normalStoolFrequency: 2,
+        questions: [],
         today: '2026-08-20',
       });
       expect(summary.nextScreeningDate).toBe('2027-01-15');
@@ -800,6 +805,7 @@ describe('visitSummary', () => {
           visits: [visit({ id: 1, visitDate: '2026-08-01' })],
           screening: null,
           normalStoolFrequency,
+          questions: [],
           today: '2026-08-20',
         });
       }
@@ -844,6 +850,42 @@ describe('visitSummary', () => {
         expect(summary.activity?.average).toBe(0);
       });
     });
+  });
+});
+
+describe('offene Fragen in der Zusammenfassung', () => {
+  function summaryWithQuestions(questions: { id: number; answeredAt: string | null }[]) {
+    return buildVisitSummary({
+      entries: [],
+      medications: [],
+      intakes: [],
+      visits: [visit({ id: 1, visitDate: '2026-08-01' })],
+      screening: null,
+      normalStoolFrequency: 2,
+      questions: questions.map((entry) => ({
+        id: entry.id,
+        text: 'Frage ' + entry.id,
+        createdAt: '2026-08-0' + entry.id + 'T09:00:00.000Z',
+        answeredAt: entry.answeredAt,
+      })),
+      today: '2026-08-20',
+    });
+  }
+
+  it('carries only the open ones', () => {
+    const summary = summaryWithQuestions([
+      { id: 1, answeredAt: null },
+      { id: 2, answeredAt: '2026-08-05T10:00:00.000Z' },
+      { id: 3, answeredAt: null },
+    ]);
+
+    expect(summary.openQuestions.map((entry) => entry.id)).toEqual([1, 3]);
+  });
+
+  it('is empty when every question was discussed', () => {
+    const summary = summaryWithQuestions([{ id: 1, answeredAt: '2026-08-05T10:00:00.000Z' }]);
+
+    expect(summary.openQuestions).toEqual([]);
   });
 });
 

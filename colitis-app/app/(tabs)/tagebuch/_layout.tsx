@@ -20,6 +20,7 @@ export default function TagebuchLayout() {
       <Stack.Screen name="arztbesuche/neu" options={{ title: 'Neuer Arztbesuch' }} />
       <Stack.Screen name="arztbesuche/[id]" options={{ title: 'Arztbesuch bearbeiten' }} />
       <Stack.Screen name="arztbesuche/zusammenfassung" options={{ title: 'Zusammenfassung' }} />
+      <Stack.Screen name="arztbesuche/fragen" options={{ title: 'Fragen für den Termin' }} />
     </Stack>
   );
 }
