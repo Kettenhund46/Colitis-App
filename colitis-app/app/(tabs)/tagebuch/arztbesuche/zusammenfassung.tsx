@@ -17,6 +17,7 @@ import { VisitSummaryView } from '../../../../src/features/doctorVisits/componen
 import { EmptyState } from '../../../../src/components/ui/EmptyState';
 import { SkeletonList } from '../../../../src/components/ui/SkeletonList';
 import { formatLocalDateKey } from '../../../../src/lib/localDate';
+import { listScheduleHistory } from '../../../../src/features/medications/db/scheduleHistoryRepository';
 import { useTheme } from '../../../../src/theme/ThemeContext';
 import { tokens } from '../../../../src/styles/tokens';
 import type { VisitSummary } from '../../../../src/features/doctorVisits/visitSummary';
@@ -37,14 +38,16 @@ export default function ZusammenfassungScreen() {
 
       createEncryptedDb()
         .then(async (db) => {
-          const [entries, medications, intakes, visits, screening, questions] = await Promise.all([
-            listDiaryEntries(db),
-            listMedications(db),
-            listMedicationIntakes(db, null),
-            listDoctorVisits(db),
-            getScreeningReminder(db),
-            listVisitQuestions(db),
-          ]);
+          const [entries, medications, intakes, visits, screening, questions, scheduleHistory] =
+            await Promise.all([
+              listDiaryEntries(db),
+              listMedications(db),
+              listMedicationIntakes(db, null),
+              listDoctorVisits(db),
+              getScreeningReminder(db),
+              listVisitQuestions(db),
+              listScheduleHistory(db),
+            ]);
           const normalStoolFrequency = await getNormalStoolFrequency();
           if (isActive) {
             setSummary(
@@ -56,6 +59,7 @@ export default function ZusammenfassungScreen() {
                 screening,
                 normalStoolFrequency,
                 questions,
+                scheduleHistory,
                 today: formatLocalDateKey(new Date()),
               })
             );

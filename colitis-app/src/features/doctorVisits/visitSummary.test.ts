@@ -19,7 +19,12 @@ import {
 } from './visitSummary';
 import type { DoctorVisit } from './types';
 import type { DiaryEntryWithTriggers } from '../diary/types';
+import type { ScheduleHistory } from '../medications/scheduleHistory';
 import type { Medication, MedicationIntake } from '../medications/types';
+
+// Ohne Abschnitte gilt die Laufzeit des Medikaments -- das Verhalten von vor
+// der Historisierung. Die Historie selbst hat einen eigenen Block.
+const NO_HISTORY: ScheduleHistory = new Map();
 
 function visit(overrides: Partial<DoctorVisit> & { id: number; visitDate: string }): DoctorVisit {
   return {
@@ -610,30 +615,71 @@ describe('visitSummary', () => {
     });
   });
 
+  describe('buildMedicationLines with a schedule history', () => {
+    const running = medication({ id: 1, name: 'Mesalazin', startDate: '2026-08-01' });
+
+    it('leaves a paused stretch out of the denominator', () => {
+      // Laeuft vom 1. bis zum 20., pausiert vom 6. bis zum 20. -- bleiben fuenf
+      // faellige Tage statt zwanzig.
+      const history = new Map([
+        [
+          1,
+          [
+            { id: 1, validFrom: '2026-08-01', validTo: '2026-08-05', dosesPerDay: 3 },
+            { id: 2, validFrom: '2026-08-06', validTo: null, dosesPerDay: 0 },
+          ],
+        ],
+      ]);
+      const line = buildMedicationLines([running], [], history, PERIOD_AUGUST)[0];
+      expect(line.dueDays).toBe(5);
+    });
+
+    it('skips a medication that was paused through the whole period', () => {
+      const history = new Map([
+        [1, [{ id: 1, validFrom: '2026-07-01', validTo: null, dosesPerDay: 0 }]],
+      ]);
+      expect(buildMedicationLines([running], [], history, PERIOD_AUGUST)).toEqual([]);
+    });
+
+    it('does not count an intake that falls into the pause', () => {
+      const history = new Map([
+        [
+          1,
+          [
+            { id: 1, validFrom: '2026-08-01', validTo: '2026-08-05', dosesPerDay: 3 },
+            { id: 2, validFrom: '2026-08-06', validTo: null, dosesPerDay: 0 },
+          ],
+        ],
+      ]);
+      const line = buildMedicationLines([running], [intake(1, 1, 10)], history, PERIOD_AUGUST)[0];
+      expect(line.totalIntakes).toBe(0);
+    });
+  });
+
   describe('buildMedicationLines', () => {
     it('skips a medication that did not run in the period', () => {
       const older = medication({ id: 1, name: 'Prednisolon', startDate: '2026-01-01', endDate: '2026-02-01' });
-      expect(buildMedicationLines([older], [], PERIOD_AUGUST)).toEqual([]);
+      expect(buildMedicationLines([older], [], NO_HISTORY, PERIOD_AUGUST)).toEqual([]);
     });
 
     it('uses the days it actually ran as the denominator', () => {
       // Laeuft vom 1. bis zum 10., der Zeitraum geht bis zum 20.
       const ended = medication({ id: 1, name: 'Prednisolon', startDate: '2026-08-01', endDate: '2026-08-10' });
-      const lines = buildMedicationLines([ended], [], PERIOD_AUGUST);
+      const lines = buildMedicationLines([ended], [], NO_HISTORY, PERIOD_AUGUST);
       expect(lines[0].dueDays).toBe(10);
     });
 
     it('counts a day with intake once, however many intakes it has', () => {
       const running = medication({ id: 1, name: 'Mesalazin' });
       const intakes = [intake(1, 1, 3, 8), intake(2, 1, 3, 13), intake(3, 1, 3, 19)];
-      const lines = buildMedicationLines([running], intakes, PERIOD_AUGUST);
+      const lines = buildMedicationLines([running], intakes, NO_HISTORY, PERIOD_AUGUST);
       expect(lines[0].daysWithIntake).toBe(1);
       expect(lines[0].totalIntakes).toBe(3);
     });
 
     it('ignores intakes of another medication', () => {
       const running = medication({ id: 1, name: 'Mesalazin' });
-      const lines = buildMedicationLines([running], [intake(1, 2, 3)], PERIOD_AUGUST);
+      const lines = buildMedicationLines([running], [intake(1, 2, 3)], NO_HISTORY, PERIOD_AUGUST);
       expect(lines[0].totalIntakes).toBe(0);
     });
 
@@ -644,7 +690,7 @@ describe('visitSummary', () => {
         medicationId: 1,
         takenAt: new Date(2026, 6, 15, 9).toISOString(),
       };
-      expect(buildMedicationLines([running], [outside], PERIOD_AUGUST)[0].totalIntakes).toBe(0);
+      expect(buildMedicationLines([running], [outside], NO_HISTORY, PERIOD_AUGUST)[0].totalIntakes).toBe(0);
     });
 
     it('carries dose, schedule and end date', () => {
@@ -655,7 +701,7 @@ describe('visitSummary', () => {
         schedule: 'morgens',
         endDate: '2026-08-10',
       });
-      const line = buildMedicationLines([ended], [], PERIOD_AUGUST)[0];
+      const line = buildMedicationLines([ended], [], NO_HISTORY, PERIOD_AUGUST)[0];
       expect(line.name).toBe('Prednisolon');
       expect(line.dose).toBe('20 mg');
       expect(line.schedule).toBe('morgens');
@@ -665,29 +711,29 @@ describe('visitSummary', () => {
     it('carries the medication id so that two medications of the same name stay apart', () => {
       const first = medication({ id: 1, name: 'Prednisolon', startDate: '2026-08-01', endDate: '2026-08-05' });
       const second = medication({ id: 2, name: 'Prednisolon', startDate: '2026-08-10' });
-      const lines = buildMedicationLines([first, second], [], PERIOD_AUGUST);
+      const lines = buildMedicationLines([first, second], [], NO_HISTORY, PERIOD_AUGUST);
       expect(lines.map((line) => line.medicationId)).toEqual([1, 2]);
     });
 
     it('treats an end date in the future as still running', () => {
       const planned = medication({ id: 1, name: 'Prednisolon', startDate: '2026-08-01', endDate: '2026-09-30' });
-      expect(buildMedicationLines([planned], [], PERIOD_AUGUST)[0].hasEnded).toBe(false);
+      expect(buildMedicationLines([planned], [], NO_HISTORY, PERIOD_AUGUST)[0].hasEnded).toBe(false);
     });
 
     it('treats an end date on the last day of the period as still running', () => {
       const ending = medication({ id: 1, name: 'Prednisolon', startDate: '2026-08-01', endDate: '2026-08-20' });
-      expect(buildMedicationLines([ending], [], PERIOD_AUGUST)[0].hasEnded).toBe(false);
+      expect(buildMedicationLines([ending], [], NO_HISTORY, PERIOD_AUGUST)[0].hasEnded).toBe(false);
     });
 
     it('treats an end date before the end of the period as ended', () => {
       const ended = medication({ id: 1, name: 'Prednisolon', startDate: '2026-08-01', endDate: '2026-08-10' });
-      expect(buildMedicationLines([ended], [], PERIOD_AUGUST)[0].hasEnded).toBe(true);
+      expect(buildMedicationLines([ended], [], NO_HISTORY, PERIOD_AUGUST)[0].hasEnded).toBe(true);
     });
 
     it('ignores an intake on a day the medication was not running', () => {
       // Beendet am 10., aber am 12. noch protokolliert.
       const ended = medication({ id: 1, name: 'Prednisolon', startDate: '2026-08-01', endDate: '2026-08-10' });
-      const line = buildMedicationLines([ended], [intake(1, 1, 12)], PERIOD_AUGUST)[0];
+      const line = buildMedicationLines([ended], [intake(1, 1, 12)], NO_HISTORY, PERIOD_AUGUST)[0];
       expect(line.daysWithIntake).toBe(0);
       expect(line.totalIntakes).toBe(0);
     });
@@ -725,6 +771,7 @@ describe('visitSummary', () => {
         screening: null,
         normalStoolFrequency: 2,
         questions: [],
+        scheduleHistory: NO_HISTORY,
         today: '2026-08-20',
       });
 
@@ -745,6 +792,7 @@ describe('visitSummary', () => {
         screening: null,
         normalStoolFrequency: 2,
         questions: [],
+        scheduleHistory: NO_HISTORY,
         today: '2026-08-20',
       });
 
@@ -763,6 +811,7 @@ describe('visitSummary', () => {
         screening: null,
         normalStoolFrequency: 2,
         questions: [],
+        scheduleHistory: NO_HISTORY,
         today: '2026-08-20',
       });
       expect(summary.isEmpty).toBe(true);
@@ -777,6 +826,7 @@ describe('visitSummary', () => {
         screening: null,
         normalStoolFrequency: 2,
         questions: [],
+        scheduleHistory: NO_HISTORY,
         today: '2026-08-20',
       });
       expect(summary.isEmpty).toBe(false);
@@ -791,6 +841,7 @@ describe('visitSummary', () => {
         screening: { id: 1, intervalMonths: 12, nextDueDate: '2027-01-15', note: null, notificationId: null },
         normalStoolFrequency: 2,
         questions: [],
+        scheduleHistory: NO_HISTORY,
         today: '2026-08-20',
       });
       expect(summary.nextScreeningDate).toBe('2027-01-15');
@@ -806,6 +857,7 @@ describe('visitSummary', () => {
           screening: null,
           normalStoolFrequency,
           questions: [],
+          scheduleHistory: NO_HISTORY,
           today: '2026-08-20',
         });
       }
@@ -868,6 +920,7 @@ describe('offene Fragen in der Zusammenfassung', () => {
         createdAt: '2026-08-0' + entry.id + 'T09:00:00.000Z',
         answeredAt: entry.answeredAt,
       })),
+      scheduleHistory: NO_HISTORY,
       today: '2026-08-20',
     });
   }

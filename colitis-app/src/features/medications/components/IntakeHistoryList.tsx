@@ -8,9 +8,23 @@ import {
 import { Card } from '../../../components/ui/Card';
 import { useTheme } from '../../../theme/ThemeContext';
 import { tokens } from '../../../styles/tokens';
-import type { DaySummary } from '../adherence';
+import type { DayState, DaySummary } from '../adherence';
 import type { Medication } from '../types';
 import type { ThemeColors } from '../../../theme/types';
+
+// Eine Pause ist kein Versaeumnis: Sie bleibt neutral, waehrend ein
+// unvollstaendiger Tag die Warnfarbe traegt.
+const ACCENT_BY_STATE: Record<DayState, 'good' | 'warning' | 'neutral'> = {
+  complete: 'good',
+  incomplete: 'warning',
+  paused: 'neutral',
+};
+
+const TEXT_STYLE_BY_STATE: Record<DayState, 'completeText' | 'missingText' | 'pausedText'> = {
+  complete: 'completeText',
+  incomplete: 'missingText',
+  paused: 'pausedText',
+};
 
 interface IntakeHistoryListProps {
   summaries: DaySummary[];
@@ -39,7 +53,7 @@ export function IntakeHistoryList({
       renderItem={({ item }) => {
         const isExpanded = item.date === expandedDate;
         return (
-          <Card accent={item.isComplete ? 'good' : 'warning'}>
+          <Card accent={ACCENT_BY_STATE[item.state]}>
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ expanded: isExpanded }}
@@ -48,7 +62,7 @@ export function IntakeHistoryList({
               onPress={() => onToggleDate(item.date)}
             >
               <Text style={styles.dayHeading}>{formatDayHeading(item.date)}</Text>
-              <Text style={item.isComplete ? styles.completeText : styles.missingText}>
+              <Text style={styles[TEXT_STYLE_BY_STATE[item.state]]}>
                 {formatDaySummaryLabel(item)}
               </Text>
             </Pressable>
@@ -96,6 +110,7 @@ function makeStyles(colors: ThemeColors) {
     },
     completeText: { color: colors.success, fontSize: tokens.typography.fontSize.sm },
     missingText: { color: colors.danger, fontSize: tokens.typography.fontSize.sm },
+    pausedText: { color: colors.textSecondary, fontSize: tokens.typography.fontSize.sm },
     intakeBlock: {
       marginTop: tokens.spacing.sm,
       borderTopWidth: 1,

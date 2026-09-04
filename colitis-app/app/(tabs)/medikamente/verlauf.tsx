@@ -11,6 +11,7 @@ import {
 } from '../../../src/features/medications/db/medicationsRepository';
 import { formatLocalDate } from '../../../src/features/medications/medicationStatus';
 import { buildDaySummaries, periodStartDate } from '../../../src/features/medications/adherence';
+import { listScheduleHistory } from '../../../src/features/medications/db/scheduleHistoryRepository';
 import { IntakeHistoryList } from '../../../src/features/medications/components/IntakeHistoryList';
 import { EmptyState } from '../../../src/components/ui/EmptyState';
 import { SkeletonList } from '../../../src/components/ui/SkeletonList';
@@ -19,6 +20,7 @@ import { usePendingDeletion } from '../../../src/features/deletion/usePendingDel
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
 import type { HistoryPeriod } from '../../../src/features/medications/adherence';
+import type { ScheduleHistory } from '../../../src/features/medications/scheduleHistory';
 import type { Medication, MedicationIntake } from '../../../src/features/medications/types';
 import type { ThemeColors } from '../../../src/theme/types';
 
@@ -34,6 +36,7 @@ export default function EinnahmeVerlaufScreen() {
   const [period, setPeriod] = useState<HistoryPeriod>('30');
   const [medications, setMedications] = useState<Medication[]>([]);
   const [intakes, setIntakes] = useState<MedicationIntake[]>([]);
+  const [history, setHistory] = useState<ScheduleHistory>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
@@ -45,13 +48,15 @@ export default function EinnahmeVerlaufScreen() {
 
       createEncryptedDb()
         .then(async (db) => {
-          const [loadedMedications, loadedIntakes] = await Promise.all([
+          const [loadedMedications, loadedIntakes, loadedHistory] = await Promise.all([
             listMedications(db),
             listMedicationIntakes(db, null),
+            listScheduleHistory(db),
           ]);
           if (isActive) {
             setMedications(loadedMedications);
             setIntakes(loadedIntakes);
+            setHistory(loadedHistory);
             setError(null);
             setIsLoading(false);
           }
@@ -105,10 +110,11 @@ export default function EinnahmeVerlaufScreen() {
     return buildDaySummaries(
       medications,
       visibleIntakes,
+      history,
       periodStartDate(period, medications, today),
       today
     );
-  }, [medications, visibleIntakes, period]);
+  }, [medications, visibleIntakes, history, period]);
 
   function renderBody() {
     if (isLoading) {

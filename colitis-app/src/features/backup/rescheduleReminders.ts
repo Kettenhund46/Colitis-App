@@ -23,6 +23,8 @@ import {
   buildAppointmentReminderTrigger,
   buildAppointmentReminderContent,
 } from '../doctorVisits/appointmentReminder';
+import { pausedMedicationIdsOn } from '../medications/scheduleHistory';
+import { formatLocalDateKey } from '../../lib/localDate';
 import type { BackupDb } from './db/backupRepository';
 import type { BackupData } from './types';
 
@@ -53,7 +55,20 @@ export async function rescheduleAllReminders(
     return;
   }
 
+  // Was zum Zeitpunkt der Sicherung pausiert war, bleibt pausiert: Eine
+  // Wiederherstellung darf ein ausgesetztes Medikament nicht wieder klingeln
+  // lassen.
+  // Fehlen die Abschnitte -- aeltere Sicherung --, ist nichts pausiert.
+  const pausedMedicationIds = pausedMedicationIdsOn(
+    data.tables.medicationScheduleHistory ?? [],
+    formatLocalDateKey(now)
+  );
+
   for (const reminderTime of data.tables.medicationReminderTimes) {
+    if (pausedMedicationIds.has(reminderTime.medicationId)) {
+      await setReminderTimeNotificationId(db, reminderTime.id, null);
+      continue;
+    }
     const medication = data.tables.medications.find((candidate) => candidate.id === reminderTime.medicationId);
     const content = medication
       ? buildMedicationReminderContent(medication)

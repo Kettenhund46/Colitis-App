@@ -5,14 +5,17 @@ import {
   knowledgeFavorites,
   medicationLog,
   medicationReminderTimes,
+  medicationScheduleHistory,
   medications,
   savedPlaces,
   screeningReminders,
   triggers,
+  visitQuestions,
 } from '../../../db/schema';
 import * as schema from '../../../db/schema';
 import { BACKUP_FORMAT_VERSION, type BackupData } from '../types';
 import { normalizeDiaryRow } from '../legacyDiaryRow';
+import { scheduleHistoryForImport } from '../legacyScheduleHistory';
 
 export type BackupDb = BaseSQLiteDatabase<'sync', any, typeof schema>;
 
@@ -26,6 +29,8 @@ export async function exportBackupData(db: BackupDb): Promise<BackupData> {
       medications: await db.select().from(medications),
       medicationLog: await db.select().from(medicationLog),
       medicationReminderTimes: await db.select().from(medicationReminderTimes),
+      medicationScheduleHistory: await db.select().from(medicationScheduleHistory),
+      visitQuestions: await db.select().from(visitQuestions),
       savedPlaces: await db.select().from(savedPlaces),
       screeningReminders: await db.select().from(screeningReminders),
       knowledgeFavorites: await db.select().from(knowledgeFavorites),
@@ -40,6 +45,8 @@ export async function importBackupData(db: BackupDb, data: BackupData): Promise<
     tx.delete(triggers).run();
     tx.delete(medicationLog).run();
     tx.delete(medicationReminderTimes).run();
+    tx.delete(medicationScheduleHistory).run();
+    tx.delete(visitQuestions).run();
     tx.delete(diaryEntries).run();
     tx.delete(medications).run();
     tx.delete(savedPlaces).run();
@@ -74,6 +81,17 @@ export async function importBackupData(db: BackupDb, data: BackupData): Promise<
     }
     for (const row of data.tables.medicationReminderTimes) {
       tx.insert(medicationReminderTimes).values(row).run();
+    }
+    for (const row of data.tables.visitQuestions ?? []) {
+      tx.insert(visitQuestions).values(row).run();
+    }
+    // Aeltere Sicherungen kennen die Zeitplan-Historie nicht. Sie wird dann aus
+    // Laufzeit und Erinnerungszeiten erzeugt -- genau wie bei der Migration.
+    const historyRows =
+      data.tables.medicationScheduleHistory ??
+      scheduleHistoryForImport(data.tables.medications, data.tables.medicationReminderTimes);
+    for (const row of historyRows) {
+      tx.insert(medicationScheduleHistory).values(row).run();
     }
   });
 }

@@ -70,6 +70,24 @@ export const medicationReminderTimes = sqliteTable('medication_reminder_times', 
   notificationId: text('notification_id'),
 });
 
+/**
+ * Wie viele Einnahmen an einem Tag faellig waren -- abschnittsweise, nicht als
+ * aktueller Stand. Ohne diese Tabelle bewertet die Rueckschau jeden vergangenen
+ * Tag mit der heutigen Zahl der Erinnerungszeiten.
+ */
+export const medicationScheduleHistory = sqliteTable('medication_schedule_history', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  medicationId: integer('medication_id')
+    .notNull()
+    .references(() => medications.id),
+  /** Erster Tag, an dem der Abschnitt gilt. YYYY-MM-DD, lokal. */
+  validFrom: text('valid_from').notNull(),
+  /** Letzter Tag des Abschnitts. `null` heisst: gilt weiter. */
+  validTo: text('valid_to'),
+  /** Faellige Einnahmen je Tag. `0` heisst pausiert. */
+  dosesPerDay: integer('doses_per_day').notNull(),
+});
+
 export const savedPlaces = sqliteTable('saved_places', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),

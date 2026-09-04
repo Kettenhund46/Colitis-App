@@ -11,8 +11,15 @@ import {
   logMedicationTaken,
   listMedicationIntakes,
   endMedication,
+  pauseMedication,
+  resumeMedication,
   deleteMedication,
 } from '../../../src/features/medications/db/medicationsRepository';
+import { listScheduleHistory } from '../../../src/features/medications/db/scheduleHistoryRepository';
+import { rescheduleSupplyReminder } from '../../../src/features/medications/scheduleSupplyReminder';
+import { buildMedicationReminderContent } from '../../../src/features/medications/notifications/reminderContent';
+import { scheduleDailyReminder } from '../../../src/lib/notifications/notificationService';
+import { setReminderTimeNotificationId } from '../../../src/features/medications/db/medicationsRepository';
 import { formatLocalDate } from '../../../src/features/medications/medicationStatus';
 import {
   countByMedication,
@@ -33,6 +40,7 @@ import {
 } from '../../../src/lib/notifications/notificationService';
 import { buildScreeningReminderContent } from '../../../src/features/medications/notifications/reminderContent';
 import { exportMedicationPass } from '../../../src/features/medications/medicationPassExport';
+import { passAdherencePeriod } from '../../../src/features/medications/medicationPassBuilder';
 import { MedicationList } from '../../../src/features/medications/components/MedicationList';
 import { ScreeningReminderCard } from '../../../src/features/medications/components/ScreeningReminderCard';
 import { SwipeableTabScreen } from '../../../src/components/SwipeableTabScreen';
@@ -40,6 +48,7 @@ import { UndoBar } from '../../../src/components/ui/UndoBar';
 import { usePendingDeletion } from '../../../src/features/deletion/usePendingDeletion';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { tokens } from '../../../src/styles/tokens';
+import type { ScheduleHistory } from '../../../src/features/medications/scheduleHistory';
 import type {
   Medication,
   MedicationIntake,
@@ -54,6 +63,7 @@ export default function MedikamenteScreen() {
   const styles = makeStyles(colors);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [intakes, setIntakes] = useState<MedicationIntake[]>([]);
+  const [history, setHistory] = useState<ScheduleHistory>(new Map());
   const [screeningReminder, setScreeningReminder] = useState<ScreeningReminder | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -73,17 +83,20 @@ export default function MedikamenteScreen() {
       createEncryptedDb()
         .then(async (db) => {
           const today = formatLocalDate(new Date());
-          const [loadedMedications, loadedScreening, loadedIntakes, loadedLeadDays] = await Promise.all([
-            listMedications(db),
-            getScreeningReminder(db),
-            listMedicationIntakes(db, queryLowerBoundIso(today)),
-            getPrescriptionLeadDays(),
-          ]);
+          const [loadedMedications, loadedScreening, loadedIntakes, loadedLeadDays, loadedHistory] =
+            await Promise.all([
+              listMedications(db),
+              getScreeningReminder(db),
+              listMedicationIntakes(db, queryLowerBoundIso(today)),
+              getPrescriptionLeadDays(),
+              listScheduleHistory(db),
+            ]);
           if (isActive) {
             setMedications(loadedMedications);
             setScreeningReminder(loadedScreening);
             setIntakes(loadedIntakes);
             setPrescriptionLeadDays(loadedLeadDays);
+            setHistory(loadedHistory);
             setError(null);
             setIsLoading(false);
           }
@@ -167,10 +180,62 @@ export default function MedikamenteScreen() {
         }
       }
       setMedications(await listMedications(db));
+      setHistory(await listScheduleHistory(db));
       setError(null);
     } catch (endError: unknown) {
       console.error('[Medikamente] Beenden fehlgeschlagen:', endError);
       setError('Medikament konnte nicht beendet werden.');
+    }
+  }
+
+  async function handlePause(medicationId: number) {
+    try {
+      const db = await createEncryptedDb();
+      const reminderTimes = await pauseMedication(db, medicationId, formatLocalDate(new Date()));
+      // Waehrend der Pause soll nichts klingeln -- weder die taeglichen
+      // Erinnerungen noch die ans Rezept.
+      for (const reminderTime of reminderTimes) {
+        if (reminderTime.notificationId) {
+          await cancelScheduledReminder(reminderTime.notificationId);
+          await setReminderTimeNotificationId(db, reminderTime.id, null);
+        }
+      }
+      await rescheduleSupplyReminder(db, medicationId, prescriptionLeadDays);
+      setMedications(await listMedications(db));
+      setHistory(await listScheduleHistory(db));
+      saveFeedback();
+      setError(null);
+    } catch (pauseError: unknown) {
+      console.error('[Medikamente] Pausieren fehlgeschlagen:', pauseError);
+      setError('Medikament konnte nicht pausiert werden.');
+    }
+  }
+
+  async function handleResume(medicationId: number) {
+    try {
+      const db = await createEncryptedDb();
+      const reminderTimes = await resumeMedication(db, medicationId, formatLocalDate(new Date()));
+      const medication = medications.find((entry) => entry.id === medicationId);
+      if (medication && reminderTimes.length > 0) {
+        const granted = await requestNotificationPermission();
+        if (granted) {
+          for (const reminderTime of reminderTimes) {
+            const notificationId = await scheduleDailyReminder(
+              reminderTime.time,
+              buildMedicationReminderContent(medication)
+            );
+            await setReminderTimeNotificationId(db, reminderTime.id, notificationId);
+          }
+        }
+      }
+      await rescheduleSupplyReminder(db, medicationId, prescriptionLeadDays);
+      setMedications(await listMedications(db));
+      setHistory(await listScheduleHistory(db));
+      saveFeedback();
+      setError(null);
+    } catch (resumeError: unknown) {
+      console.error('[Medikamente] Fortsetzen fehlgeschlagen:', resumeError);
+      setError('Medikament konnte nicht fortgesetzt werden.');
     }
   }
 
@@ -247,7 +312,12 @@ export default function MedikamenteScreen() {
   async function handleExportPass() {
     setIsExporting(true);
     try {
-      await exportMedicationPass(medications);
+      // Der Bildschirm haelt nur die Einnahmen von heute -- die Zeile im Pass
+      // blickt drei Monate zurueck und laedt sich ihren Zeitraum selbst.
+      const db = await createEncryptedDb();
+      const periodDays = passAdherencePeriod(new Date());
+      const passIntakes = await listMedicationIntakes(db, queryLowerBoundIso(periodDays[0]));
+      await exportMedicationPass(medications, passIntakes, history);
       setError(null);
     } catch (exportError: unknown) {
       console.error('[Medikamente] Medikamenten-Pass-Export fehlgeschlagen:', exportError);
@@ -311,10 +381,13 @@ export default function MedikamenteScreen() {
         takenTodayCounts={takenTodayCounts}
         onTakenToday={handleTakenToday}
         onEnd={handleEnd}
+        onPause={handlePause}
+        onResume={handleResume}
+        history={history}
         onEdit={(medicationId) => router.push(`/medikamente/${medicationId}`)}
         onDelete={handleDelete}
-      onRefill={handleRefill}
-      prescriptionLeadDays={prescriptionLeadDays}
+        onRefill={handleRefill}
+        prescriptionLeadDays={prescriptionLeadDays}
         hiddenId={pending === null ? null : pending.id}
       />
       <Pressable

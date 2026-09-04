@@ -2,6 +2,14 @@ import { asc, eq, gte } from 'drizzle-orm';
 import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core';
 import { medications, medicationReminderTimes, medicationLog } from '../../../db/schema';
 import * as schema from '../../../db/schema';
+import { dosesFromReminderTimes, isPausedOn, PAUSED_DOSES } from '../scheduleHistory';
+import {
+  applyScheduleChange,
+  alignHistoryStart,
+  closeScheduleAt,
+  deleteScheduleHistory,
+  listScheduleSegments,
+} from './scheduleHistoryRepository';
 import type { Medication, MedicationInput, MedicationReminderTime, MedicationIntake } from '../types';
 
 export type MedicationsDb = BaseSQLiteDatabase<'sync', any, typeof schema>;
@@ -23,6 +31,14 @@ export async function createMedication(db: MedicationsDb, input: MedicationInput
     .returning({ id: medications.id });
 
   const reminderTimes = await insertReminderTimes(db, insertedMedication.id, input.reminderTimes);
+
+  // Der erste Abschnitt der Zeitplan-Historie beginnt mit dem Medikament.
+  await applyScheduleChange(
+    db,
+    insertedMedication.id,
+    input.startDate,
+    dosesFromReminderTimes(input.reminderTimes.length)
+  );
 
   return {
     id: insertedMedication.id,
@@ -122,7 +138,8 @@ export interface ReminderTimesReplaceResult {
 export async function updateMedication(
   db: MedicationsDb,
   medicationId: number,
-  input: MedicationInput
+  input: MedicationInput,
+  today: string
 ): Promise<ReminderTimesReplaceResult> {
   await assertMedicationExists(db, medicationId);
 
@@ -147,7 +164,57 @@ export async function updateMedication(
 
   const inserted = await insertReminderTimes(db, medicationId, input.reminderTimes);
 
+  // Die Historie beginnt immer mit dem Medikament -- ein vorverlegtes
+  // Startdatum liesse sonst Tage ohne Abschnitt zurueck.
+  await alignHistoryStart(db, medicationId, input.startDate);
+
+  // Waehrend einer Pause bleibt die Historie unberuehrt: Eine Aenderung der
+  // Zeiten wuerde das Medikament sonst stillschweigend wieder aufnehmen. Die
+  // neue Anzahl greift, sobald fortgesetzt wird.
+  if (!(await isPaused(db, medicationId, today))) {
+    await applyScheduleChange(
+      db,
+      medicationId,
+      today,
+      dosesFromReminderTimes(input.reminderTimes.length)
+    );
+  }
+
   return { removed, inserted };
+}
+
+async function isPaused(db: MedicationsDb, medicationId: number, date: string): Promise<boolean> {
+  return isPausedOn(await listScheduleSegments(db, medicationId), date);
+}
+
+/**
+ * Setzt ein Medikament aus: keine Erinnerungen, keine Versaeumnisse, kein
+ * Vorratsverbrauch. Gibt die Erinnerungszeiten zurueck, die abbestellt werden
+ * muessen.
+ */
+export async function pauseMedication(
+  db: MedicationsDb,
+  medicationId: number,
+  today: string
+): Promise<MedicationReminderTime[]> {
+  await assertMedicationExists(db, medicationId);
+  await applyScheduleChange(db, medicationId, today, PAUSED_DOSES);
+  return loadReminderTimes(db, medicationId);
+}
+
+/**
+ * Nimmt ein pausiertes Medikament wieder auf, mit der Anzahl, die seine
+ * Erinnerungszeiten heute vorgeben.
+ */
+export async function resumeMedication(
+  db: MedicationsDb,
+  medicationId: number,
+  today: string
+): Promise<MedicationReminderTime[]> {
+  await assertMedicationExists(db, medicationId);
+  const reminderTimes = await loadReminderTimes(db, medicationId);
+  await applyScheduleChange(db, medicationId, today, dosesFromReminderTimes(reminderTimes.length));
+  return reminderTimes;
 }
 
 export async function endMedication(
@@ -157,6 +224,7 @@ export async function endMedication(
 ): Promise<MedicationReminderTime[]> {
   await assertMedicationExists(db, medicationId);
   await db.update(medications).set({ endDate }).where(eq(medications.id, medicationId));
+  await closeScheduleAt(db, medicationId, endDate);
   return loadReminderTimes(db, medicationId);
 }
 
@@ -227,6 +295,7 @@ export async function deleteMedication(db: MedicationsDb, medicationId: number):
   const reminderTimes = await loadReminderTimes(db, medicationId);
   await db.delete(medicationLog).where(eq(medicationLog.medicationId, medicationId));
   await db.delete(medicationReminderTimes).where(eq(medicationReminderTimes.medicationId, medicationId));
+  await deleteScheduleHistory(db, medicationId);
   await db.delete(medications).where(eq(medications.id, medicationId));
   return reminderTimes;
 }

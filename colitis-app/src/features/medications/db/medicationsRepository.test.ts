@@ -120,7 +120,7 @@ describe('medications repository', () => {
       packUnits: null,
       stockUnits: null,
       reminderTimes: ['08:00', '20:00'],
-    });
+    }, '2026-07-12');
 
     expect(removed).toHaveLength(1);
     expect(removed[0].time).toBe('08:00');
@@ -207,7 +207,7 @@ describe('medications repository', () => {
         packUnits: null,
         stockUnits: null,
         reminderTimes: [],
-      })
+      }, '2026-07-12')
     ).rejects.toThrow('Medikament mit ID 999999 wurde nicht gefunden.');
   });
 
@@ -295,7 +295,7 @@ describe('medications repository', () => {
       packUnits: null,
       stockUnits: null,
       reminderTimes: [],
-    });
+    }, '2026-07-12');
 
     const updated = await getMedicationById(db, created.id);
     expect(updated?.sideEffectsNote).toBeNull();

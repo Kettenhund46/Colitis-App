@@ -16,7 +16,8 @@ import {
 } from '../diary/activityIndex';
 import type { ActivityIndex } from '../diary/activityIndex';
 import { labelFor, TRIGGER_CATEGORY_OPTIONS } from '../diary/constants';
-import { isMedicationDueOn, localDateOf } from '../medications/adherence';
+import { computeIntakeAdherence, isMedicationDueOn, localDateOf } from '../medications/adherence';
+import type { ScheduleHistory } from '../medications/scheduleHistory';
 import type { Medication, MedicationIntake, ScreeningReminder } from '../medications/types';
 
 /** Zeitraum, wenn noch kein Arztbesuch erfasst ist. */
@@ -371,6 +372,8 @@ export interface VisitSummaryInput {
   normalStoolFrequency: number | null;
   /** Alle notierten Fragen; gefiltert wird hier. */
   questions: VisitQuestion[];
+  /** Zeitplan-Abschnitte je Medikament -- daraus kommen die faelligen Tage. */
+  scheduleHistory: ScheduleHistory;
 }
 
 export function computeTriggerShares(entries: DiaryEntryWithTriggers[]): TriggerShare[] {
@@ -399,32 +402,17 @@ export function computeTriggerShares(entries: DiaryEntryWithTriggers[]): Trigger
 export function buildMedicationLines(
   medications: Medication[],
   intakes: MedicationIntake[],
+  history: ScheduleHistory,
   period: SummaryPeriod
 ): MedicationSummaryLine[] {
   const periodDays = eachDayInclusive(period.fromDate, period.toDate);
   const lines: MedicationSummaryLine[] = [];
 
   for (const medication of medications) {
-    const dueDays = periodDays.filter((date) => isMedicationDueOn(medication, date));
-    if (dueDays.length === 0) {
+    const adherence = computeIntakeAdherence(medication, intakes, history, periodDays);
+    if (adherence.dueDays.length === 0) {
       // Lief in diesem Zeitraum gar nicht -- gehoert nicht ins Dokument.
       continue;
-    }
-
-    const dueDaySet = new Set(dueDays);
-    const relevantDays: string[] = [];
-    // Gezaehlt werden nur Einnahmen an Tagen, an denen das Medikament lief.
-    // Sonst koennte daysWithIntake groesser als dueDays werden -- "an 12 von 10
-    // Tagen erfasst" waere im Arztdokument nicht erklaerbar. Einnahmen ausserhalb
-    // der Laufzeit bleiben im Protokoll, nur nicht in dieser Zeile.
-    for (const intake of intakes) {
-      if (intake.medicationId !== medication.id) {
-        continue;
-      }
-      const day = localDateOf(intake.takenAt);
-      if (dueDaySet.has(day)) {
-        relevantDays.push(day);
-      }
     }
 
     lines.push({
@@ -435,9 +423,9 @@ export function buildMedicationLines(
       startDate: medication.startDate,
       endDate: medication.endDate,
       hasEnded: medication.endDate !== null && medication.endDate < period.toDate,
-      dueDays: dueDays.length,
-      daysWithIntake: new Set(relevantDays).size,
-      totalIntakes: relevantDays.length,
+      dueDays: adherence.dueDays.length,
+      daysWithIntake: adherence.daysWithIntake,
+      totalIntakes: adherence.totalIntakes,
     });
   }
 
@@ -538,7 +526,12 @@ export function buildVisitSummary(input: VisitSummaryInput): VisitSummary {
   const byDay = groupEntriesByDay(entries);
   const daysWithEntries = byDay.size;
   const figures = figuresFromDays(byDay);
-  const medications = buildMedicationLines(input.medications, input.intakes, period);
+  const medications = buildMedicationLines(
+    input.medications,
+    input.intakes,
+    input.scheduleHistory,
+    period
+  );
 
   // Die drei haengen zusammen: Ist die Datenlage zu duenn fuer Kennzahlen, ist
   // sie es auch fuer Phasen und Ausloeser.

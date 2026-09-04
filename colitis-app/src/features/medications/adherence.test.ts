@@ -6,6 +6,7 @@ import {
   intakesOnDate,
   countByMedication,
   buildDaySummaries,
+  computeIntakeAdherence,
   formatDaySummaryLabel,
   formatDayHeading,
   formatIntakeTime,
@@ -14,6 +15,7 @@ import {
   queryLowerBoundIso,
   medicationNameById,
 } from './adherence';
+import type { ScheduleHistory } from './scheduleHistory';
 import type { Medication, MedicationIntake } from './types';
 
 function medication(overrides: Partial<Medication> & { id: number; name: string }): Medication {
@@ -150,13 +152,17 @@ describe('adherence', () => {
       endDate: '2026-08-19',
     });
 
+    // Ohne Abschnitte greift der Notnagel: die heutige Anzahl. Die Historie
+    // selbst hat einen eigenen Block weiter unten.
+    const noHistory: ScheduleHistory = new Map();
+
     it('returns the days newest first', () => {
-      const summaries = buildDaySummaries([mesalazin], [], '2026-08-18', '2026-08-20');
+      const summaries = buildDaySummaries([mesalazin], [], noHistory, '2026-08-18', '2026-08-20');
       expect(summaries.map((summary) => summary.date)).toEqual(['2026-08-20', '2026-08-19', '2026-08-18']);
     });
 
     it('skips days on which nothing was due', () => {
-      const summaries = buildDaySummaries([mesalazin], [], '2026-08-16', '2026-08-18');
+      const summaries = buildDaySummaries([mesalazin], [], noHistory, '2026-08-16', '2026-08-18');
       expect(summaries.map((summary) => summary.date)).toEqual(['2026-08-18']);
     });
 
@@ -166,15 +172,15 @@ describe('adherence', () => {
         intake(2, 10, localIso(2026, 8, 18, 13, 0)),
         intake(3, 10, localIso(2026, 8, 18, 19, 0)),
       ];
-      const summaries = buildDaySummaries([mesalazin], intakes, '2026-08-18', '2026-08-19');
+      const summaries = buildDaySummaries([mesalazin], intakes, noHistory, '2026-08-18', '2026-08-19');
       expect(summaries[0].date).toBe('2026-08-19');
-      expect(summaries[0].isComplete).toBe(false);
+      expect(summaries[0].state).toBe('incomplete');
       expect(summaries[1].date).toBe('2026-08-18');
-      expect(summaries[1].isComplete).toBe(true);
+      expect(summaries[1].state).toBe('complete');
     });
 
     it('counts an ended medication only within its runtime', () => {
-      const summaries = buildDaySummaries([mesalazin, prednisolon], [], '2026-08-18', '2026-08-20');
+      const summaries = buildDaySummaries([mesalazin, prednisolon], [], noHistory, '2026-08-18', '2026-08-20');
       const byDate = new Map(summaries.map((summary) => [summary.date, summary]));
       expect(byDate.get('2026-08-19')?.medications.map((status) => status.name)).toEqual([
         'Mesalazin',
@@ -185,13 +191,48 @@ describe('adherence', () => {
 
     it('carries the intakes of each day', () => {
       const intakes = [intake(7, 10, localIso(2026, 8, 19, 8, 0))];
-      const summaries = buildDaySummaries([mesalazin], intakes, '2026-08-18', '2026-08-19');
+      const summaries = buildDaySummaries([mesalazin], intakes, noHistory, '2026-08-18', '2026-08-19');
       expect(summaries[0].intakes.map((entry) => entry.id)).toEqual([7]);
       expect(summaries[1].intakes).toEqual([]);
     });
 
     it('returns nothing when the range is inverted', () => {
-      expect(buildDaySummaries([mesalazin], [], '2026-08-20', '2026-08-18')).toEqual([]);
+      expect(buildDaySummaries([mesalazin], [], noHistory, '2026-08-20', '2026-08-18')).toEqual([]);
+    });
+
+    it('rates a past day by the count that was in force back then', () => {
+      // Drei Einnahmen im August, seit September nur noch eine. Der Augusttag
+      // muss weiterhin gegen drei gemessen werden.
+      const history: ScheduleHistory = new Map([
+        [
+          10,
+          [
+            { id: 1, validFrom: '2026-08-18', validTo: '2026-08-31', dosesPerDay: 3 },
+            { id: 2, validFrom: '2026-09-01', validTo: null, dosesPerDay: 1 },
+          ],
+        ],
+      ]);
+      const summaries = buildDaySummaries([mesalazin], [], history, '2026-08-20', '2026-09-02');
+      const byDate = new Map(summaries.map((summary) => [summary.date, summary]));
+      expect(byDate.get('2026-08-20')?.medications[0].expected).toBe(3);
+      expect(byDate.get('2026-09-02')?.medications[0].expected).toBe(1);
+    });
+
+    it('reads a paused stretch as paused, not as missed', () => {
+      const history: ScheduleHistory = new Map([
+        [
+          10,
+          [
+            { id: 1, validFrom: '2026-08-18', validTo: '2026-08-19', dosesPerDay: 3 },
+            { id: 2, validFrom: '2026-08-20', validTo: null, dosesPerDay: 0 },
+          ],
+        ],
+      ]);
+      const summaries = buildDaySummaries([mesalazin], [], history, '2026-08-19', '2026-08-20');
+      const byDate = new Map(summaries.map((summary) => [summary.date, summary]));
+      expect(byDate.get('2026-08-20')?.state).toBe('paused');
+      expect(byDate.get('2026-08-20')?.medications[0].isPaused).toBe(true);
+      expect(byDate.get('2026-08-19')?.state).toBe('incomplete');
     });
   });
 
@@ -199,23 +240,50 @@ describe('adherence', () => {
     it('confirms a complete day', () => {
       const summary = {
         date: '2026-08-20',
-        medications: [{ medicationId: 10, name: 'Mesalazin', expected: 3, taken: 3 }],
+        medications: [
+          { medicationId: 10, name: 'Mesalazin', expected: 3, taken: 3, isPaused: false },
+        ],
         intakes: [],
-        isComplete: true,
+        state: 'complete' as const,
       };
       expect(formatDaySummaryLabel(summary)).toBe('alles genommen');
+    });
+
+    it('says plainly that the day was paused', () => {
+      const summary = {
+        date: '2026-08-20',
+        medications: [
+          { medicationId: 10, name: 'Mesalazin', expected: 0, taken: 0, isPaused: true },
+        ],
+        intakes: [],
+        state: 'paused' as const,
+      };
+      expect(formatDaySummaryLabel(summary)).toBe('pausiert');
+    });
+
+    it('leaves a paused medication out of the missing list', () => {
+      const summary = {
+        date: '2026-08-20',
+        medications: [
+          { medicationId: 10, name: 'Mesalazin', expected: 3, taken: 2, isPaused: false },
+          { medicationId: 11, name: 'Azathioprin', expected: 0, taken: 0, isPaused: true },
+        ],
+        intakes: [],
+        state: 'incomplete' as const,
+      };
+      expect(formatDaySummaryLabel(summary)).toBe('Mesalazin: 2 von 3');
     });
 
     it('names only what is missing', () => {
       const summary = {
         date: '2026-08-20',
         medications: [
-          { medicationId: 10, name: 'Mesalazin', expected: 3, taken: 2 },
-          { medicationId: 11, name: 'Azathioprin', expected: 1, taken: 1 },
-          { medicationId: 12, name: 'Prednisolon', expected: 1, taken: 0 },
+          { medicationId: 10, name: 'Mesalazin', expected: 3, taken: 2, isPaused: false },
+          { medicationId: 11, name: 'Azathioprin', expected: 1, taken: 1, isPaused: false },
+          { medicationId: 12, name: 'Prednisolon', expected: 1, taken: 0, isPaused: false },
         ],
         intakes: [],
-        isComplete: false,
+        state: 'incomplete' as const,
       };
       expect(formatDaySummaryLabel(summary)).toBe('Mesalazin: 2 von 3 · Prednisolon: 0 von 1');
     });
@@ -288,5 +356,82 @@ describe('adherence', () => {
     it('falls back when the medication is gone', () => {
       expect(medicationNameById(medications, 99)).toBe('Unbekanntes Medikament');
     });
+  });
+});
+
+describe('computeIntakeAdherence', () => {
+  const mesalazin = medication({
+    id: 10,
+    name: 'Mesalazin',
+    startDate: '2026-08-01',
+    reminderTimes: reminderTimesFor(['08:00', '13:00', '19:00']),
+  });
+  const period = ['2026-08-01', '2026-08-02', '2026-08-03'];
+
+  it('falls back to the runtime when no segment exists', () => {
+    const result = computeIntakeAdherence(mesalazin, [], new Map(), period);
+    expect(result.dueDays).toEqual(period);
+  });
+
+  it('leaves the paused days out of the due days', () => {
+    const history: ScheduleHistory = new Map([
+      [
+        10,
+        [
+          { id: 1, validFrom: '2026-08-01', validTo: '2026-08-01', dosesPerDay: 3 },
+          { id: 2, validFrom: '2026-08-02', validTo: '2026-08-02', dosesPerDay: 0 },
+          { id: 3, validFrom: '2026-08-03', validTo: null, dosesPerDay: 3 },
+        ],
+      ],
+    ]);
+    const result = computeIntakeAdherence(mesalazin, [], history, period);
+    expect(result.dueDays).toEqual(['2026-08-01', '2026-08-03']);
+  });
+
+  it('counts a day complete against the count that was in force back then', () => {
+    // Am 01.08. waren drei faellig, ab dem 02.08. nur noch eine. Eine einzige
+    // Einnahme macht deshalb nur den zweiten Tag vollstaendig.
+    const history: ScheduleHistory = new Map([
+      [
+        10,
+        [
+          { id: 1, validFrom: '2026-08-01', validTo: '2026-08-01', dosesPerDay: 3 },
+          { id: 2, validFrom: '2026-08-02', validTo: null, dosesPerDay: 1 },
+        ],
+      ],
+    ]);
+    const intakes = [
+      intake(1, 10, localIso(2026, 8, 1, 8, 0)),
+      intake(2, 10, localIso(2026, 8, 2, 8, 0)),
+    ];
+    const result = computeIntakeAdherence(mesalazin, intakes, history, period);
+    expect(result.daysWithIntake).toBe(2);
+    expect(result.completeDays).toBe(1);
+    expect(result.totalIntakes).toBe(2);
+  });
+
+  it('ignores intakes of another medication', () => {
+    const intakes = [intake(1, 99, localIso(2026, 8, 1, 8, 0))];
+    const result = computeIntakeAdherence(mesalazin, intakes, new Map(), period);
+    expect(result.totalIntakes).toBe(0);
+  });
+
+  it('ignores intakes outside the due days', () => {
+    const history: ScheduleHistory = new Map([
+      [10, [{ id: 1, validFrom: '2026-08-03', validTo: null, dosesPerDay: 1 }]],
+    ]);
+    const intakes = [intake(1, 10, localIso(2026, 8, 1, 8, 0))];
+    const result = computeIntakeAdherence(mesalazin, intakes, history, period);
+    expect(result.totalIntakes).toBe(0);
+    expect(result.dueDays).toEqual(['2026-08-03']);
+  });
+
+  it('is empty for a medication that did not run in the period', () => {
+    const history: ScheduleHistory = new Map([
+      [10, [{ id: 1, validFrom: '2026-09-01', validTo: null, dosesPerDay: 1 }]],
+    ]);
+    const result = computeIntakeAdherence(mesalazin, [], history, period);
+    expect(result.dueDays).toEqual([]);
+    expect(result.completeDays).toBe(0);
   });
 });

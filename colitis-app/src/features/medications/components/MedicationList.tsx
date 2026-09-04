@@ -4,12 +4,15 @@ import { tokens } from '../../../styles/tokens';
 import { isMedicationActive, formatLocalDate } from '../medicationStatus';
 import { expectedDosesPerDay, formatTakenButtonLabel, isMedicationDueOn } from '../adherence';
 import { formatSupplyLabel, formatRefillLabel, isSupplyLow } from '../supply';
+import { pausedSince, segmentsFor } from '../scheduleHistory';
+import { formatMedicationStartDate } from '../medicationPassBuilder';
 import { Card } from '../../../components/ui/Card';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { SkeletonList } from '../../../components/ui/SkeletonList';
 import { FAB_CLEARANCE } from '../../../components/ui/floatingActionButton';
 import { SwipeableRow } from '../../../components/swipe/SwipeableRow';
 import type { ReactElement } from 'react';
+import type { ScheduleHistory } from '../scheduleHistory';
 import type { Medication } from '../types';
 import type { ThemeColors } from '../../../theme/types';
 
@@ -19,6 +22,11 @@ interface MedicationListProps {
   takenTodayCounts: Map<number, number>;
   onTakenToday: (medicationId: number) => void;
   onEnd: (medicationId: number) => void;
+  /** Setzt aus: keine Erinnerungen, keine Versaeumnisse, kein Verbrauch. */
+  onPause: (medicationId: number) => void;
+  onResume: (medicationId: number) => void;
+  /** Zeitplan-Abschnitte je Medikament -- daraus kommt der Pausen-Zustand. */
+  history: ScheduleHistory;
   onEdit: (medicationId: number) => void;
   onDelete: (medicationId: number) => void;
   /** Legt eine Packung nach. */
@@ -44,6 +52,9 @@ export function MedicationList({
   takenTodayCounts,
   onTakenToday,
   onEnd,
+  onPause,
+  onResume,
+  history,
   onEdit,
   onDelete,
   onRefill,
@@ -86,17 +97,21 @@ export function MedicationList({
       }
       renderItem={({ item }) => {
         const isActive = isMedicationActive(item.endDate, today);
-        const isDueToday = isMedicationDueOn(item, formatLocalDate(today));
+        const pausedFrom = pausedSince(segmentsFor(history, item.id), formatLocalDate(today));
+        const isPaused = pausedFrom !== null;
+        const isDueToday = isMedicationDueOn(item, formatLocalDate(today)) && !isPaused;
         const expectedToday = expectedDosesPerDay(item);
         const takenToday = takenTodayCounts.get(item.id) ?? 0;
         const isTakenToday = takenToday >= expectedToday;
-        const supplyLabel = formatSupplyLabel(item);
+        // Waehrend einer Pause wird nichts verbraucht -- eine Reichweite in
+        // Tagen waere dort schlicht falsch.
+        const supplyLabel = isPaused ? null : formatSupplyLabel(item);
         const isLow = isSupplyLow(item, prescriptionLeadDays);
         const refillLabel = formatRefillLabel(item);
         return (
           <View style={styles.rowWrapper}>
             <SwipeableRow onDelete={() => onDelete(item.id)}>
-              <Card accent={isActive ? 'good' : 'neutral'} isMuted={!isActive}>
+              <Card accent={!isActive || isPaused ? 'neutral' : 'good'} isMuted={!isActive || isPaused}>
               <Text style={styles.cardName}>{item.name}</Text>
               <Text style={styles.cardDetail}>
                 {item.dose} · {item.schedule}
@@ -111,6 +126,11 @@ export function MedicationList({
               )}
               {supplyLabel !== null && (
                 <Text style={isLow ? styles.cardSupplyLow : styles.cardDetail}>{supplyLabel}</Text>
+              )}
+              {pausedFrom !== null && (
+                <Text style={styles.cardPausedLabel}>
+                  Pausiert seit {formatMedicationStartDate(pausedFrom)}
+                </Text>
               )}
               {!isActive && item.endDate && <Text style={styles.cardEndedLabel}>Beendet am {item.endDate}</Text>}
               <View style={styles.actionsRow}>
@@ -150,6 +170,20 @@ export function MedicationList({
                 >
                   <Text style={styles.editButtonText}>Bearbeiten</Text>
                 </Pressable>
+                {isActive && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      isPaused ? `${item.name} fortsetzen` : `${item.name} pausieren`
+                    }
+                    style={styles.pauseButton}
+                    onPress={() => (isPaused ? onResume(item.id) : onPause(item.id))}
+                  >
+                    <Text style={styles.pauseButtonText}>
+                      {isPaused ? 'Fortsetzen' : 'Pausieren'}
+                    </Text>
+                  </Pressable>
+                )}
                 {isActive &&
                   (item.endDate === null ? (
                     <Pressable
@@ -229,6 +263,21 @@ function makeStyles(colors: ThemeColors) {
       fontSize: tokens.typography.fontSize.sm,
       marginTop: tokens.spacing.xs,
     },
+    // Kein Warnton: Eine Pause ist eine Entscheidung, kein Fehlzustand.
+    cardPausedLabel: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      fontStyle: 'italic',
+      marginTop: tokens.spacing.xs,
+    },
+    pauseButton: {
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: tokens.spacing.xs,
+      paddingHorizontal: tokens.spacing.md,
+    },
+    pauseButtonText: { color: colors.textPrimary, fontSize: tokens.typography.fontSize.sm },
     cardEndedLabel: {
       color: colors.textSecondary,
       fontSize: tokens.typography.fontSize.sm,

@@ -10,7 +10,7 @@ describe('backup repository', () => {
     db = createTestDb();
   });
 
-  it('exports an empty structure with all nine table keys when nothing exists yet', async () => {
+  it('exports an empty structure with all eleven table keys when nothing exists yet', async () => {
     const data = await exportBackupData(db);
     expect(data.version).toBe(1);
     expect(data.tables).toEqual({
@@ -19,6 +19,8 @@ describe('backup repository', () => {
       medications: [],
       medicationLog: [],
       medicationReminderTimes: [],
+      medicationScheduleHistory: [],
+      visitQuestions: [],
       savedPlaces: [],
       screeningReminders: [],
       knowledgeFavorites: [],
@@ -314,5 +316,92 @@ describe('backup repository', () => {
 
     const data = await exportBackupData(db);
     expect(data.tables.doctorVisits).toEqual(importedData.tables.doctorVisits);
+  });
+function legacyTables() {
+    return {
+      diaryEntries: [],
+      triggers: [],
+      medications: [
+        {
+          id: 5,
+          name: 'Mesalazin',
+          dose: '500mg',
+          schedule: '3x taeglich',
+          startDate: '2026-06-01',
+          endDate: null,
+          sideEffectsNote: null,
+          unitsPerIntake: 1,
+          packUnits: null,
+          stockUnits: null,
+          supplyNotificationId: null,
+        },
+      ],
+      medicationLog: [],
+      medicationReminderTimes: [
+        { id: 1, medicationId: 5, time: '08:00', notificationId: null },
+        { id: 2, medicationId: 5, time: '19:00', notificationId: null },
+      ],
+      savedPlaces: [],
+      screeningReminders: [],
+      knowledgeFavorites: [],
+      doctorVisits: [],
+    };
+  }
+
+  it('carries the schedule history through an export and re-import', async () => {
+    const importedData = {
+      version: 1 as const,
+      exportedAt: '2026-09-04T09:00:00.000Z',
+      tables: {
+        ...legacyTables(),
+        medicationScheduleHistory: [
+          { id: 1, medicationId: 5, validFrom: '2026-06-01', validTo: '2026-07-31', dosesPerDay: 3 },
+          { id: 2, medicationId: 5, validFrom: '2026-08-01', validTo: null, dosesPerDay: 2 },
+        ],
+        visitQuestions: [],
+      },
+    };
+
+    await importBackupData(db, importedData);
+
+    const data = await exportBackupData(db);
+    expect(data.tables.medicationScheduleHistory).toEqual(
+      importedData.tables.medicationScheduleHistory
+    );
+  });
+
+  it('carries the visit questions through an export and re-import', async () => {
+    const importedData = {
+      version: 1 as const,
+      exportedAt: '2026-09-04T09:00:00.000Z',
+      tables: {
+        ...legacyTables(),
+        medicationScheduleHistory: [],
+        visitQuestions: [
+          { id: 3, text: 'Kann ich die Dosis senken?', createdAt: '2026-08-01T09:00:00.000Z', answeredAt: null },
+        ],
+      },
+    };
+
+    await importBackupData(db, importedData);
+
+    const data = await exportBackupData(db);
+    expect(data.tables.visitQuestions).toEqual(importedData.tables.visitQuestions);
+  });
+
+  it('builds a schedule history for a backup that predates it', async () => {
+    // Aeltere Sicherung: keine Abschnitte, keine Fragen. Beides darf nicht zum
+    // Fehler fuehren, und die Historie entsteht aus Laufzeit und Zeiten.
+    await importBackupData(db, {
+      version: 1 as const,
+      exportedAt: '2026-08-01T09:00:00.000Z',
+      tables: legacyTables(),
+    });
+
+    const data = await exportBackupData(db);
+    expect(data.tables.medicationScheduleHistory).toEqual([
+      { id: 1, medicationId: 5, validFrom: '2026-06-01', validTo: null, dosesPerDay: 2 },
+    ]);
+    expect(data.tables.visitQuestions).toEqual([]);
   });
 });

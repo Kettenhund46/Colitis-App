@@ -1,10 +1,15 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { buildMedicationPassHtml } from './medicationPassBuilder';
-import type { Medication } from './types';
+import type { ScheduleHistory } from './scheduleHistory';
+import type { Medication, MedicationIntake } from './types';
 
-export async function exportMedicationPass(medications: Medication[]): Promise<void> {
-  const html = buildMedicationPassHtml(medications, new Date());
+export async function exportMedicationPass(
+  medications: Medication[],
+  intakes: MedicationIntake[],
+  history: ScheduleHistory
+): Promise<void> {
+  const html = buildMedicationPassHtml(medications, intakes, history, new Date());
   const { uri } = await Print.printToFileAsync({ html });
 
   const isAvailable = await Sharing.isAvailableAsync();

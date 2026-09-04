@@ -4,6 +4,7 @@ import { Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
 import { rescheduleSupplyReminder } from '../../../src/features/medications/scheduleSupplyReminder';
 import { getPrescriptionLeadDays } from '../../../src/features/settings/settingsStorage';
+import { formatLocalDate } from '../../../src/features/medications/medicationStatus';
 import {
   getMedicationById,
   updateMedication,
@@ -60,7 +61,12 @@ export default function MedikamentBearbeitenScreen() {
   async function handleSubmit(input: MedicationInput) {
     try {
       const db = await createEncryptedDb();
-      const { removed, inserted } = await updateMedication(db, medicationId, input);
+      const { removed, inserted } = await updateMedication(
+        db,
+        medicationId,
+        input,
+        formatLocalDate(new Date())
+      );
 
       for (const reminderTime of removed) {
         if (reminderTime.notificationId) {
