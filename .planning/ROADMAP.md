@@ -729,6 +729,78 @@ Ernährungstagebuch, die Laborwerte, der Zeitraum-Vergleich und die Kopplung
 der Frühwarnung an den Aktivitätsindex. Außerdem trägt die App weiterhin das
 Platzhalter-Symbol von Expo.
 
+*Nachtrag 04.09.: Gruppe B ist erledigt, siehe unten.*
+
+---
+
+## Gruppe B — Historisierung der Zeitpläne (`3f5f159`, Migration 0013)
+
+Der letzte verbliebene Rechenfehler, seit dem 28.08. bewusst zurückgestellt
+und am 04.09. behoben. `expectedDosesPerDay` las die Erinnerungszeiten, wie
+sie **heute** stehen, und `buildDaySummaries` wandte das auf jeden
+vergangenen Tag an. Eine Dosisänderung schrieb damit die ganze Vergangenheit
+um; bei einer Erhöhung entstand eine Wand aus Versäumnissen, die es nie
+gegeben hat.
+
+### Die Tabelle
+
+`medication_schedule_history` führt je Medikament Abschnitte mit
+`valid_from`, `valid_to` und `doses_per_day`. Abschnitte überlappen sich
+nicht, der letzte bleibt offen (`valid_to = null`).
+
+`planScheduleChange` entscheidet rein, was eine Änderung bedeutet — kein
+offener Abschnitt heißt eröffnen, eine Änderung am Starttag des offenen
+Abschnitts überschreibt ihn (sonst entstünde ein Abschnitt ohne einen
+einzigen Tag), sonst wird am Vortag geschlossen und neu eröffnet. Das
+Speichern führt diese Anweisung nur noch aus.
+
+**Bestandsdaten**, auf Entscheidung des Nutzers: ein erster Abschnitt ab dem
+Startdatum mit der heute eingestellten Anzahl. Die Vergangenheit liest sich
+damit genau wie vorher — nicht besser, aber auch nicht schlechter — und
+nichts geht verloren.
+
+### Pausieren
+
+Der zweite Teil des Fehlers: Ein Medikament hatte genau eine Laufzeit. Wer
+pausierte, setzte ein Enddatum und nahm es später weg — die ganze Pause
+zählte als versäumte Tage.
+
+Eine Pause ist jetzt ein Abschnitt mit null Einnahmen. Daraus folgt alles
+Weitere von selbst: keine Erinnerungen, keine fälligen Tage, kein
+Vorratsverbrauch und keine Reichweite. Der Verlauf zeigt solche Tage neutral
+als „pausiert", nicht rot als Versäumnis. Eine Bearbeitung während der Pause
+nimmt das Medikament **nicht** stillschweigend wieder auf; die neue Anzahl
+greift erst beim Fortsetzen. Eine Wiederherstellung lässt pausiert, was
+pausiert war.
+
+### Einnahme im Medikamenten-Pass
+
+Damit fällt die Sperre vom 28.08.: Der Pass trägt je Medikament eine Zeile
+über die letzten 90 Tage, gemessen an der **jeweils damals gültigen** Anzahl,
+Pausen herausgerechnet, mit Herkunftshinweis darunter. Die Zählung liegt in
+`computeIntakeAdherence` und wird von Pass und Arztbesuch-Zusammenfassung
+gemeinsam benutzt.
+
+### Zwei Befunde, die dabei auffielen
+
+- `medication_schedule_history` **und** `visit_questions` fehlten in der
+  Sicherung. Die Fragen vom 02.09. wären beim Wiederherstellen spurlos
+  verlorengegangen. Beide sind jetzt drin; ältere Sicherungen ohne Historie
+  bekommen sie beim Einlesen erzeugt, genau wie bei der Migration.
+- Ein Test fand, dass ein rückwirkend gesetztes Enddatum nur den letzten
+  Abschnitt entfernte und den davorliegenden über das Ende hinausreichen
+  ließ. `closeScheduleAt` räumt jetzt alle Abschnitte hinter dem Enddatum ab
+  und schließt den letzten verbleibenden.
+
+### Stand
+
+845 Tests grün (799 zuvor), Typprüfung sauber, Durchsicht auf tote Importe
+sauber.
+
+**Weiterhin offen:** das Ernährungstagebuch, die Laborwerte, der
+Zeitraum-Vergleich und die Kopplung der Frühwarnung an den Aktivitätsindex.
+Dazu trägt die App weiterhin das Platzhalter-Symbol von Expo.
+
 ---
 
 ## Abdeckungsprüfung
