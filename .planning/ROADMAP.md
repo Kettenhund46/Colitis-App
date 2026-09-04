@@ -675,12 +675,59 @@ RKI-Adressen mussten korrigiert werden.
 ### Stand
 
 721 Tests grün (642 zu Beginn der Runde), Typprüfung sauber, vier
-Migrationen (0007 bis 0010). Gerätedurchgang für Tag 1–6 bestanden, für
-Tag 7–8 aus Build `b79eb3d7` läuft er.
+Migrationen (0007 bis 0010). Gerätedurchgang für Tag 1–8 bestanden.
 
-**Weiterhin offen:** Gruppe B (Historisierung der Zeitpläne), das
-Ernährungstagebuch als eigene Funktion und die Laborwerte. Alle drei sind
-eigene Phasen mit Schemawechsel und wurden bewusst nicht angefangen.
+---
+
+## Zusatzfunktionen 02.09. — Vorrat und Fragen
+
+Nach der Schlussrunde stellte sich die Frage, was die App bietet, das
+vergleichbare Angebote nicht haben. Von vier Vorschlägen wählte der Nutzer
+die ersten beiden; Zeitraum-Vergleich und die Kopplung der Frühwarnung an
+den Aktivitätsindex bleiben bewusst liegen.
+
+### Medikamenten-Vorrat und Reichweite (`bcb3858`, Migration 0011)
+
+Ein Medikament kann Packungsgröße, aktuellen Bestand und Einheiten je
+Einnahme führen. Daraus entsteht die Reichweite in Tagen und, rechtzeitig
+vor dem Aufbrauchen, eine Erinnerung ans Rezept.
+
+Entscheidungen, die den Ausschlag gaben:
+- Gezählt wird in **Einheiten**, nicht in Einnahmen. Bei zwei Tabletten je
+  Einnahme steht 100 in der Packung, nicht 50.
+- `null` heißt „nicht geführt", `0` heißt „aufgebraucht". Die Unterscheidung
+  trägt durch Oberfläche, PDF und Tests hindurch; wer das Feld leer lässt,
+  sieht nirgends etwas von Vorrat.
+- Der Bestand folgt der Einnahme **in beide Richtungen**: Abhaken zieht ab,
+  Löschen im Einnahme-Verlauf bucht zurück.
+- Der Vorlauf steht in den Einstellungen, Standard sieben Tage. Beim Ändern
+  werden alle Vorrats-Erinnerungen neu geplant.
+- Der Text der Erinnerung nennt bewusst **keine Resttage** — sie wird Tage
+  im Voraus geplant und wäre bis zum Auslösen längst überholt.
+
+### Fragen für den Arzttermin sammeln (`1458631`, Migration 0012)
+
+Eine Frage, die zwischen zwei Terminen aufkommt, ist im Sprechzimmer meist
+vergessen. Sie lässt sich jetzt notieren, abhaken und wieder öffnen.
+
+- Offene Fragen stehen in der Zusammenfassung **vor den Zahlen** — auf
+  Bildschirm und im PDF. Im Gespräch ist die Frage das, was sonst untergeht.
+- Sortiert wird offen vor beantwortet, innerhalb der Gruppe älteste zuerst.
+- Beantwortete Fragen verschwinden aus der Zusammenfassung, bleiben aber in
+  der Liste stehen.
+
+### Stand am 04.09.
+
+771 Tests grün in 76 Dateien, Typprüfung sauber, Durchsicht auf tote
+Importe sauber. Sechs Migrationen in dieser Runde (0007 bis 0012).
+Gerätetest aus Build `3a605964` vom Nutzer bestätigt: „Läuft alles wie es
+soll."
+
+**Weiterhin offen:** Gruppe B (Historisierung der Zeitpläne — bis dahin darf
+die Einnahme-Auswertung nicht in den Medikamenten-Pass), das
+Ernährungstagebuch, die Laborwerte, der Zeitraum-Vergleich und die Kopplung
+der Frühwarnung an den Aktivitätsindex. Außerdem trägt die App weiterhin das
+Platzhalter-Symbol von Expo.
 
 ---
 
