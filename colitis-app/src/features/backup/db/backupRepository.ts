@@ -3,6 +3,7 @@ import {
   diaryEntries,
   doctorVisits,
   knowledgeFavorites,
+  meals,
   medicationLog,
   medicationReminderTimes,
   medicationScheduleHistory,
@@ -31,6 +32,7 @@ export async function exportBackupData(db: BackupDb): Promise<BackupData> {
       medicationReminderTimes: await db.select().from(medicationReminderTimes),
       medicationScheduleHistory: await db.select().from(medicationScheduleHistory),
       visitQuestions: await db.select().from(visitQuestions),
+      meals: await db.select().from(meals),
       savedPlaces: await db.select().from(savedPlaces),
       screeningReminders: await db.select().from(screeningReminders),
       knowledgeFavorites: await db.select().from(knowledgeFavorites),
@@ -47,6 +49,7 @@ export async function importBackupData(db: BackupDb, data: BackupData): Promise<
     tx.delete(medicationReminderTimes).run();
     tx.delete(medicationScheduleHistory).run();
     tx.delete(visitQuestions).run();
+    tx.delete(meals).run();
     tx.delete(diaryEntries).run();
     tx.delete(medications).run();
     tx.delete(savedPlaces).run();
@@ -84,6 +87,9 @@ export async function importBackupData(db: BackupDb, data: BackupData): Promise<
     }
     for (const row of data.tables.visitQuestions ?? []) {
       tx.insert(visitQuestions).values(row).run();
+    }
+    for (const row of data.tables.meals ?? []) {
+      tx.insert(meals).values(row).run();
     }
     // Aeltere Sicherungen kennen die Zeitplan-Historie nicht. Sie wird dann aus
     // Laufzeit und Erinnerungszeiten erzeugt -- genau wie bei der Migration.

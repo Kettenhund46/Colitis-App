@@ -111,7 +111,7 @@ export function MedicationList({
         return (
           <View style={styles.rowWrapper}>
             <SwipeableRow onDelete={() => onDelete(item.id)}>
-              <Card accent={!isActive || isPaused ? 'neutral' : 'good'} isMuted={!isActive || isPaused}>
+              <Card accent={!isActive || isPaused ? 'neutral' : 'good'} isMuted={!isActive}>
               <Text style={styles.cardName}>{item.name}</Text>
               <Text style={styles.cardDetail}>
                 {item.dose} · {item.schedule}
@@ -152,6 +152,18 @@ export function MedicationList({
                     </Text>
                   </Pressable>
                 )}
+                {/* Waehrend der Pause steht Fortsetzen an erster Stelle: Es ist die
+                    einzige Handlung, die den Zustand aufhebt. */}
+                {isActive && isPaused && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${item.name} fortsetzen`}
+                    style={styles.resumeButton}
+                    onPress={() => onResume(item.id)}
+                  >
+                    <Text style={styles.resumeButtonText}>Fortsetzen</Text>
+                  </Pressable>
+                )}
                 {refillLabel !== null && supplyLabel !== null && (
                   <Pressable
                     accessibilityRole="button"
@@ -170,18 +182,14 @@ export function MedicationList({
                 >
                   <Text style={styles.editButtonText}>Bearbeiten</Text>
                 </Pressable>
-                {isActive && (
+                {isActive && !isPaused && (
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={
-                      isPaused ? `${item.name} fortsetzen` : `${item.name} pausieren`
-                    }
+                    accessibilityLabel={`${item.name} pausieren`}
                     style={styles.pauseButton}
-                    onPress={() => (isPaused ? onResume(item.id) : onPause(item.id))}
+                    onPress={() => onPause(item.id)}
                   >
-                    <Text style={styles.pauseButtonText}>
-                      {isPaused ? 'Fortsetzen' : 'Pausieren'}
-                    </Text>
+                    <Text style={styles.pauseButtonText}>Pausieren</Text>
                   </Pressable>
                 )}
                 {isActive &&
@@ -278,6 +286,20 @@ function makeStyles(colors: ThemeColors) {
       paddingHorizontal: tokens.spacing.md,
     },
     pauseButtonText: { color: colors.textPrimary, fontSize: tokens.typography.fontSize.sm },
+    // Waehrend der Pause ist Fortsetzen die eine Handlung, die zaehlt. Sie
+    // traegt dieselbe gefuellte Form wie "Heute genommen" und steht damit
+    // sichtbar vor den uebrigen Knoepfen der Karte.
+    resumeButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      paddingVertical: tokens.spacing.xs,
+      paddingHorizontal: tokens.spacing.md,
+    },
+    resumeButtonText: {
+      color: colors.surface,
+      fontSize: tokens.typography.fontSize.sm,
+      fontWeight: tokens.typography.fontWeight.medium,
+    },
     cardEndedLabel: {
       color: colors.textSecondary,
       fontSize: tokens.typography.fontSize.sm,

@@ -172,6 +172,14 @@ export default function TagebuchScreen() {
         >
           <Text style={styles.chipText}>Arztbesuche</Text>
         </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Ernährungstagebuch öffnen"
+          style={styles.chip}
+          onPress={() => router.push('/tagebuch/ernaehrung')}
+        >
+          <Text style={styles.chipText}>Ernährung</Text>
+        </Pressable>
       </View>
       {isLoading ? (
         <SkeletonList count={3} lines={3} />

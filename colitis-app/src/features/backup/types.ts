@@ -1,4 +1,4 @@
-import type { diaryEntries, doctorVisits, knowledgeFavorites, medicationLog, medicationReminderTimes, medicationScheduleHistory, medications, savedPlaces, screeningReminders, triggers, visitQuestions } from '../../db/schema';
+import type { diaryEntries, doctorVisits, knowledgeFavorites, meals, medicationLog, medicationReminderTimes, medicationScheduleHistory, medications, savedPlaces, screeningReminders, triggers, visitQuestions } from '../../db/schema';
 
 export const BACKUP_FORMAT_VERSION = 1;
 
@@ -18,6 +18,8 @@ export interface BackupData {
     medicationScheduleHistory?: (typeof medicationScheduleHistory.$inferSelect)[];
     /** Fehlt in Sicherungen, die vor den Arzt-Fragen entstanden sind. */
     visitQuestions?: (typeof visitQuestions.$inferSelect)[];
+    /** Fehlt in Sicherungen, die vor dem Ernaehrungstagebuch entstanden sind. */
+    meals?: (typeof meals.$inferSelect)[];
     savedPlaces: (typeof savedPlaces.$inferSelect)[];
     screeningReminders: (typeof screeningReminders.$inferSelect)[];
     knowledgeFavorites: (typeof knowledgeFavorites.$inferSelect)[];

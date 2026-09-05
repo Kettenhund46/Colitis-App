@@ -10,7 +10,7 @@ describe('backup repository', () => {
     db = createTestDb();
   });
 
-  it('exports an empty structure with all eleven table keys when nothing exists yet', async () => {
+  it('exports an empty structure with all twelve table keys when nothing exists yet', async () => {
     const data = await exportBackupData(db);
     expect(data.version).toBe(1);
     expect(data.tables).toEqual({
@@ -21,6 +21,7 @@ describe('backup repository', () => {
       medicationReminderTimes: [],
       medicationScheduleHistory: [],
       visitQuestions: [],
+      meals: [],
       savedPlaces: [],
       screeningReminders: [],
       knowledgeFavorites: [],
@@ -370,6 +371,27 @@ function legacyTables() {
     );
   });
 
+  it('carries the meals through an export and re-import', async () => {
+    const importedData = {
+      version: 1 as const,
+      exportedAt: '2026-09-05T09:00:00.000Z',
+      tables: {
+        ...legacyTables(),
+        medicationScheduleHistory: [],
+        visitQuestions: [],
+        meals: [
+          { id: 4, eatenAt: '2026-09-04T17:30:00.000Z', description: 'Pizza' },
+          { id: 5, eatenAt: '2026-09-04T06:30:00.000Z', description: 'Haferbrei' },
+        ],
+      },
+    };
+
+    await importBackupData(db, importedData);
+
+    const data = await exportBackupData(db);
+    expect(data.tables.meals).toEqual(importedData.tables.meals);
+  });
+
   it('carries the visit questions through an export and re-import', async () => {
     const importedData = {
       version: 1 as const,
@@ -403,5 +425,6 @@ function legacyTables() {
       { id: 1, medicationId: 5, validFrom: '2026-06-01', validTo: null, dosesPerDay: 2 },
     ]);
     expect(data.tables.visitQuestions).toEqual([]);
+    expect(data.tables.meals).toEqual([]);
   });
 });

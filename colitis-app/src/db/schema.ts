@@ -88,6 +88,17 @@ export const medicationScheduleHistory = sqliteTable('medication_schedule_histor
   dosesPerDay: integer('doses_per_day').notNull(),
 });
 
+/**
+ * Eine Mahlzeit als Freitext mit Zeitpunkt. Bewusst ohne Kategorien: Was
+ * schnell einzutragen ist, wird nach vier Wochen noch gefuehrt.
+ */
+export const meals = sqliteTable('meals', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  /** Zeitpunkt der Mahlzeit, ISO in UTC. */
+  eatenAt: text('eaten_at').notNull(),
+  description: text('description').notNull(),
+});
+
 export const savedPlaces = sqliteTable('saved_places', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
