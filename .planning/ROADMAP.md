@@ -801,6 +801,73 @@ sauber.
 Zeitraum-Vergleich und die Kopplung der Frühwarnung an den Aktivitätsindex.
 Dazu trägt die App weiterhin das Platzhalter-Symbol von Expo.
 
+*Nachtrag 05.09.: Das Ernährungstagebuch ist erledigt, siehe unten.*
+
+---
+
+## Ernährungstagebuch (`4a29ac0`, Migration 0014)
+
+Eine der drei Funktionen, die seit dem 28.08. als eigene Phase offenstanden.
+Am 05.09. umgesetzt, nachdem Gruppe B den letzten Rechenfehler geräumt hatte.
+
+### Was erfasst wird
+
+Freitext plus Zeitpunkt, Tabelle `meals`. Bewusst **keine** Kategorien zum
+Ankreuzen: Die hätten die Auswertung belastbarer gemacht, aber das Eintragen
+verlangsamt — und was langsam ist, wird nach vier Wochen nicht mehr geführt.
+Bei einem konkreten Verdacht ist ohnehin der Freitext die Information, die
+zählt.
+
+Datum und Uhrzeit sind mit dem Jetzt vorbelegt und bleiben nach dem Speichern
+stehen. Wer abends drei Mahlzeiten nachträgt, tippt das Datum einmal.
+
+### Was abgeleitet wird
+
+Je schub-verdächtigem Tag die Mahlzeiten der 24 Stunden davor. Drei
+Entscheidungen tragen das Ergebnis:
+
+- Gemessen wird gegen den **frühesten** Eintrag des Tages. Gegen den spätesten
+  zählte ein Mittagessen als „davor", obwohl die Beschwerden schon am Morgen
+  da waren.
+- Bewertet wird der **Tag als Ganzes** (`rateDayEntries`), nicht der einzelne
+  Eintrag. Zwei je für sich unauffällige Einträge ergeben zusammen acht
+  Stuhlgänge — und damit einen auffälligen Tag.
+- Tage ohne eine einzige Mahlzeit im Fenster fallen **heraus**. Eine leere
+  Liste trägt keine Aussage und verdeckt die Tage, die eine tragen.
+
+Unter jeder Ausgabe steht, dass es sich um eine zeitliche Nachbarschaft
+handelt und um keine Ursache — dieselbe Linie wie beim Aktivitätsindex.
+Eine Häufigkeitsrechnung über Kategorien wurde verworfen: Sie klänge nach
+mehr, als die Datenmenge eines einzelnen Menschen hergibt.
+
+### Ort
+
+Ein Knopf im Tagebuch-Tab neben Auswertung und Arztbesuchen, kein sechster
+Tab. Es steht damit neben den Symptomen, mit denen es verglichen wird.
+
+### Nebenbei behoben
+
+Der Fortsetzen-Knopf eines pausierten Medikaments war so blass wie alle
+anderen. Ursache war nicht der Knopf, sondern die Karte: `isMuted` legt eine
+Deckkraft von 60 % über den gesamten Inhalt, aus der sich ein Kind nicht
+befreien kann. Pausierte Karten sind jetzt nicht mehr gedämpft — das bleibt
+beendeten Medikamenten vorbehalten —, und „Fortsetzen" trägt die gefüllte
+Form und steht an erster Stelle.
+
+### Stand
+
+886 Tests grün (845 zuvor), Typprüfung sauber, Durchsicht auf tote Importe
+sauber. Gerätetest aus Build `1d635518` bestätigt.
+
+**Weiterhin offen:** die Laborwerte, der Zeitraum-Vergleich und die Kopplung
+der Frühwarnung an den Aktivitätsindex. Dazu trägt die App weiterhin das
+Platzhalter-Symbol von Expo — der einzige offene Punkt, den man auf jedem
+Screenshot der Präsentation sieht.
+
+*Aufgefallen, aber nicht angefasst:* Der Test-Helper `createTestDb` liegt
+inzwischen in sechs Features fast wortgleich. Als eigene Aufräum-Sitzung
+ausgelagert.
+
 ---
 
 ## Abdeckungsprüfung
