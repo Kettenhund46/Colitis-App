@@ -428,3 +428,102 @@ function legacyTables() {
     expect(data.tables.meals).toEqual([]);
   });
 });
+
+describe('Datenverlust beim Wiederherstellen', () => {
+  let db: ReturnType<typeof createTestDb>;
+
+  beforeEach(() => {
+    db = createTestDb();
+  });
+
+  it('laesst die vorhandenen Daten stehen, wenn der Import mittendrin scheitert', async () => {
+    // Der Import loescht erst alles und fuegt dann neu ein. Scheitert er
+    // dazwischen, darf davon nichts uebrig bleiben -- sonst waere ein
+    // fehlerhaftes Backup schlimmer als gar keines.
+    const [vorhandenerEintrag] = await db
+      .insert(diaryEntries)
+      .values({
+        occurredAt: '2026-09-01T09:00:00.000Z',
+        stoolFrequency: 3,
+        bloodLevel: 1,
+        nocturnalStools: 0,
+        stoolConsistency: 'weich',
+        painLevel: 4,
+        symptoms: 'Kraempfe',
+        note: null,
+      })
+      .returning();
+    await db.insert(medications).values({
+      name: 'Bestehendes Medikament',
+      dose: '500mg',
+      schedule: '1x taeglich',
+      startDate: '2026-08-01',
+      endDate: null,
+    });
+
+    const kaputt = {
+      version: 1 as const,
+      exportedAt: '2026-09-07T09:00:00.000Z',
+      tables: {
+        diaryEntries: [],
+        triggers: [],
+        // `name` ist NOT NULL -- diese Zeile bringt den Import zu Fall,
+        // nachdem das Loeschen bereits gelaufen ist.
+        medications: [
+          {
+            id: 1,
+            name: null as unknown as string,
+            dose: '1mg',
+            schedule: '1x',
+            startDate: '2026-01-01',
+            endDate: null,
+            sideEffectsNote: null,
+            unitsPerIntake: 1,
+            packUnits: null,
+            stockUnits: null,
+            supplyNotificationId: null,
+          },
+        ],
+        medicationLog: [],
+        medicationReminderTimes: [],
+        medicationScheduleHistory: [],
+        visitQuestions: [],
+        meals: [],
+        savedPlaces: [],
+        screeningReminders: [],
+        knowledgeFavorites: [],
+        doctorVisits: [],
+      },
+    };
+
+    await expect(importBackupData(db, kaputt)).rejects.toThrow();
+
+    const danach = await exportBackupData(db);
+    expect(danach.tables.diaryEntries).toHaveLength(1);
+    expect(danach.tables.diaryEntries[0].id).toBe(vorhandenerEintrag.id);
+    expect(danach.tables.medications).toHaveLength(1);
+    expect(danach.tables.medications[0].name).toBe('Bestehendes Medikament');
+  });
+
+  it('sichert jede Tabelle mit Nutzerdaten', async () => {
+    // Zwischenspeicher und die aus dem Code erzeugten Wissensartikel fehlen
+    // bewusst: Sie entstehen beim naechsten Start von selbst neu.
+    const data = await exportBackupData(db);
+    expect(Object.keys(data.tables).sort()).toEqual(
+      [
+        'diaryEntries',
+        'doctorVisits',
+        'knowledgeFavorites',
+        'meals',
+        'medicationLog',
+        'medicationReminderTimes',
+        'medicationScheduleHistory',
+        'medications',
+        'savedPlaces',
+        'screeningReminders',
+        'triggers',
+        'visitQuestions',
+      ].sort()
+    );
+  });
+});
