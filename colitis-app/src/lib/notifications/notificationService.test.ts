@@ -22,6 +22,10 @@ import {
   cancelScheduledReminder,
   rememberScheduledReminder,
 } from './notificationService';
+import {
+  isPermissionRequestPending,
+  resetPendingPermissionRequests,
+} from '../permissions/pendingPermissionGuard';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -55,6 +59,30 @@ describe('requestNotificationPermission', () => {
   it('returns false when permission is denied', async () => {
     requestPermissionsAsync.mockResolvedValueOnce({ status: 'denied' });
     expect(await requestNotificationPermission()).toBe(false);
+  });
+
+  it('holds back the app lock while the system dialog is open', async () => {
+    // Der Dialog legt die App in den Hintergrund. Ohne diesen Merker landet
+    // der Nutzer beim Zurueckkommen auf dem Sperrbildschirm.
+    resetPendingPermissionRequests();
+    let pendingWhileAsking = false;
+    requestPermissionsAsync.mockImplementationOnce(async () => {
+      pendingWhileAsking = isPermissionRequestPending();
+      return { status: 'granted' };
+    });
+
+    await requestNotificationPermission();
+
+    expect(pendingWhileAsking).toBe(true);
+    expect(isPermissionRequestPending()).toBe(false);
+  });
+
+  it('releases the marker when the request fails', async () => {
+    resetPendingPermissionRequests();
+    requestPermissionsAsync.mockRejectedValueOnce(new Error('kaputt'));
+
+    await expect(requestNotificationPermission()).rejects.toThrow('kaputt');
+    expect(isPermissionRequestPending()).toBe(false);
   });
 });
 

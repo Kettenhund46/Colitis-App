@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { buildDailyReminderTrigger, buildScreeningReminderTrigger } from '../../features/medications/reminderScheduling';
+import { runWithPendingPermission } from '../permissions/pendingPermissionGuard';
 
 export interface ReminderContent {
   title: string;
@@ -17,8 +18,17 @@ export function configureNotificationHandling(): void {
   });
 }
 
+/**
+ * Ab Android 13 zeigt diese Anfrage einen Systemdialog, der die App in den
+ * Hintergrund legt. Der Merker haelt die App-Sperre so lange zurueck --
+ * derselbe Schutz, den der Standort-Dialog seit dem 23.07. hat. Er sitzt hier
+ * und nicht an den Aufrufstellen, weil es sechs davon gibt und die siebte
+ * sonst wieder ohne auskommt.
+ */
 export async function requestNotificationPermission(): Promise<boolean> {
-  const { status } = await Notifications.requestPermissionsAsync();
+  const { status } = await runWithPendingPermission(() =>
+    Notifications.requestPermissionsAsync()
+  );
   return status === 'granted';
 }
 

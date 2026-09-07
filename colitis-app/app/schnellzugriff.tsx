@@ -5,7 +5,7 @@ import * as Location from 'expo-location';
 import {
   beginPendingPermissionRequest,
   endPendingPermissionRequest,
-} from '../src/features/appLock/pendingPermissionGuard';
+} from '../src/lib/permissions/pendingPermissionGuard';
 import { createEncryptedDb } from '../src/db/client';
 import { listSavedPlaces } from '../src/features/toilets/db/savedPlacesRepository';
 import { listCachedToilets } from '../src/features/toilets/db/cachedToiletsRepository';

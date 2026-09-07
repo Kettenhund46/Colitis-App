@@ -5,7 +5,7 @@ import * as Location from 'expo-location';
 import {
   beginPendingPermissionRequest,
   endPendingPermissionRequest,
-} from '../../../src/features/appLock/pendingPermissionGuard';
+} from '../../../src/lib/permissions/pendingPermissionGuard';
 import { ToiletMapView } from '../../../src/features/toilets/components/ToiletMapView';
 import { ToiletInfoCard } from '../../../src/features/toilets/components/ToiletInfoCard';
 import { SavedPlaceInfoCard } from '../../../src/features/toilets/components/SavedPlaceInfoCard';

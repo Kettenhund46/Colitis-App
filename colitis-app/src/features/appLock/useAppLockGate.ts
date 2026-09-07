@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 import { isAppLockEnabled } from './pinAuth';
-import { isPermissionRequestPending } from './pendingPermissionGuard';
+import { isPermissionRequestPending } from '../../lib/permissions/pendingPermissionGuard';
 
 export function useAppLockGate() {
   const [isLockEnabled, setIsLockEnabled] = useState(false);
