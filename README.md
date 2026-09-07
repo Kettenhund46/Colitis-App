@@ -46,6 +46,7 @@ Komponenten weiter.
 | npm | 11.x (entwickelt mit 11.16.0) |
 | Expo SDK | 57 |
 | Zielplattform | Android; iOS ist nicht getestet |
+| Prüfgerät | Nothing Phone 3A, Android 16 |
 | Für Cloud-Builds | Konto bei [expo.dev](https://expo.dev) |
 
 Ein lokaler Android-Build braucht zusätzlich Android Studio mit SDK und JDK 17.
@@ -205,11 +206,11 @@ Der Umfang der Geräteprüfungen steht in [`TESTPROTOKOLL.md`](TESTPROTOKOLL.md)
    Offline-Hinweis. **In Betrieb nehmen** würde bedeuten: ein Repository
    `colitis-app-feed` anlegen, `ANTHROPIC_API_KEY` und `FEED_PUBLISH_TOKEN` als
    GitHub-Secrets hinterlegen und den Workflow laufen lassen.
-2. **Toiletten-Umkreissuche ohne Ergebnis.** Auf dem Testgerät erscheint
-   „Toiletten konnten nicht geladen werden". Ursache noch nicht eingegrenzt;
-   in Frage kommen der Standort (das Testgerät hat keine Google Play Services)
-   und die Overpass-Abfrage selbst. Sichere Orte, Offline-Speicher und
-   Schnellzugriff sind im Code vorhanden, aber dadurch praktisch nicht
+2. **Toiletten-Umkreissuche ohne Ergebnis.** Auf dem Prüfgerät (Nothing
+   Phone 3A, Android 16) erscheint „Toiletten konnten nicht geladen werden".
+   Die Karte selbst lädt. Ursache noch nicht eingegrenzt; in Frage kommen die
+   Standortbestimmung und die Overpass-Abfrage. Sichere Orte, Offline-Speicher
+   und Schnellzugriff sind im Code vorhanden, aber dadurch praktisch nicht
    erreichbar und ungetestet.
 3. **Kein Wiederherstellungs-Test in getrennter Installation.** Sicherung und
    Wiederherstellung sind automatisiert getestet, aber nicht auf einem zweiten

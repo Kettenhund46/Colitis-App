@@ -10,8 +10,12 @@ Durchgang nach einer vorab notierten Prüfliste, das Ergebnis wurde mündlich
 bestätigt. Abschnitt B gibt deshalb wieder, *was geprüft werden sollte* und
 *was zurückgemeldet wurde* — nicht mehr. Wo eine Angabe fehlt, steht das da.
 
-**Offene Angabe:** Gerätemodell und Android-Version sind unten nicht eingetragen,
-weil sie nicht festgehalten wurden. Adrian trägt sie nach.
+**Prüfgerät:** Nothing Phone 3A, Android 16. Alle unter B genannten
+Gerätedurchgänge liefen auf diesem Gerät.
+
+Android 16 heißt für die offenen Punkte: Die Erlaubnis für Benachrichtigungen
+wird als Systemdialog abgefragt (seit Android 13), und ungenaue Alarme dürfen
+vom System verschoben werden (seit Android 12). Beides greift hier also.
 
 ---
 
@@ -128,8 +132,8 @@ Vorab notierte Prüfliste:
    als „noch nicht in Betrieb", keine rote Fehlermeldung.
 
 Rückmeldung am 07.09.2026: „Funktioniert beides wie es soll." Damit sind E3
-und E5 am Gerät bestätigt. Einzelergebnisse je Punkt wurden nicht getrennt
-festgehalten; Gerätemodell und Android-Version stehen weiterhin aus.
+und E5 auf Nothing Phone 3A mit Android 16 bestätigt. Einzelergebnisse je
+Punkt wurden nicht getrennt festgehalten.
 
 ---
 
@@ -157,7 +161,7 @@ Ausbaustufe gehörte.
 | # | Befund | Stand |
 |---|---|---|
 | D1 | Die App-Sperre schlug erneut zu, sobald der Standort-Berechtigungsdialog erschien; nach dem Entsperren landete man im falschen Tab. | behoben |
-| D2 | Toilettenkarte meldet „Toiletten konnten nicht geladen werden". Die Karte selbst lädt, die Umkreissuche liefert nichts. Ursache nicht eingegrenzt. Das Testgerät hat keine Google Play Services, was die Standortbestimmung betrifft; ob zusätzlich die Overpass-Abfrage scheitert, ist offen. | **offen** |
+| D2 | Toilettenkarte meldet „Toiletten konnten nicht geladen werden". Die Karte selbst lädt, die Umkreissuche liefert nichts. **Ursache nicht eingegrenzt.** In Frage kommen die Standortbestimmung und die Overpass-Abfrage. Eine frühere Vermutung — dem Testgerät fehlten Google Play Services — trägt nicht: Der Durchgang vom 07.09. lief auf einem Nothing Phone 3A mit Android 16. | **offen** |
 | D3 | Der Nachrichten-Feed liefert HTTP 404. | Ursache belegt, Zustand in der App benannt (E5); der Feed selbst bleibt **außer Betrieb** |
 | D4 | Der Knopf „Beenden" löschte ein Medikament, statt es zu beenden. | behoben |
 | D5 | Ein über Mitternacht angelegtes Medikament bekam den Vortag als Startdatum. | behoben |
@@ -215,7 +219,7 @@ bestätigt** in Build `e783b7a2`, siehe B6.
 
 ## F · Nachzutragen
 
-- [ ] Gerätemodell und Android-Version in Abschnitt B
+- [x] Gerätemodell und Android-Version eingetragen (Nothing Phone 3A, Android 16)
 - [ ] Build `5d8bd31b` installieren und das App-Symbol sichten
 - [x] Build aus `141ae24` erstellt (`e783b7a2`); E3 und E5 am Gerät bestätigt
 - [ ] Wiederherstellung in getrennter Installation durchspielen (Abschnitt C)
