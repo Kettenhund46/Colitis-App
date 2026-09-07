@@ -1,6 +1,26 @@
 import { FEED_URL, FEED_CLIENT_TIMEOUT_MS } from './constants';
 import type { RemoteFeedItem, RemoteFeedPublication } from './types';
 
+/**
+ * Unter der Adresse liegt nichts. Die Adresse selbst steht fest im Code, ist
+ * also nicht vertippt -- ein 404 heisst deshalb: noch nicht veroeffentlicht.
+ * Ein eigener Fehlertyp, damit der Bildschirm diesen Dauerzustand von einer
+ * voruebergehenden Stoerung unterscheiden kann.
+ */
+export class FeedNotPublishedError extends Error {
+  readonly status: number;
+
+  constructor(status: number) {
+    super(`Feed unter der hinterlegten Adresse nicht veröffentlicht (Status ${status}).`);
+    this.name = 'FeedNotPublishedError';
+    this.status = status;
+  }
+}
+
+export function isFeedNotPublished(error: unknown): boolean {
+  return error instanceof FeedNotPublishedError;
+}
+
 const VALID_SOURCES: ReadonlyArray<RemoteFeedItem['source']> = ['pubmed', 'awmf', 'fda', 'ema'];
 const VALID_CATEGORIES: ReadonlyArray<RemoteFeedItem['category']> = ['studie', 'leitlinie', 'zulassung'];
 
@@ -45,6 +65,10 @@ export async function fetchFeedPublication(): Promise<RemoteFeedPublication> {
     throw error;
   } finally {
     clearTimeout(timeoutId);
+  }
+
+  if (response.status === 404) {
+    throw new FeedNotPublishedError(response.status);
   }
 
   if (!response.ok) {

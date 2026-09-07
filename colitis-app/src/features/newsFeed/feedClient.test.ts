@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchFeedPublication, parseFeedPublication } from './feedClient';
+import {
+  fetchFeedPublication,
+  parseFeedPublication,
+  FeedNotPublishedError,
+  isFeedNotPublished,
+} from './feedClient';
 import { FEED_URL, FEED_CLIENT_TIMEOUT_MS } from './constants';
 
 describe('parseFeedPublication', () => {
@@ -88,10 +93,31 @@ describe('fetchFeedPublication', () => {
     expect(fetchMock).toHaveBeenCalledWith(FEED_URL, expect.objectContaining({}));
   });
 
-  it('throws a German error when the response is not ok', async () => {
+  it('meldet einen 404 als "noch nicht veröffentlicht", nicht als Stoerung', async () => {
+    // Die Adresse steht fest im Code und ist damit nicht vertippt. Liegt dort
+    // nichts, ist das ein Dauerzustand -- der Bildschirm muss ihn von einer
+    // voruebergehenden Stoerung unterscheiden koennen.
     fetchMock.mockResolvedValueOnce({ ok: false, status: 404, json: () => Promise.resolve({}) });
 
-    await expect(fetchFeedPublication()).rejects.toThrow('Feed-Anfrage fehlgeschlagen (Status 404)');
+    await expect(fetchFeedPublication()).rejects.toBeInstanceOf(FeedNotPublishedError);
+  });
+
+  it('behandelt einen Serverfehler weiterhin als gewoehnlichen Fehler', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 500, json: () => Promise.resolve({}) });
+
+    const fehler = await fetchFeedPublication().catch((error: unknown) => error);
+    expect(isFeedNotPublished(fehler)).toBe(false);
+    expect(fehler).toBeInstanceOf(Error);
+    expect((fehler as Error).message).toContain('Status 500');
+  });
+
+  it('erkennt einen gewoehnlichen Netzfehler nicht als "nicht veröffentlicht"', async () => {
+    // Offline heisst: spaeter nochmal versuchen. Nicht veroeffentlicht heisst:
+    // warten hilft nicht. Die beiden duerfen nicht zusammenfallen.
+    fetchMock.mockRejectedValueOnce(new Error('network unreachable'));
+
+    const fehler = await fetchFeedPublication().catch((error: unknown) => error);
+    expect(isFeedNotPublished(fehler)).toBe(false);
   });
 
   it('propagates a network failure', async () => {

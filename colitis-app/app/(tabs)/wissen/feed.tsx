@@ -2,7 +2,12 @@ import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { Linking, Text, View, StyleSheet } from 'react-native';
 import { createEncryptedDb } from '../../../src/db/client';
-import { fetchFeedPublication } from '../../../src/features/newsFeed/feedClient';
+import { fetchFeedPublication, isFeedNotPublished } from '../../../src/features/newsFeed/feedClient';
+import {
+  FEED_NOT_PUBLISHED_TEXT,
+  FEED_OFFLINE_TEXT,
+  FEED_LOAD_ERROR_TEXT,
+} from '../../../src/features/newsFeed/constants';
 import {
   syncFeedItems,
   listCachedFeedItems,
@@ -22,6 +27,8 @@ export default function NewsFeedScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [offlineHint, setOfflineHint] = useState<string | null>(null);
+  // Ein Dauerzustand, keine Stoerung -- deshalb ruhig dargestellt und nicht rot.
+  const [notPublishedHint, setNotPublishedHint] = useState<string | null>(null);
   const loadRequestIdRef = useRef(0);
 
   useFocusEffect(
@@ -55,16 +62,17 @@ export default function NewsFeedScreen() {
       setItems(cached);
       setLoadError(null);
       setOfflineHint(null);
+      setNotPublishedHint(null);
     } catch (error: unknown) {
       if (requestId !== loadRequestIdRef.current) {
         return;
       }
       console.error('[NewsFeed] Laden der Neuigkeiten fehlgeschlagen:', error);
-      await handleLoadFailure(requestId);
+      await handleLoadFailure(requestId, error);
     }
   }
 
-  async function handleLoadFailure(requestId: number) {
+  async function handleLoadFailure(requestId: number, error: unknown) {
     try {
       const db = await createEncryptedDb();
       const cached = await listCachedFeedItems(db);
@@ -73,8 +81,9 @@ export default function NewsFeedScreen() {
       }
       if (cached.length > 0) {
         setItems(cached);
-        setOfflineHint('Offline — zeigt zuletzt geladene Neuigkeiten');
+        setOfflineHint(FEED_OFFLINE_TEXT);
         setLoadError(null);
+        setNotPublishedHint(null);
         return;
       }
     } catch (cacheError: unknown) {
@@ -83,8 +92,18 @@ export default function NewsFeedScreen() {
     if (requestId !== loadRequestIdRef.current) {
       return;
     }
-    setLoadError('Neuigkeiten konnten nicht geladen werden.');
+    // Ohne Zwischenspeicher entscheidet die Ursache, was dasteht: Liegt unter
+    // der Adresse nichts, ist das kein Fehler des Nutzers und keiner, der sich
+    // durch Warten erledigt.
+    if (isFeedNotPublished(error)) {
+      setNotPublishedHint(FEED_NOT_PUBLISHED_TEXT);
+      setLoadError(null);
+      setOfflineHint(null);
+      return;
+    }
+    setLoadError(FEED_LOAD_ERROR_TEXT);
     setOfflineHint(null);
+    setNotPublishedHint(null);
   }
 
   async function handleSelect(item: FeedItem) {
@@ -111,6 +130,11 @@ export default function NewsFeedScreen() {
       {offlineHint && (
         <View style={styles.offlineBanner}>
           <Text style={styles.offlineText}>{offlineHint}</Text>
+        </View>
+      )}
+      {notPublishedHint && (
+        <View style={styles.notPublishedBanner}>
+          <Text style={styles.notPublishedText}>{notPublishedHint}</Text>
         </View>
       )}
       {isLoading && items.length === 0 ? (
@@ -148,6 +172,18 @@ function makeStyles(colors: ThemeColors) {
     offlineText: {
       color: colors.textSecondary,
       fontSize: tokens.typography.fontSize.sm,
+      textAlign: 'center',
+    },
+    notPublishedBanner: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      padding: tokens.spacing.md,
+    },
+    notPublishedText: {
+      color: colors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      lineHeight: 20,
       textAlign: 'center',
     },
   });
