@@ -121,9 +121,8 @@ Das Profil `preview` erzeugt eine installierbare APK zur internen Verteilung
 (siehe `eas.json`). Der Build läuft auf den Servern von Expo und dauert rund
 fünfzehn Minuten; am Ende steht ein Download-Link im Terminal.
 
-Die zuletzt ausgelieferte APK stammt aus Commit `7335082`. Der Code ist seither
-weitergelaufen; die Änderungen der Commits `c3e0aa2` bis `3c9b7b7` stecken
-noch in keiner gebauten APK.
+Die zuletzt ausgelieferte APK stammt aus Commit `141ae24` (Build `e783b7a2`,
+07.09.2026).
 
 Lokaler Build ohne Expo-Konto:
 
@@ -182,7 +181,8 @@ vollständig — eine automatische Sicherheitskopie davor gibt es nicht.
 | Arztbesuche und Fragen | in Betrieb, am Gerät geprüft |
 | Ernährungstagebuch | in Betrieb, am Gerät geprüft |
 | Wissensartikel | in Betrieb, am Gerät geprüft |
-| App-Sperre, Sicherung | umgesetzt, nur teilweise am Gerät geprüft |
+| App-Sperre | in Betrieb, am Gerät geprüft |
+| Sicherung | umgesetzt und automatisiert getestet, nicht in getrennter Installation durchgespielt |
 | Toiletten-Bereich | **nur die Karte**; die Umkreissuche liefert keine Ergebnisse |
 | Nachrichten-Feed | **nicht in Betrieb**; die App weist im Bildschirm darauf hin |
 

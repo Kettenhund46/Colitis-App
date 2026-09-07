@@ -112,12 +112,24 @@ nicht geladen werden". Siehe Abschnitt D2.
 Umfang: eigenes App-Symbol. Keine Migration, keine Logikänderung.
 **Noch nicht am Gerät installiert** (Stand 07.09.2026, 11:45 Uhr).
 
-### B6 · Änderungen vom Nachmittag des 07.09. — noch in keinem Build
+### B6 · Build `e783b7a2`, Commit `141ae24`
 
-Die Commits `c3e0aa2` bis `3c9b7b7` sind nicht gebaut und damit auf keinem
-Gerät gelaufen. Betroffen sind der Hinweis beim nicht veröffentlichten Feed
-und die Rückhaltung der App-Sperre beim Benachrichtigungs-Dialog. Beides ist
-automatisiert belegt, beides ist **ungeprüft am Gerät**.
+Umfang: die beiden Korrekturen vom Nachmittag des 07.09. — Rückhaltung der
+App-Sperre beim Benachrichtigungs-Dialog (E3) und die Kennzeichnung des nicht
+veröffentlichten Feeds (E5). Keine Migration.
+
+Vorab notierte Prüfliste:
+
+1. App-Sperre einschalten, PIN vergeben. Danach in den Einstellungen die
+   tägliche Erinnerung aktivieren → Android fragt nach der
+   Benachrichtigungserlaubnis; nach dem Erlauben **darf der Sperrbildschirm
+   nicht erscheinen**.
+2. Wissen → Neuigkeiten öffnen → ein ruhiger grauer Hinweis benennt den Feed
+   als „noch nicht in Betrieb", keine rote Fehlermeldung.
+
+Rückmeldung am 07.09.2026: „Funktioniert beides wie es soll." Damit sind E3
+und E5 am Gerät bestätigt. Einzelergebnisse je Punkt wurden nicht getrennt
+festgehalten; Gerätemodell und Android-Version stehen weiterhin aus.
 
 ---
 
@@ -128,7 +140,7 @@ automatisiert belegt, beides ist **ungeprüft am Gerät**.
 | Wiederherstellung in getrennter Installation | Sicherung und Wiederherstellung sind automatisiert getestet, aber nie auf einem zweiten Gerät durchgespielt. Falsches Passwort und beschädigte Datei sind nur im Test abgedeckt, nicht am Gerät. |
 | Erinnerung bei geschlossener App | Ob eine Medikamenten-Erinnerung bei beendeter App und nach einem Geräteneustart ausgelöst wird, ist ungeprüft. Das Manifest der gebauten APK deklariert `RECEIVE_BOOT_COMPLETED`, die Voraussetzung für das Wiedereintragen nach einem Neustart ist also da. |
 | Pünktlichkeit der Erinnerungen | Das Manifest deklariert weder `SCHEDULE_EXACT_ALARM` noch `USE_EXACT_ALARM`. Die Erinnerungen sind damit ungenaue Alarme und dürfen ab Android 12 vom System verschoben werden — im Doze-Modus oder bei aktiver Akku-Optimierung um Minuten bis Stunden. Nicht gemessen. |
-| App-Sperre im Zusammenspiel mit Berechtigungen | Zwei Fehler behoben (D1 und E3), keiner davon nach der Behebung am Gerät nachgeprüft. |
+| App-Sperre im Zusammenspiel mit Berechtigungen | E3 ist nach der Behebung am Gerät bestätigt (B6). D1 — der Standort-Dialog — ist nach seiner Behebung nie erneut durchgespielt worden; durch D2 ist der Toiletten-Bereich dafür ohnehin schlecht erreichbar. |
 | Toiletten-Bereich vollständig | Siehe D2 — durch den Fehler in der Umkreissuche ist der Rest des Bereichs praktisch nicht erreichbar und damit ungetestet. |
 | Nachrichten-Feed | Siehe D3 — der Feed war nie in Betrieb, ein sinnvoller Test ist deshalb nicht möglich. |
 | Verhalten bei frischer Installation ohne Netz | Nicht durchgespielt. |
@@ -185,7 +197,7 @@ Behoben in `colitis-app/src/lib/permissions/pendingPermissionGuard.ts` und
 `colitis-app/src/lib/notifications/notificationService.ts`: Der Merker sitzt
 jetzt in der Anfrage selbst statt an den Aufrufstellen, ist ein Zähler statt
 eines Schalters (verschachtelte Anfragen) und wird auch im Fehlerfall
-freigegeben. Sechs Tests. **Am Gerät nicht nachgeprüft.**
+freigegeben. Sechs Tests. **Am Gerät bestätigt** in Build `e783b7a2`, siehe B6.
 
 **E4 · Migration 0013 lief nie gegen Daten.** Alle Tests legen eine leere
 Datenbank an; die Nachtragung der Zeitplan-Abschnitte arbeitete dabei auf null
@@ -196,8 +208,8 @@ Geschlossen in `scheduleHistoryMigration.test.ts`.
 **E5 · Feed-Fehler nicht von einer Störung unterscheidbar.** Der Bildschirm
 zeigte für den dauerhaft nicht veröffentlichten Feed dieselbe rote Meldung wie
 für eine vorübergehende Störung. Seit `3c9b7b7` wirft der Client bei 404 einen
-eigenen Fehlertyp, und der Bildschirm benennt den Zustand. **Am Gerät nicht
-nachgeprüft.**
+eigenen Fehlertyp, und der Bildschirm benennt den Zustand. **Am Gerät
+bestätigt** in Build `e783b7a2`, siehe B6.
 
 ---
 
@@ -205,10 +217,7 @@ nachgeprüft.**
 
 - [ ] Gerätemodell und Android-Version in Abschnitt B
 - [ ] Build `5d8bd31b` installieren und das App-Symbol sichten
-- [ ] Neuen Build aus `3c9b7b7` erstellen; darin E3 und E5 am Gerät nachprüfen
-      (App-Sperre einschalten, dann die tägliche Erinnerung aktivieren — der
-      Sperrbildschirm darf nicht erscheinen; Neuigkeiten öffnen — der Hinweis
-      muss den Feed als „noch nicht in Betrieb" benennen)
+- [x] Build aus `141ae24` erstellt (`e783b7a2`); E3 und E5 am Gerät bestätigt
 - [ ] Wiederherstellung in getrennter Installation durchspielen (Abschnitt C)
 - [ ] Erinnerung bei geschlossener App und nach Geräteneustart prüfen
 - [ ] Pünktlichkeit der Erinnerungen unter Akku-Optimierung beobachten
