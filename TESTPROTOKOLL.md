@@ -1,8 +1,8 @@
 # Testprotokoll Colitis2Go
 
-Stand 07.09.2026. Dieses Dokument trennt drei Dinge: was automatisiert geprüft
-wird, was tatsächlich auf einem Android-Gerät ausprobiert wurde, und was
-ungeprüft geblieben ist.
+Stand 07.09.2026, nachmittags. Dieses Dokument trennt drei Dinge: was
+automatisiert geprüft wird, was tatsächlich auf einem Android-Gerät
+ausprobiert wurde, und was ungeprüft geblieben ist.
 
 **Ein Hinweis vorweg zur Ehrlichkeit dieses Dokuments.** Während der Entwicklung
 wurde kein formales Geräteprotokoll geführt. Die Geräteprüfungen liefen als
@@ -21,8 +21,8 @@ Reproduzierbar mit `npm test` im Ordner `colitis-app`.
 
 | | |
 |---|---|
-| Testfälle | 886 |
-| Testdateien | 82 |
+| Testfälle | 904 |
+| Testdateien | 84 |
 | Laufzeit | rund 5 Sekunden |
 | Ergebnis am 07.09.2026 | alle grün |
 | Typprüfung `npx tsc --noEmit` | ohne Befund |
@@ -112,6 +112,13 @@ nicht geladen werden". Siehe Abschnitt D2.
 Umfang: eigenes App-Symbol. Keine Migration, keine Logikänderung.
 **Noch nicht am Gerät installiert** (Stand 07.09.2026, 11:45 Uhr).
 
+### B6 · Änderungen vom Nachmittag des 07.09. — noch in keinem Build
+
+Die Commits `c3e0aa2` bis `3c9b7b7` sind nicht gebaut und damit auf keinem
+Gerät gelaufen. Betroffen sind der Hinweis beim nicht veröffentlichten Feed
+und die Rückhaltung der App-Sperre beim Benachrichtigungs-Dialog. Beides ist
+automatisiert belegt, beides ist **ungeprüft am Gerät**.
+
 ---
 
 ## C · Was nicht geprüft wurde
@@ -119,8 +126,9 @@ Umfang: eigenes App-Symbol. Keine Migration, keine Logikänderung.
 | Bereich | Warum es offen ist |
 |---|---|
 | Wiederherstellung in getrennter Installation | Sicherung und Wiederherstellung sind automatisiert getestet, aber nie auf einem zweiten Gerät durchgespielt. Falsches Passwort und beschädigte Datei sind nur im Test abgedeckt, nicht am Gerät. |
-| Erinnerung bei geschlossener App | Ob eine Medikamenten-Erinnerung bei beendeter App und nach einem Geräteneustart ausgelöst wird, ist ungeprüft. Akku-Optimierung von Android kann das verhindern. |
-| App-Sperre im Zusammenspiel mit Berechtigungen | Der Fehler „Sperre schlägt beim Standort-Dialog erneut zu" wurde behoben (siehe D1), aber nach der Behebung nicht erneut systematisch durchgespielt. |
+| Erinnerung bei geschlossener App | Ob eine Medikamenten-Erinnerung bei beendeter App und nach einem Geräteneustart ausgelöst wird, ist ungeprüft. Das Manifest der gebauten APK deklariert `RECEIVE_BOOT_COMPLETED`, die Voraussetzung für das Wiedereintragen nach einem Neustart ist also da. |
+| Pünktlichkeit der Erinnerungen | Das Manifest deklariert weder `SCHEDULE_EXACT_ALARM` noch `USE_EXACT_ALARM`. Die Erinnerungen sind damit ungenaue Alarme und dürfen ab Android 12 vom System verschoben werden — im Doze-Modus oder bei aktiver Akku-Optimierung um Minuten bis Stunden. Nicht gemessen. |
+| App-Sperre im Zusammenspiel mit Berechtigungen | Zwei Fehler behoben (D1 und E3), keiner davon nach der Behebung am Gerät nachgeprüft. |
 | Toiletten-Bereich vollständig | Siehe D2 — durch den Fehler in der Umkreissuche ist der Rest des Bereichs praktisch nicht erreichbar und damit ungetestet. |
 | Nachrichten-Feed | Siehe D3 — der Feed war nie in Betrieb, ein sinnvoller Test ist deshalb nicht möglich. |
 | Verhalten bei frischer Installation ohne Netz | Nicht durchgespielt. |
@@ -138,7 +146,7 @@ Ausbaustufe gehörte.
 |---|---|---|
 | D1 | Die App-Sperre schlug erneut zu, sobald der Standort-Berechtigungsdialog erschien; nach dem Entsperren landete man im falschen Tab. | behoben |
 | D2 | Toilettenkarte meldet „Toiletten konnten nicht geladen werden". Die Karte selbst lädt, die Umkreissuche liefert nichts. Ursache nicht eingegrenzt. Das Testgerät hat keine Google Play Services, was die Standortbestimmung betrifft; ob zusätzlich die Overpass-Abfrage scheitert, ist offen. | **offen** |
-| D3 | Der Nachrichten-Feed liefert HTTP 404. | **offen**, siehe README |
+| D3 | Der Nachrichten-Feed liefert HTTP 404. | Ursache belegt, Zustand in der App benannt (E5); der Feed selbst bleibt **außer Betrieb** |
 | D4 | Der Knopf „Beenden" löschte ein Medikament, statt es zu beenden. | behoben |
 | D5 | Ein über Mitternacht angelegtes Medikament bekam den Vortag als Startdatum. | behoben |
 | D6 | Symbole der Tab-Leiste erschienen beim ersten Start als leere Kästchen (Schriftart noch nicht geladen). | behoben |
@@ -149,10 +157,10 @@ Ausbaustufe gehörte.
 
 ---
 
-## E · Fehler, die die Testsuite gefunden hat
+## E · Fehler, die ohne Gerät gefunden wurden
 
-Zwei Beispiele, bei denen ein neu geschriebener Test einen echten Fehler
-aufdeckte, nicht nur bestehendes Verhalten festhielt:
+Aus einem neu geschriebenen Test oder aus dem Lesen des Codes — nicht aus
+einem Gerätedurchgang.
 
 **E1 · Rückwirkend gesetztes Enddatum.** Ein Test zu `closeScheduleAt` zeigte,
 dass beim rückwirkenden Beenden eines Medikaments nur der letzte
@@ -166,12 +174,42 @@ Arzttermin wären beim Wiederherstellen spurlos verschwunden. Behoben in
 `colitis-app/src/features/backup/db/backupRepository.ts`, mit Test für den
 Rundlauf und für ältere Sicherungen ohne diese Tabelle.
 
+**E3 · App-Sperre beim Benachrichtigungs-Dialog.** Bei der Durchsicht am
+07.09. fiel auf, dass der Schutz aus D1 nur um den Standort-Aufruf gelegt war.
+Ab Android 13 zeigt auch `requestNotificationPermission` einen Systemdialog,
+der die App in den Hintergrund legt — bei aktiver App-Sperre landet der Nutzer
+danach auf dem Sperrbildschirm. Sechs Aufrufstellen waren betroffen, etwa das
+Einschalten der täglichen Erinnerung.
+
+Behoben in `colitis-app/src/lib/permissions/pendingPermissionGuard.ts` und
+`colitis-app/src/lib/notifications/notificationService.ts`: Der Merker sitzt
+jetzt in der Anfrage selbst statt an den Aufrufstellen, ist ein Zähler statt
+eines Schalters (verschachtelte Anfragen) und wird auch im Fehlerfall
+freigegeben. Sechs Tests. **Am Gerät nicht nachgeprüft.**
+
+**E4 · Migration 0013 lief nie gegen Daten.** Alle Tests legen eine leere
+Datenbank an; die Nachtragung der Zeitplan-Abschnitte arbeitete dabei auf null
+Medikamenten. Auf dem Gerät eines aktualisierenden Nutzers ist genau das der
+Fall, der zählt. Kein Fehler im Code — aber eine Zusicherung ohne Nachweis.
+Geschlossen in `scheduleHistoryMigration.test.ts`.
+
+**E5 · Feed-Fehler nicht von einer Störung unterscheidbar.** Der Bildschirm
+zeigte für den dauerhaft nicht veröffentlichten Feed dieselbe rote Meldung wie
+für eine vorübergehende Störung. Seit `3c9b7b7` wirft der Client bei 404 einen
+eigenen Fehlertyp, und der Bildschirm benennt den Zustand. **Am Gerät nicht
+nachgeprüft.**
+
 ---
 
 ## F · Nachzutragen
 
 - [ ] Gerätemodell und Android-Version in Abschnitt B
 - [ ] Build `5d8bd31b` installieren und das App-Symbol sichten
+- [ ] Neuen Build aus `3c9b7b7` erstellen; darin E3 und E5 am Gerät nachprüfen
+      (App-Sperre einschalten, dann die tägliche Erinnerung aktivieren — der
+      Sperrbildschirm darf nicht erscheinen; Neuigkeiten öffnen — der Hinweis
+      muss den Feed als „noch nicht in Betrieb" benennen)
 - [ ] Wiederherstellung in getrennter Installation durchspielen (Abschnitt C)
 - [ ] Erinnerung bei geschlossener App und nach Geräteneustart prüfen
+- [ ] Pünktlichkeit der Erinnerungen unter Akku-Optimierung beobachten
 - [ ] Ursache von D2 eingrenzen

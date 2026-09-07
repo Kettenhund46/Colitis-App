@@ -76,11 +76,23 @@ in Expo Go, sondern nur in einem Development Build oder in der fertigen APK.
 npm test
 ```
 
-Führt die Vitest-Suite aus: **886 Tests in 82 Dateien** (Stand 07.09.2026).
+Führt die Vitest-Suite aus: **904 Tests in 84 Dateien** (Stand 07.09.2026).
 
 Getestet wird die gesamte Fachlogik — Bewertung von Tagen, Krankheitsaktivität,
 Zeitplan-Historie, Vorratsrechnung, Backup-Serialisierung, PDF- und CSV-Aufbau,
 Datenbank-Repositories gegen eine In-Memory-SQLite.
+
+Drei Tests verdienen eine eigene Erwähnung, weil sie Zusicherungen absichern
+statt nur Verhalten festzuhalten:
+
+- `backupRepository.test.ts` — ein Import, der mittendrin scheitert, lässt die
+  vorhandenen Daten unangetastet, und die Sicherung erfasst nachweislich alle
+  zwölf Tabellen mit Nutzerdaten.
+- `medicationHistorySequence.test.ts` — die Abfolge Dosisänderung, Pausieren,
+  Fortsetzen, Beenden an einem Stück, mit der Prüfung nach jedem Schritt, dass
+  ein vergangener Tag seine ursprüngliche Bewertung behält.
+- `scheduleHistoryMigration.test.ts` — Migration 0013 gegen echte
+  Bestandsdaten statt gegen eine leere Datenbank.
 
 **Nicht** automatisiert getestet werden React-Native-Komponenten. Der Test-Runner
 läuft in einer Node-Umgebung ohne DOM; `@testing-library/react-native` ist damit
@@ -109,7 +121,9 @@ Das Profil `preview` erzeugt eine installierbare APK zur internen Verteilung
 (siehe `eas.json`). Der Build läuft auf den Servern von Expo und dauert rund
 fünfzehn Minuten; am Ende steht ein Download-Link im Terminal.
 
-Die zuletzt ausgelieferte APK stammt aus Commit `7335082`.
+Die zuletzt ausgelieferte APK stammt aus Commit `7335082`. Der Code ist seither
+weitergelaufen; die Änderungen der Commits `c3e0aa2` bis `3c9b7b7` stecken
+noch in keiner gebauten APK.
 
 Lokaler Build ohne Expo-Konto:
 
@@ -141,6 +155,20 @@ dem Gerät nicht. Die Migrationen laufen beim App-Start automatisch.
 Es gibt derzeit fünfzehn Migrationen (0000 bis 0014). Zwei davon tragen Daten
 über einen Umbau hinweg mit: `0008` überführt „Blut ja/nein" in vier Stufen,
 `0013` legt für jedes vorhandene Medikament einen ersten Zeitplan-Abschnitt an.
+Die Nachtragung in `0013` ist in `scheduleHistoryMigration.test.ts` gegen
+echte Bestandsdaten geprüft.
+
+### Was die Sicherung enthält
+
+Zwölf der fünfzehn Tabellen. Bewusst nicht enthalten sind `cached_toilets`,
+`cached_feed_items` und `knowledge_content` — zwei Zwischenspeicher und die aus
+dem Code erzeugten Artikel; alle drei entstehen beim nächsten Start neu.
+
+Ein Wiederherstellen prüft Umschlag, Version, Passwort und Format **bevor** die
+Datenbank angefasst wird. Falsches Passwort oder eine beschädigte Datei kosten
+keine Daten. Der Import selbst läuft in einer Transaktion; bricht er ab, bleibt
+der alte Stand stehen. Was der Import ersetzt, ersetzt er allerdings
+vollständig — eine automatische Sicherheitskopie davor gibt es nicht.
 
 ---
 
@@ -156,7 +184,7 @@ Es gibt derzeit fünfzehn Migrationen (0000 bis 0014). Zwei davon tragen Daten
 | Wissensartikel | in Betrieb, am Gerät geprüft |
 | App-Sperre, Sicherung | umgesetzt, nur teilweise am Gerät geprüft |
 | Toiletten-Bereich | **nur die Karte**; die Umkreissuche liefert keine Ergebnisse |
-| Nachrichten-Feed | **nicht in Betrieb**; das Ziel-Repository existiert nicht |
+| Nachrichten-Feed | **nicht in Betrieb**; die App weist im Bildschirm darauf hin |
 
 Der Umfang der Geräteprüfungen steht in [`TESTPROTOKOLL.md`](TESTPROTOKOLL.md).
 
@@ -168,9 +196,15 @@ Der Umfang der Geräteprüfungen steht in [`TESTPROTOKOLL.md`](TESTPROTOKOLL.md)
    `https://raw.githubusercontent.com/Kettenhund46/colitis-app-feed/main/feed.json`
    (`src/features/newsFeed/constants.ts`). Dieses Repository gibt es nicht; der
    Abruf endet mit HTTP 404. Der Erzeuger liegt unter `feed-service/` samt
-   GitHub-Actions-Workflow, wurde aber nie in Betrieb genommen. Die App fängt
-   den Fehler ab und zeigt den zwischengespeicherten Stand — bei einer frischen
-   Installation also nichts.
+   Clients für PubMed, AWMF, FDA und EMA, deutscher Zusammenfassung über die
+   Claude-API und einem GitHub-Actions-Workflow — er wurde nie gestartet.
+
+   Seit `3c9b7b7` unterscheidet die App diesen Dauerzustand von einer Störung:
+   Ein 404 unter der fest einkompilierten Adresse führt zu einem ruhigen
+   Hinweis („noch nicht in Betrieb"), ein Netzfehler weiterhin zum
+   Offline-Hinweis. **In Betrieb nehmen** würde bedeuten: ein Repository
+   `colitis-app-feed` anlegen, `ANTHROPIC_API_KEY` und `FEED_PUBLISH_TOKEN` als
+   GitHub-Secrets hinterlegen und den Workflow laufen lassen.
 2. **Toiletten-Umkreissuche ohne Ergebnis.** Auf dem Testgerät erscheint
    „Toiletten konnten nicht geladen werden". Ursache noch nicht eingegrenzt;
    in Frage kommen der Standort (das Testgerät hat keine Google Play Services)
@@ -180,10 +214,17 @@ Der Umfang der Geräteprüfungen steht in [`TESTPROTOKOLL.md`](TESTPROTOKOLL.md)
 3. **Kein Wiederherstellungs-Test in getrennter Installation.** Sicherung und
    Wiederherstellung sind automatisiert getestet, aber nicht auf einem zweiten
    Gerät durchgespielt.
-4. **Erinnerungen nach einem Geräteneustart** sind nicht geprüft.
-5. **Nur deutsche Bedienung.** Die Mehrsprachigkeit ist geplant und
+4. **Erinnerungen nach einem Geräteneustart** sind nicht geprüft. Das Manifest
+   der gebauten APK deklariert `RECEIVE_BOOT_COMPLETED`, die Voraussetzung ist
+   also da.
+5. **Erinnerungen sind ungenaue Alarme.** Das Manifest deklariert weder
+   `SCHEDULE_EXACT_ALARM` noch `USE_EXACT_ALARM`. Ab Android 12 darf das System
+   solche Alarme verschieben — im Doze-Modus oder bei aktiver Akku-Optimierung
+   um Minuten bis Stunden. Für eine Medikamenten-Erinnerung ist das eine
+   spürbare Einschränkung.
+6. **Nur deutsche Bedienung.** Die Mehrsprachigkeit ist geplant und
    zurückgestellt, siehe Fahrplan.
-6. **Der Test-Helfer `createTestDb`** liegt in sechs Fachbereichen fast
+7. **Der Test-Helfer `createTestDb`** liegt in sechs Fachbereichen fast
    wortgleich; das Zusammenführen steht aus.
 
 ---
